@@ -401,9 +401,6 @@ module Lightrope
   end
 end
 
-module Bar
-
-end
 
 class Editor
   def initialize(file)
@@ -510,58 +507,100 @@ module TestModule
   end
 end
 
-root_path = Bundler.root
-path = root_path.join('lib/gempilot.rb')
-source = path.read
 
-lightrope = Lightrope.from_code(source)
-Lightrope::ClientProvider.instance.root_client = lightrope
+# demo
+#
+# easily get an enum of all nodes of any type:
+#
+# source = File.open('foo.rb')
+# lightrope = Lightrope::Client.from_code(source)
+#
+# lightrope.class_nodes       # all class nodes
+# lightrope.class_nodes.last  # last_defined_class_node
+# lightrope.methods           # all methods
+# lightrope.require_calls     # all require calls
+# lightrope
+#
+#
+# Introspect a class/object just like you normally would if it was loaded into the VM, but do it 100% statically
+#
+# source = File.open('foo.rb')
+# foo_proxy = Lightrope::ClassProxy.proxy_instance(source)
+# foo_proxy.methods # all methods
+# foo_proxy.name # full class name, includes full namespace
+# and more
+#
+#
+# find any particular node type with any name in a single call
+#
+# prism_module_node = lightrope.find_node(type: :module, name: 'Prism')
+#
+#
+# see if a node is an ancestor/descendant of another node in a single call
+#
+# activesupport = lightrope.find_node(type: :module, name: 'ActiveSupport')
+# cache = lightrope.find_node(type: :class, name: 'Cache')
+#
+# activesupport.has_descendant?(cache) # true
+#
+# 
+# Add a method to an existing ruby file underneath the last defined method, using real ruby (no heredocs/strings, etc)
+# editor = Editor.new('foo.rb')
+# editor.add_method :new_method do
+#   puts 'hello world'
+# end
+#
+# editor.save
+#
+# Add an additional require call to the top of the file, underneath the last require call
+# editor = Editor.new('foo.rb')
+# editor.add_require 'foo/bar'
+#
+# editor.save
+#
 
-require_calls = lightrope.require_calls
-puts "file requires the following: #{require_calls.map(&:requireable).join(', ')}"
-puts
+#root_path = Bundler.root
+#path = root_path.join('lib/gempilot.rb')
+#source = path.read
+#
+#lightrope = Lightrope.from_code(source)
+#Lightrope::ClientProvider.instance.root_client = lightrope
+#
+#require_calls = lightrope.require_calls
+#puts "file requires the following: #{require_calls.map(&:requireable).join(', ')}"
+#puts
+#
+#nodes = lightrope.class_nodes
+#puts "found class nodes: #{nodes.map(&:name).join(', ')}"
+#puts
+#
+#puts "now use proxy to get full names and methods: "
+#
+#nodes.each do |n|
+#  proxy = Lightrope::ClassProxy.proxy_instance(n)
+#  puts "#{proxy.name} has methods: #{proxy.methods.join(', ')}"
+#end
+#
 
-nodes = lightrope.class_nodes
-puts "found class nodes: #{nodes.map(&:name).join(', ')}"
-puts
 
-puts "now use proxy to get full names and methods: "
-
-nodes.each do |n|
-  proxy = Lightrope::ClassProxy.proxy_instance(n)
-  puts "#{proxy.name} has methods: #{proxy.methods.join(', ')}"
-end
 
 # last_require_call = lightrope.require_calls.last
 # end_line = last_require_call.end_line
 # puts end_line
 
-bar = lightrope.find_node(type: :module, name: 'Gempilot')
-foo = lightrope.find_node(type: :def, name: 'cool')
-e = Editor.new(path)
-# e.add_require('observer')
-e.add_method :again do
-  foo = 'bar'
-
-  stuff = 1 + 1
-  puts stuff
-end
-
-l = Lightrope.from_code(File.read(__FILE__))
-l.block_nodes.to_a
-e.save
+#bar = lightrope.find_node(type: :module, name: 'Gempilot')
+#foo = lightrope.find_node(type: :def, name: 'cool')
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
+#e = Editor.new(path)
+#e.add_method :again do
+#  foo = 'bar'
+#
+#  stuff = 1 + 1
+#  puts stuff
+#end
+#
+#l = Lightrope.from_code(File.read(__FILE__))
+#l.block_nodes.to_a
+#e.save
