@@ -68,8 +68,8 @@ class BundlerRunner
 
   def gemspec_path
     Pathname.new(@gem_name)
-      .join("#{@gem_name}.gemspec")
-      .expand_path
+            .join("#{@gem_name}.gemspec")
+            .expand_path
   end
 
   def install
@@ -222,12 +222,12 @@ class GemSpecEditor
 
   def save
     buf = @working_buffer
-      .then { remove_todo _1 }
-      .then { remove_comments _1 }
-      .then { add_frozen_string_literal _1 }
-      .then { squish_blank_lines(_1) }
-      .then { remove_ending_blank_lines(_1) }
-      .tap { _1.puts "\nend" }
+            .then { remove_todo _1 }
+            .then { remove_comments _1 }
+            .then { add_frozen_string_literal _1 }
+            .then { squish_blank_lines(_1) }
+            .then { remove_ending_blank_lines(_1) }
+            .tap { _1.puts "\nend" }
 
     wip_gemspec_path.open('w') do |spec|
       spec.write(buf.read)
@@ -274,9 +274,9 @@ class GemSpecEditor
   def current_value_for(attribute)
     attribute = attribute.to_s
     value = @readonly_buffer
-      .match(/spec\.#{attribute} = (?<value>.*?)spec\.\w+ = /m)
-      &.named_captures
-      &.fetch('value')
+              .match(/spec\.#{attribute} = (?<value>.*?)spec\.\w+ = /m)
+              &.named_captures
+              &.fetch('value')
 
     raise "Attribute #{attribute} not found in gemspec" unless value
 
@@ -337,8 +337,8 @@ class GemSpecEditor
     buffer_string = buffer.string
     selected_attributes = [:files, :executables, :version]
     map = selected_attributes
-      .map(&:to_s)
-      .inject({}) { |acc, attr| acc.merge(attr => current_value_for(attr)) }
+            .map(&:to_s)
+            .inject({}) { |acc, attr| acc.merge(attr => current_value_for(attr)) }
 
     map.each do |attr, value|
       replace_value_for(buffer_string, attr, value)
@@ -416,9 +416,9 @@ if gem_name.nil? || gem_name.empty?
 end
 
 formatted_options = options
-  .transform_keys(&:to_s)
-  .transform_keys { _1.gsub('-', '_') }
-  .transform_keys(&:to_sym)
+                      .transform_keys(&:to_s)
+                      .transform_keys { _1.gsub('-', '_') }
+                      .transform_keys(&:to_sym)
 
 if (missing_options = required_options - options.keys) && missing_options.any?
   puts "Missing required options: #{missing_options.map(&:to_s).join(', ')}"
@@ -431,77 +431,6 @@ runner.create_gem
 rest = formatted_options.tap do |f|
   f.delete(:github_user)
   f.delete(:executable)
-end
-
-class String
-  def tac
-    lines = self.lines
-    lines.reverse.join
-  end
-end
-
-class RubyEditor
-  attr_reader :working_buffer
-
-  def initialize(path, &block)
-    @pathname = Pathname.new(path)
-
-    @working_buffer = Buffer.new(@pathname.read)
-    @rest_blocks = []
-    @scanner = StringScanner.new(@working_buffer.read)
-    setup
-    return unless block_given?
-
-    block.call(self)
-    finalize
-  end
-
-  def preview
-    $stdout.puts @working_buffer.read
-  end
-
-  def puts(...)
-    @working_buffer.puts(...)
-  end
-
-  def print(...)
-    @working_buffer.print(...)
-  end
-
-  def finalize
-    @rest_blocks.reverse.each { @working_buffer.write(_1) }
-    #    @working_buffer.write(@rest_buffer.read)
-    self
-  end
-
-  private
-
-  def setup
-    seek_opening
-    seek_public_entry
-  end
-
-  def seek_opening
-    @scanner.check_until(closing_regexp)
-    @working_buffer = Buffer.new(@scanner.pre_match)
-    @rest_blocks << @scanner.matched
-    self
-  end
-
-  def seek_public_entry
-    scanner = StringScanner.new(@working_buffer.read.lines.reverse.join)
-    reversed_position = scanner.skip_until(/(?<opening>public|private|protected)/)
-    target_position = scanner.string.size - reversed_position
-    scanner.string = @working_buffer.read
-    scanner.pos = target_position
-    @rest_blocks << scanner.rest
-    @working_buffer = Buffer.new(@working_buffer.read[0...target_position])
-    self
-  end
-
-  def closing_regexp
-    /(?<closing>(?:\s*end\s*)+\z)/m
-  end
 end
 
 GemSpecEditor.new(runner.gemspec_path) do |e|
