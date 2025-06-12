@@ -16,3 +16,16 @@
 * Remove dead test
 * Run rake to ensure everything works
 * Release?
+
+
+
+
+test helper plugin ignore:
+
+```ruby
+unless ENV['RM_INFO']
+  ENV['MT_NO_PLUGINS'] = '1'
+  Minitest::Reporters.use! [Minitest::Reporters::DefaultReporter.new(color: true)]
+end
+```
+
