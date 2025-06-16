@@ -1,0 +1,54 @@
+#!/usr/bin/env ruby
+
+require 'optparse'
+require_relative '../lib/gempilot'
+
+required_options = [:summary, :github_user, :ruby_version]
+options = { executable: false, description: nil, github_user: nil, ruby_version: nil, summary: nil }
+parser = OptionParser.new do |o|
+  o.require_exact = true
+  o.on('--github-user GITHUB_USER', "The author's github user name. Example: \"user/repo\"")
+  o.on('--summary SUMMARY', 'The summary of the gem. Example: "A simple gem"')
+  o.on('--description DESCRIPTION', '(OPTIONAL) The description of the gem. Example: "A simple gem that does something"')
+  o.on('--executable', '(OPTIONAL) Create an executable file in ./exe')
+  o.on('--ruby-version VERSION', 'The minimum Ruby version required for the gem. Example: ">= 3.3"')
+
+  o.on('-h', '--help') do
+    puts o
+    exit
+  end
+end
+
+parser.parse!(into: options)
+
+gem_name = ARGV.shift
+
+if gem_name.nil? || gem_name.empty?
+  puts 'Please provide a gem name'
+  exit 1
+end
+
+formatted_options = options
+                      .transform_keys(&:to_s)
+                      .transform_keys { _1.gsub('-', '_') }
+                      .transform_keys(&:to_sym)
+
+if (missing_options = required_options - options.keys) && missing_options.any?
+  puts "Missing required options: #{missing_options.map(&:to_s).join(', ')}"
+  exit 1
+end
+
+runner = Gempilot::BundlerRunner.new(gem_name:, **formatted_options.slice(:github_user, :executable), target_path: Dir.pwd)
+puts runner
+runner.create_gem
+
+rest = formatted_options.tap do |f|
+  f.delete(:github_user)
+  f.delete(:executable)
+end
+
+Gempilot::GemspecEditor.new(runner.gemspec_path) do |e|
+  e.strip_authors
+  e.summary = rest[:summary] if rest[:summary]
+  e.required_ruby_version = rest[:required_ruby_version] if rest[:required_ruby_version]
+end
