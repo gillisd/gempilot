@@ -1,3 +1,5 @@
+require_relative '../../../snick/lib/snick'
+require 'rubocop'
 module Gempilot
   class GemspecEditor
     include FileUtils
@@ -14,14 +16,29 @@ module Gempilot
 
       clean_slate
       block.call(self)
-      import_dev_dependencies
+      # import_dev_dependencies
       save
+      modify_metadata
       chdir @gemspec_path.parent do
         system 'bundle install', out: $stdout, err: $stderr
       end
-      @clean_gemfile.call
+      # @clean_gemfile.call
       publish
+      binding.irb
       format
+
+    end
+
+    def modify_metadata
+      rel_gemspec_path = @gemspec_path.relative_path_from(@gemspec_path.parent).to_s
+      workdir = @gemspec_path.parent.to_s
+      Snick.define do
+        working_directory workdir
+        file rel_gemspec_path do
+          insert_after /spec.metadata/, "spec.metadata['rubygems_mfa_required'] = 'true'"
+
+        end
+      end
     end
 
     def import_dev_dependencies
@@ -72,6 +89,7 @@ module Gempilot
       rm_f(@gemspec_path)
       mv wip_gemspec_path, @gemspec_path
       @readonly_buffer = nil
+      Snick.run_all!
     end
 
     def formatter
@@ -160,6 +178,10 @@ module Gempilot
     def required_ruby_version=(value)
       value_with_operator = ">= #{value}"
       replace_text_value(:required_ruby_version, value_with_operator)
+    end
+
+    def metadata
+
     end
 
     private

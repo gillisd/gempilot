@@ -3,7 +3,7 @@
 # $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 require 'rake'
 require 'forwardable'
-require 'minitest/autorun'
+require 'pathname'
 require_relative '../../junk/minitest-activate'
 require_relative "../lib/gempilot"
 

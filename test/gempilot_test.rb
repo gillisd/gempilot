@@ -31,13 +31,14 @@ class TestGempilot < Minitest::Test
     sh final
   end
 
+  def test_gemspec
+
+
+  end
+
   def test_env
     env.mkdir_p 'foo'
-    env
-    env.touch 'foo/bar.txt'
 
     output = gempilot '--summary "another gem" bar'
-    output
-
   end
 end

@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
 
+require 'bundler/setup'
 require 'optparse'
+require 'command_mapper'
 require_relative '../lib/gempilot'
 
 required_options = [:summary, :github_user, :ruby_version]
@@ -37,17 +39,34 @@ if (missing_options = required_options - options.keys) && missing_options.any?
   puts "Missing required options: #{missing_options.map(&:to_s).join(', ')}"
   exit 1
 end
+runner = Gempilot::CommandMappers::Bundle.new do |bundle|
+  bundle.gem do |gem|
+    gem.gem_name = gem_name
+    gem.no_coc = true
+    gem.test = 'minitest'
+    gem.exe = formatted_options[:executable]
+    gem.git = true
+  end
+end
 
-runner = Gempilot::BundlerRunner.new(gem_name:, **formatted_options.slice(:github_user, :executable), target_path: Dir.pwd)
-puts runner
-runner.create_gem
+captured = runner.capture_command
+gemspec_path = captured
+                 &.match(/create\s*(?<gemspec_relative_path>.*\.gemspec)$/)
+                 &.named_captures(symbolize_names: true)
+                 &.fetch(:gemspec_relative_path, nil)
+                 &.then { |it| Pathname.new it }
+                 &.then { |it| Pathname.getwd.join(it) }
+
+# runner = Gempilot::BundlerRunner.new(gem_name:, **formatted_options.slice(:github_user, :executable), target_path: Dir.pwd)
+# puts runner
+# runner.create_gem
 
 rest = formatted_options.tap do |f|
   f.delete(:github_user)
   f.delete(:executable)
 end
 
-Gempilot::GemspecEditor.new(runner.gemspec_path) do |e|
+Gempilot::GemspecEditor.new(gemspec_path) do |e|
   e.strip_authors
   e.summary = rest[:summary] if rest[:summary]
   e.required_ruby_version = rest[:required_ruby_version] if rest[:required_ruby_version]

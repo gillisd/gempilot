@@ -1,15 +1,14 @@
 require 'shellwords'
-require 'bundler/cli/add'
 
 module Gempilot
   module Commands
     def bundle_add(*gems)
-      Bundler::CLI::Add.new({ force: true }, gems).run
+      # Bundler::CLI::Add.new({ force: true }, gems).run
       # bundle 'add', *gems, force: true
     end
 
     def bundle_config_set(setting, value)
-      Bundler::CLI::Config.new.invoke(:set, [setting, value])
+      # Bundler::CLI::Config.new.invoke(:set, [setting, value])
       # bundle 'config', 'set', setting, value
     end
 
