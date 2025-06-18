@@ -1,0 +1,9 @@
+module Gemz
+  def <%= name %>
+    p "This method is called #{__method__}"
+  end
+
+  def setup
+    p 'setting up'
+  end
+end
