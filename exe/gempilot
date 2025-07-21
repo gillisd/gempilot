@@ -2,9 +2,9 @@
 # frozen_string_literal: true
 
 require 'bundler/setup'
-require 'optparse'
-require 'command_mapper'
+require 'forwardable'
 require '~/repos/completions/dsl'
+require 'command_mapper'
 require_relative '../lib/gempilot'
 
 module Git
@@ -18,11 +18,13 @@ module Git
 end
 
 class Creator
-  attr_reader :gem_name, :options, :context
+  attr_reader :gem_name, :options
+  attr_accessor :context
 
   def initialize(gem_name, **options)
     @gem_name = gem_name
     @options = options
+    @context = nil
   end
 
   def create
@@ -38,11 +40,12 @@ class Creator
 
     captured = runner.capture_command
     gemspec_path = captured
-      &.match(/create\s*(?<gemspec_relative_path>.*\.gemspec)$/)
+      &.match(/(create|identical)\s*(?<gemspec_relative_path>.*\.gemspec)$/)
       &.named_captures(symbolize_names: true)
       &.fetch(:gemspec_relative_path, nil)
       &.then { |it| Pathname.new it }
       &.then { |it| Pathname.getwd.join(it) }
+
     self.context = Context.new(gemspec_path)
 
     rest = options.tap do |f|
@@ -54,6 +57,7 @@ class Creator
       e.strip_authors
       e.summary = rest[:summary] if rest[:summary]
       e.required_ruby_version = rest[:required_ruby_version] if rest[:required_ruby_version]
+      e.setup
     end
   end
 end
@@ -66,7 +70,7 @@ class Context
 
   def initialize(gemspec_path)
     @gemspec_path = Pathname.new(gemspec_path)
-    ensure_correct_workdir
+    ensure_correct_workdir!
   end
 
   def current_workdir
@@ -93,7 +97,8 @@ class Context
 end
 
 class ConfigRunner
-  delegate [:gemspec, :gemfile] => context
+  extend Forwardable
+  delegate [:gemspec, :gemfile] => :context
 
   def initialize(context)
     @context = context
@@ -126,12 +131,78 @@ class ConfigRunner
   end
 end
 
+class AddRunner
+  extend Forwardable
+
+  attr_reader :context
+  delegate [:gemspec_path] => :context
+
+  def initialize(context, local_root_path: Pathname.new(Dir.home).join('repos'))
+    @context = context
+    @commands = []
+    @local_root_path = local_root_path
+  end
+
+  def run
+    add_dev :irb
+    add_dev :rbs
+    add_dev :repl_type_completor
+    add_dev :debug
+    add_dev :rubocop, require: false
+    add_dev :modern_rake, local: true
+    add_dev :rdoc, require: false
+    add :zeitwerk
+    @commands.each(&:run_command)
+  end
+
+  def add(name, version: nil)
+    add_dev(name, execute_immediately: true, version:)
+    latest_version = get_installed_version(name) #install via Gemfile first, then copy to gemspec
+    Gempilot::GemspecEditor.new(gemspec_path) do |e|
+      e.add_dependency name, latest_version
+    end
+  end
+
+  def get_installed_version(gem_name)
+    command = Gempilot::CommandMappers::Bundle.new do |bundle|
+      bundle.info do |info|
+        info.get_version! gem_name
+      end
+    end
+    command.capture_command.strip
+  end
+
+  def add_dev(name, version: nil, require: nil, local: nil, execute_immediately: false)
+    command =  Gempilot::CommandMappers::Bundle.new do |bundle|
+      bundle.add do |adder|
+        adder.gem_name = name.to_s
+        adder.version = version if version
+        adder.require = require if require
+        if local
+          adder.local_gem!(name, local_path_for(name))
+          adder.version = nil
+        end
+      end
+    end
+
+    if execute_immediately
+      return command.run_command
+    end
+    @commands << command
+    command
+  end
+
+  def local_path_for(gem_name)
+    @local_root_path.join(gem_name.to_s).to_s
+  end
+end
+
 cli :gempilot do
   command 'new' do
     include CommandKit::Options::Mandatory
 
     option :github_user, value: { required: true, type: String, default: Git.user_name, raise_on_missing: true }, desc: "The github user's first and last name"
-    option :github_email, value: { required: true, type: String, default: Git.user_email, raise_on_missing: true }, desc:  "The github user's email address"
+    option :github_email, value: { required: true, type: String, default: Git.user_email, raise_on_missing: true }, desc: "The github user's email address"
     option :summary, value: { type: String, raise_on_missing: true }, desc: 'A summary of the gem'
     argument :gem_name, required: true, desc: 'The gem name'
 
@@ -141,7 +212,9 @@ cli :gempilot do
       creator = Creator.new(gem_name, **options)
       creator.create
       context = creator.context
-      ConfigRunner.new(context).create
+      ConfigRunner.new(context).run
+      AddRunner.new(context).run
     end
   end
 end
+
