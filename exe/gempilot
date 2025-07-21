@@ -1,74 +1,147 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
 
 require 'bundler/setup'
 require 'optparse'
 require 'command_mapper'
-#require '~/repos/completions/dsl'
+require '~/repos/completions/dsl'
 require_relative '../lib/gempilot'
 
-required_options = [:summary, :github_user, :ruby_version]
-options = { executable: false, description: nil, github_user: nil, ruby_version: nil, summary: nil }
-parser = OptionParser.new do |o|
-  o.require_exact = true
-  o.on('--github-user GITHUB_USER', "The author's github user name. Example: \"user/repo\"")
-  o.on('--summary SUMMARY', 'The summary of the gem. Example: "A simple gem"')
-  o.on('--description DESCRIPTION', '(OPTIONAL) The description of the gem. Example: "A simple gem that does something"')
-  o.on('--executable', '(OPTIONAL) Create an executable file in ./exe')
-  o.on('--ruby-version VERSION', 'The minimum Ruby version required for the gem. Example: ">= 3.3"')
+module Git
+  def self.user_email
+    `git config get user.email`.strip
+  end
 
-  o.on('-h', '--help') do
-    puts o
-    exit
+  def self.user_name
+    `git config get user.name`.strip
   end
 end
 
-parser.parse!(into: options)
+class Creator
+  attr_reader :gem_name, :options, :context
 
-gem_name = ARGV.shift
+  def initialize(gem_name, **options)
+    @gem_name = gem_name
+    @options = options
+  end
 
-if gem_name.nil? || gem_name.empty?
-  puts 'Please provide a gem name'
-  exit 1
-end
+  def create
+    runner = Gempilot::CommandMappers::Bundle.new do |bundle|
+      bundle.gem do |gem|
+        gem.gem_name = gem_name
+        gem.no_coc = true
+        gem.test = 'minitest'
+        gem.exe = options[:executable]
+        gem.git = true
+      end
+    end
 
-formatted_options = options
-                      .transform_keys(&:to_s)
-                      .transform_keys { _1.gsub('-', '_') }
-                      .transform_keys(&:to_sym)
+    captured = runner.capture_command
+    gemspec_path = captured
+      &.match(/create\s*(?<gemspec_relative_path>.*\.gemspec)$/)
+      &.named_captures(symbolize_names: true)
+      &.fetch(:gemspec_relative_path, nil)
+      &.then { |it| Pathname.new it }
+      &.then { |it| Pathname.getwd.join(it) }
+    self.context = Context.new(gemspec_path)
 
-if (missing_options = required_options - options.keys) && missing_options.any?
-  puts "Missing required options: #{missing_options.map(&:to_s).join(', ')}"
-  exit 1
-end
-runner = Gempilot::CommandMappers::Bundle.new do |bundle|
-  bundle.gem do |gem|
-    gem.gem_name = gem_name
-    gem.no_coc = true
-    gem.test = 'minitest'
-    gem.exe = formatted_options[:executable]
-    gem.git = true
+    rest = options.tap do |f|
+      f.delete(:github_user)
+      f.delete(:executable)
+    end
+
+    Gempilot::GemspecEditor.new(gemspec_path) do |e|
+      e.strip_authors
+      e.summary = rest[:summary] if rest[:summary]
+      e.required_ruby_version = rest[:required_ruby_version] if rest[:required_ruby_version]
+    end
   end
 end
 
-captured = runner.capture_command
-gemspec_path = captured
-                 &.match(/create\s*(?<gemspec_relative_path>.*\.gemspec)$/)
-                 &.named_captures(symbolize_names: true)
-                 &.fetch(:gemspec_relative_path, nil)
-                 &.then { |it| Pathname.new it }
-                 &.then { |it| Pathname.getwd.join(it) }
+class Context
+  extend Forwardable
+  include FileUtils
 
-# runner = Gempilot::BundlerRunner.new(gem_name:, **formatted_options.slice(:github_user, :executable), target_path: Dir.pwd)
-# puts runner
-# runner.create_gem
+  attr_reader :gemspec_path
 
-rest = formatted_options.tap do |f|
-  f.delete(:github_user)
-  f.delete(:executable)
+  def initialize(gemspec_path)
+    @gemspec_path = Pathname.new(gemspec_path)
+    ensure_correct_workdir
+  end
+
+  def current_workdir
+    pwd
+  end
+
+  def project_dir
+    gemspec_path.parent.realpath.cleanpath
+  end
+
+  def gem_name
+    gemspec.name
+  end
+
+  private
+
+  def gemspec
+    Gem::Specification.load(gemspec_path.to_s)
+  end
+
+  def ensure_correct_workdir!
+    chdir project_dir
+  end
 end
 
-Gempilot::GemspecEditor.new(gemspec_path) do |e|
-  e.strip_authors
-  e.summary = rest[:summary] if rest[:summary]
-  e.required_ruby_version = rest[:required_ruby_version] if rest[:required_ruby_version]
+class ConfigRunner
+  delegate [:gemspec, :gemfile] => context
+
+  def initialize(context)
+    @context = context
+    @commands = []
+  end
+
+  def run
+    set 'cache_all', 'true'
+    set 'cache_all_platforms', 'true'
+    set 'path', 'vendor'
+    set 'allow_offline_install', 'true'
+    set_repository
+
+    @commands.each(&:run_command)
+  end
+
+  def set_repository
+    set 'gem.push_key', 'gemsluice_private_api_key'
+  end
+
+  def set(name, value)
+    @commands << Gempilot::CommandMappers::Bundle.new do |bundle|
+      bundle.config do |config|
+        config.set do |set|
+          set.name = name.to_s
+          set.value = value.to_s
+        end
+      end
+    end
+  end
+end
+
+cli :gempilot do
+  command 'new' do
+    include CommandKit::Options::Mandatory
+
+    option :github_user, value: { required: true, type: String, default: Git.user_name, raise_on_missing: true }, desc: "The github user's first and last name"
+    option :github_email, value: { required: true, type: String, default: Git.user_email, raise_on_missing: true }, desc:  "The github user's email address"
+    option :summary, value: { type: String, raise_on_missing: true }, desc: 'A summary of the gem'
+    argument :gem_name, required: true, desc: 'The gem name'
+
+    description 'Create a new gem'
+
+    run do |gem_name|
+      creator = Creator.new(gem_name, **options)
+      creator.create
+      context = creator.context
+      ConfigRunner.new(context).create
+    end
+  end
 end

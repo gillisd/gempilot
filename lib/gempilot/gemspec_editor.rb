@@ -16,17 +16,13 @@ module Gempilot
 
       clean_slate
       block.call(self)
-      # import_dev_dependencies
       save
       modify_metadata
       chdir @gemspec_path.parent do
         system 'bundle install', out: $stdout, err: $stderr
       end
-      # @clean_gemfile.call
       publish
-      binding.irb
       format
-
     end
 
     def modify_metadata
