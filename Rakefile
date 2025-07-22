@@ -1,11 +1,13 @@
 # frozen_string_literal: true
 
+require 'bundler/setup'
 require "bundler/gem_tasks"
-require "minitest/test_task"
+require "rubocop/rake_task"
+Bundler::GemHelper.install_tasks name: 'gempilot'
 
+require "minitest/test_task"
 Minitest::TestTask.create
 
-require "rubocop/rake_task"
 
 RuboCop::RakeTask.new
 

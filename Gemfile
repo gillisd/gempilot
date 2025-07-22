@@ -1,6 +1,12 @@
 source "https://rubygems.org"
 gemspec
-gem 'rubocop', require: false
+gem 'rubocop'
+gem 'rubocop-rake'
+gem 'rubocop-performance'
+gem 'rubocop-minitest'
+gem 'rubocop-md'
+
+
 gem 'rake', require: false
 gem 'minitest'
 gem "irb", "~> 1.15"

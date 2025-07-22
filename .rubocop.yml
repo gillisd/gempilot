@@ -1,13 +1,11 @@
-inherit_from: .rubocop_todo.yml
-
-require:
+plugins:
   - rubocop-performance
-  - rubocop-rspec
+  - rubocop-minitest
   - rubocop-rake
   - rubocop-md
 
 AllCops:
-  TargetRubyVersion: 3.0
+  TargetRubyVersion: 3.3
   NewCops: enable
   Exclude: ['bin/*', 'vendor/**/*']
 
@@ -15,23 +13,6 @@ Layout/LineLength:
   Max: 100
   Exclude: ['**/spec/**/*.rb', 'remap.gemspec']
 
-RSpec/NestedGroups:
-  Exclude:
-    - spec/**/*
-
-RSpec/ExampleLength:
-  Exclude:
-    - spec/**/*
-
-RSpec/ContextWording:
-  Prefixes:
-    - when
-    - with
-    - without
-    - if
-    - unless
-    - for
-    - given
 
 Metrics/MethodLength:
   Enabled: false
@@ -42,8 +23,6 @@ Metrics/BlockLength:
 Metrics/AbcSize:
   Max: 40
 
-RSpec:
-  Enabled: true
 
 Style/Documentation:
   Enabled: false
@@ -93,27 +72,19 @@ Style/StringLiterals:
 Lint/EmptyFile:
   Enabled: false
 
-RSpec/MultipleMemoizedHelpers:
-  Enabled: false
 
 
 Style/ClassAndModuleChildren:
   Enabled: false
 
-RSpec/LeakyConstantDeclaration:
-  Enabled: false
 
 Lint/ConstantDefinitionInBlock:
   Enabled: false
 
-RSpec/MultipleExpectations:
-  Enabled: false
 
 Style/CaseEquality:
   Enabled: false
 
-RSpec/RepeatedExampleGroupBody:
-  Enabled: false
 
 Naming/MethodName:
   Enabled: false
@@ -127,8 +98,6 @@ Style/SignalException:
 Style/SymbolProc:
   Enabled: false
 
-RSpec/FilePath:
-  Enabled: false
 
 Layout/CaseIndentation:
   EnforcedStyle: end
@@ -256,15 +225,6 @@ Layout/MultilineMethodCallBraceLayout:
 
 Layout/MultilineMethodCallIndentation:
   EnforcedStyle: indented
-
-RSpec/AlignLeftLetBrace:
-  Enabled: false
-
-RSpec/AlignRightLetBrace:
-  Enabled: false
-
-RSpec/RepeatedDescription:
-  Enabled: false
 
 Performance/BlockGivenWithExplicitBlock:
   Enabled: true
