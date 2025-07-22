@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Gempilot
   class Formatter
     def initialize(formatter: RuboCop::CLI.new)
@@ -28,8 +30,8 @@ module Gempilot
       path = path.expand_path
 
       args = [].tap do |a|
-        a << '--autocorrect' if autocorrect
-        a << '--safe-auto-correct' if safe_autocorrect
+        a << "--autocorrect" if autocorrect
+        a << "--safe-auto-correct" if safe_autocorrect
         a << path.to_path
       end
 

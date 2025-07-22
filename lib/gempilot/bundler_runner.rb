@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Gempilot
   class BundlerRunner
     include FileUtils
@@ -11,14 +13,12 @@ module Gempilot
     end
 
     def gemspec_path
-      Pathname.new(@gem_name)
-              .join("#{@gem_name}.gemspec")
-              .expand_path
+      Pathname.new(@gem_name).join("#{@gem_name}.gemspec").expand_path
     end
 
     def install
       chdir @gem_name do
-        system('bundle install', out: $stdout, err: $stderr)
+        system("bundle install", out: $stdout, err: $stderr)
       end
     end
 
@@ -38,10 +38,10 @@ module Gempilot
 
     def build_command
       @command_buffer.tap do |cb|
-        cb.write 'bundle gem '
+        cb.write "bundle gem "
         cb.write "--github-username #{@github_user} "
-        cb.write '--exe ' if @executable
-        cb.write '--linter=rubocop '
+        cb.write "--exe " if @executable
+        cb.write "--linter=rubocop "
         cb.write @gem_name.to_s
       end
     end

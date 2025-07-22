@@ -1,4 +1,6 @@
-require 'shellwords'
+# frozen_string_literal: true
+
+require "shellwords"
 
 module Gempilot
   module Commands
@@ -13,21 +15,21 @@ module Gempilot
     end
 
     def bundle_config_unset(setting)
-      bundle 'config', 'unset', setting
+      bundle "config", "unset", setting
     end
 
     def bundle(*args, **options)
-      command = %w[bin/bundle]
+      command = ["bin/bundle"]
       command.concat(args.map(&:to_s))
-      options = options.inject(StringIO.new) do |io, (k, v)|
-        if v.is_a?(TrueClass) || v.is_a?(FalseClass)
+      options = options.each_with_object(StringIO.new) do |(k, v), io|
+        case v
+        when TrueClass, FalseClass
           io << "--#{k}" if v
-        elsif v.is_a?(String) || v.is_a?(Symbol)
+        when String, Symbol
           io << "--#{k} #{v.shellescape}"
-        elsif v.is_a?(Array)
+        when Array
           v.each { |item| io << "--#{k} #{item.shellescape} " }
         end
-        io
       end
       command.concat(options.string.shellsplit)
 
@@ -35,23 +37,24 @@ module Gempilot
     end
 
     def bundle_init
-      command = %w[bin/bundle init]
+      command = ["bin/bundle", "init"]
       sh command.shelljoin
     end
 
     def bundle_binstub(*gems)
       command = []
-      command.concat %w[bin/bundle binstub --force]
+      command.push("bin/bundle", "binstub", "--force")
       command.concat(gems.map(&:to_s))
       sh command.shelljoin
     end
 
-    def sh(command, silent: false, input: nil, &block)
+    def sh(command, silent: false, input: nil, &)
       runner = Gempilot::Runner.new(command, silent: silent)
       begin
-        runner.run(input, &block)
-      rescue Errno::ENOENT => e
-        raise Gempilot::CommandError, "Command not found: #{command}. Ensure it is installed and available in your PATH."
+        runner.run(input, &)
+      rescue Errno::ENOENT
+        raise Gempilot::CommandError,
+              "Command not found: #{command}. Ensure it is installed and available in your PATH."
       end
     end
   end

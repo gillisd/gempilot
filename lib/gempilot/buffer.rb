@@ -1,6 +1,8 @@
+# frozen_string_literal: true
+
 module Gempilot
   class Buffer
-    def initialize(string = '')
+    def initialize(string = "")
       @io = StringIO.new(string.dup)
     end
 
@@ -22,7 +24,7 @@ module Gempilot
       @io.pos = @io.size
       begin
         @io.puts(...)
-      rescue => e
+      rescue StandardError => e
         raise e
       end
     end

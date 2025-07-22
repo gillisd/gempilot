@@ -23,8 +23,8 @@
 test helper plugin ignore:
 
 ```ruby
-unless ENV['RM_INFO']
-  ENV['MT_NO_PLUGINS'] = '1'
+unless ENV["RM_INFO"]
+  ENV["MT_NO_PLUGINS"] = "1"
   Minitest::Reporters.use! [Minitest::Reporters::DefaultReporter.new(color: true)]
 end
 ```

@@ -1,12 +1,14 @@
-require 'pty'
-require 'warning'
-require 'fileutils'
-require 'io/console'
+# frozen_string_literal: true
+
+require "pty"
+require "warning"
+require "fileutils"
+require "io/console"
 module Gempilot
   class Runner
     attr_reader :silent, :command
 
-    def initialize(command, silent: false, debug: ENV.fetch('DEBUG', false))
+    def initialize(command, silent: false, debug: ENV.fetch("DEBUG", false))
       @debug = debug
       @command = command
       @silent = silent
@@ -15,10 +17,10 @@ module Gempilot
       @ready = true
     end
 
-    def run(input = nil, &block)
+    def run(input = nil, &)
       validate_ready!
       @ready = false
-      start(input, &block)
+      start(input, &)
     end
 
     private
@@ -28,7 +30,7 @@ module Gempilot
 
       threads = []
       $stdin.raw do
-        master, slave = PTY.open
+        PTY.open
 
         threads << Thread.new do
           IO.copy_stream reader, $stdout
@@ -56,8 +58,8 @@ module Gempilot
       p command
 
       # wait_threads << wait_thread
-      if @debug && !File.exist?('.inuse')
-        FileUtils.touch '.inuse'
+      if @debug && !File.exist?(".inuse")
+        FileUtils.touch ".inuse"
         threads = []
         $stdin.raw do
           PTY.spawn(command) do |reader, writer, pid|
@@ -122,12 +124,12 @@ module Gempilot
           fd => @tee_writer
         )
 
-        case [block_given?, input]
-        in [true, nil] then block.call(sin)
+        case [block, input]
+        in [true, nil] then yield(sin)
         in [false, String] then sin.write(input)
         in [false, IO] then IO.copy_stream(input, sin)
         in [false, nil] then sin.close
-        in [true, Object] if !input.nil? then
+        in [true, Object] if !input.nil?
           raise ArgumentError, "Cannot pass a block with input: #{input.class}"
         else
           raise ArgumentError, "Invalid input type: #{input.class}"
@@ -147,12 +149,13 @@ module Gempilot
     def validate_ready!
       return if @ready
 
-      raise 'Cannot proceed, this session has already been activated'
+      raise "Cannot proceed, this session has already been activated"
     end
 
     def checkout_fd
       (10..1023).each do |fd|
         next if @used_fds.include?(fd)
+
         begin
           IO.for_fd(fd) # Test if FD exists
           # If we get here, FD is in use, continue loop

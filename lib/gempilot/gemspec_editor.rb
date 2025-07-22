@@ -1,5 +1,7 @@
-require_relative '../../../snick/lib/snick'
-require 'rubocop'
+# frozen_string_literal: true
+
+require_relative "../../../snick/lib/snick"
+require "rubocop"
 module Gempilot
   class GemspecEditor
     include FileUtils
@@ -12,10 +14,10 @@ module Gempilot
       @readonly_buffer = nil
       @working_buffer = Buffer.new
 
-      raise 'Block is required to initialize GemSpecEditor' unless block
+      raise "Block is required to initialize GemSpecEditor" unless block
 
       clean_slate
-      block.call(self)
+      yield(self)
       save
       publish
       format
@@ -24,7 +26,7 @@ module Gempilot
     def setup
       modify_metadata
       chdir @gemspec_path.parent do
-        system 'bundle install', out: $stdout, err: $stderr
+        system "bundle install", out: $stdout, err: $stderr
       end
     end
 
@@ -39,7 +41,7 @@ module Gempilot
     end
 
     def import_dev_dependencies
-      gemfile_path = @gemspec_path.parent.join('Gemfile')
+      gemfile_path = @gemspec_path.parent.join("Gemfile")
       to_write = nil
       if gemfile_path.exist?
         gemfile_path.open do |f|
@@ -50,8 +52,8 @@ module Gempilot
           f.rewind
           to_write = f.grep_v(/gem\s+['"]([^'"]+)['"],?/)
         end
-        @clean_gemfile = lambda do
-          gemfile_path.open('w') do |f|
+        @clean_gemfile = -> do
+          gemfile_path.open("w") do |f|
             to_write
               .map(&:strip)
               .reject(&:empty?)
@@ -66,20 +68,20 @@ module Gempilot
 
     def save
       buf = @working_buffer
-              .then { remove_todo _1 }
-              .then { remove_comments _1 }
-              .then { add_frozen_string_literal _1 }
-              .then { squish_blank_lines(_1) }
-              .then { remove_ending_blank_lines(_1) }
-              .tap { _1.puts "\nend" }
+        .then { remove_todo _1 }
+        .then { remove_comments _1 }
+        .then { add_frozen_string_literal _1 }
+        .then { squish_blank_lines(_1) }
+        .then { remove_ending_blank_lines(_1) }
+        .tap { _1.puts "\nend" }
 
-      wip_gemspec_path.open('w') do |spec|
+      wip_gemspec_path.open("w") do |spec|
         spec.write(buf.read)
       end
     end
 
     def publish
-      cp @gemspec_path, @gemspec_path.sub_ext('.bak.spec')
+      cp @gemspec_path, @gemspec_path.sub_ext(".bak.spec")
       rm_f(@gemspec_path)
       mv wip_gemspec_path, @gemspec_path
       @readonly_buffer = nil
@@ -91,7 +93,7 @@ module Gempilot
     end
 
     def format
-      puts 'Formatting gemspec'
+      puts "Formatting gemspec"
       chdir @gemspec_path.parent do
         begin
           formatter.format(@gemspec_path)
@@ -99,7 +101,7 @@ module Gempilot
           puts "Failed to format gemspec: #{e.message}"
           exit 1
         end
-        puts 'Formatted gemspec successfully'
+        puts "Formatted gemspec successfully"
       end
     end
 
@@ -111,17 +113,16 @@ module Gempilot
         .then { Buffer.new(_1) }
         .tap { (@readonly_buffer = Buffer.new(_1.read)).freeze }
         .tap { @working_buffer = Buffer.new(_1.read) }
-        .tap { @working_buffer.gsub!(/end\s*\z/m, '') }
+        .tap { @working_buffer.gsub!(/end\s*\z/m, "") }
 
       @spec = Gem::Specification.load(@gemspec_path.to_s)
     end
 
     def current_value_for(attribute)
       attribute = attribute.to_s
-      value = @readonly_buffer
-                .match(/spec\.#{attribute} = (?<value>.*?)spec\.\w+ = /m)
-                &.named_captures
-                &.fetch('value')
+      value = @readonly_buffer.match(/spec\.#{attribute} = (?<value>.*?)spec\.\w+ = /m)
+        &.named_captures
+        &.fetch("value")
 
       raise "Attribute #{attribute} not found in gemspec" unless value
 
@@ -152,7 +153,7 @@ module Gempilot
     end
 
     def spec
-      raise 'Specification not loaded. Call read first.' unless @spec
+      raise "Specification not loaded. Call read first." unless @spec
 
       @spec
     end
@@ -184,8 +185,8 @@ module Gempilot
       buffer_string = buffer.string
       selected_attributes = [:files, :executables, :version]
       map = selected_attributes
-              .map(&:to_s)
-              .inject({}) { |acc, attr| acc.merge(attr => current_value_for(attr)) }
+        .map(&:to_s)
+        .inject({}) { |acc, attr| acc.merge(attr => current_value_for(attr)) }
 
       map.each do |attr, value|
         replace_value_for(buffer_string, attr, value)
@@ -204,7 +205,7 @@ module Gempilot
 
     def add_frozen_string_literal(buffer)
       new_buffer = Buffer.new
-      new_buffer.puts '# frozen_string_literal: true'
+      new_buffer.puts "# frozen_string_literal: true"
 
       buffer
         .grep_v(/^\s*# frozen_string_literal:/)
@@ -214,7 +215,7 @@ module Gempilot
     end
 
     def remove_ending_blank_lines(buffer)
-      buffer.gsub!(/\s*\z/, '')
+      buffer.gsub!(/\s*\z/, "")
     end
 
     def remove_comments(buffer)
@@ -231,10 +232,7 @@ module Gempilot
     end
 
     def wip_gemspec_path
-      @gemspec_path
-        .sub_ext('.edit.gemspec')
-        .expand_path
+      @gemspec_path.sub_ext(".edit.gemspec").expand_path
     end
   end
 end
-

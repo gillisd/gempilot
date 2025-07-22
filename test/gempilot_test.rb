@@ -26,19 +26,16 @@ class TestGempilot < Minitest::Test
   end
 
   def gempilot(*args)
-    executable = @project_dir.join('exe/gempilot').expand_path.to_s
+    executable = @project_dir.join("exe/gempilot").expand_path.to_s
     final = "#{executable} #{args.join(' ')}"
     sh final
   end
 
-  def test_gemspec
-
-
-  end
+  def test_gemspec; end
 
   def test_env
-    env.mkdir_p 'foo'
+    env.mkdir_p "foo"
 
-    output = gempilot '--summary "another gem" bar'
+    gempilot '--summary "another gem" bar'
   end
 end
