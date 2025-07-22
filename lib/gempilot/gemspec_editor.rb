@@ -34,7 +34,6 @@ module Gempilot
       Snick.define do
         working_directory workdir
         file rel_gemspec_path do
-#          insert_after(/spec.metadata/, "spec.metadata['rubygems_mfa_required'] = 'true'")
         end
       end
     end
@@ -58,9 +57,6 @@ module Gempilot
               .reject(&:empty?)
               .then { remove_comments _1 }
               .each { |line| f.puts line }
-            #            f.puts "gem 'rubocop', require: false"
-            #            f.puts "gem 'rake', require: false"
-            #            f.puts "gem 'minitest', require: false"
           end
         end
       else
@@ -70,12 +66,12 @@ module Gempilot
 
     def save
       buf = @working_buffer
-        .then { remove_todo _1 }
-        .then { remove_comments _1 }
-        .then { add_frozen_string_literal _1 }
-        .then { squish_blank_lines(_1) }
-        .then { remove_ending_blank_lines(_1) }
-        .tap { _1.puts "\nend" }
+              .then { remove_todo _1 }
+              .then { remove_comments _1 }
+              .then { add_frozen_string_literal _1 }
+              .then { squish_blank_lines(_1) }
+              .then { remove_ending_blank_lines(_1) }
+              .tap { _1.puts "\nend" }
 
       wip_gemspec_path.open('w') do |spec|
         spec.write(buf.read)
@@ -123,9 +119,9 @@ module Gempilot
     def current_value_for(attribute)
       attribute = attribute.to_s
       value = @readonly_buffer
-        .match(/spec\.#{attribute} = (?<value>.*?)spec\.\w+ = /m)
-        &.named_captures
-        &.fetch('value')
+                .match(/spec\.#{attribute} = (?<value>.*?)spec\.\w+ = /m)
+                &.named_captures
+                &.fetch('value')
 
       raise "Attribute #{attribute} not found in gemspec" unless value
 
@@ -188,8 +184,8 @@ module Gempilot
       buffer_string = buffer.string
       selected_attributes = [:files, :executables, :version]
       map = selected_attributes
-        .map(&:to_s)
-        .inject({}) { |acc, attr| acc.merge(attr => current_value_for(attr)) }
+              .map(&:to_s)
+              .inject({}) { |acc, attr| acc.merge(attr => current_value_for(attr)) }
 
       map.each do |attr, value|
         replace_value_for(buffer_string, attr, value)

@@ -26,4 +26,6 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_dependency 'zeitwerk'
+  spec.add_dependency 'command_kit'
+  spec.add_dependency 'command_mapper'
 end
