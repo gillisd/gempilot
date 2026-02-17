@@ -1,15 +1,12 @@
-# frozen_string_literal: true
-
-# $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 require "rake"
 require "forwardable"
-require "pathname"
-require_relative "../../junk/minitest-activate"
+require "minitest/autorun"
 require_relative "../lib/gempilot"
+
+module Support
+end
 
 loader = Zeitwerk::Loader.new
 loader.push_dir "test/gempilot", namespace: Gempilot
+loader.push_dir "test/support", namespace: Support
 loader.setup
-require_relative "../../modern_rake/test/support/environment"
-require_relative "../../modern_rake/test/support/environment_assertions"
-require_relative "../../modern_rake/test/support/env_helper"
