@@ -9,6 +9,7 @@ Gem::Specification.new do |spec|
   spec.email = ["david@flipmine.com"]
 
   spec.summary = "A toolkit for creating and managing your own rubygems"
+  spec.homepage = "https://github.com/dgillis/gempilot"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.3.0"
 

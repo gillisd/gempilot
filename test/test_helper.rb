@@ -7,6 +7,5 @@ module Support
 end
 
 loader = Zeitwerk::Loader.new
-loader.push_dir "test/gempilot", namespace: Gempilot
 loader.push_dir "test/support", namespace: Support
 loader.setup

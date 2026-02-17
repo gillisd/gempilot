@@ -6,31 +6,12 @@ module Gempilot
   class CommandsTest < Minitest::Test
     include Gempilot::Commands
 
-    def setup
-      # Do nothing
-    end
-
-    def teardown
-      # Do nothing
-    end
-
-    def test_config
-      # bundle_config_set 'foo', 'bar'
-    end
-
-    def test_bundle_add
-      ["rails", "sinatra"]
-      # assert_output(/bundle add rails sinatra/) do
-      #   bundle_add *gems
-      # end
-      # rescue Gempilot::CommandError => e
-      #   assert_match(/Command not found: #{command.join(' ')}/, e.message)
-    end
-
-    def test_command
-      # sh 'bundle binstub --force bundler'
-      # sh 'bin/bundle binstub --force rake'
-      # sh 'bin/bundle config set path vendor'
+    def test_sh_raises_on_missing_command
+      assert_raises(Gempilot::Error) do
+        sh "nonexistent_command_that_does_not_exist_xyz"
+      end
+    rescue Gempilot::Error
+      # expected
     end
   end
 end

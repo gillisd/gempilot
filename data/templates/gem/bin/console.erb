@@ -2,6 +2,7 @@
 # frozen_string_literal: true
 
 require "bundler/setup"
-require "gempilot/cli"
+require "<%= @gem_name %>"
+require "irb"
 
-Gempilot::CLI.start
+IRB.start(__FILE__)

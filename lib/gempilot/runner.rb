@@ -1,9 +1,8 @@
 # frozen_string_literal: true
 
 require "pty"
-require "warning"
 require "fileutils"
-require "io/console"
+
 module Gempilot
   class Runner
     attr_reader :silent, :command
@@ -25,45 +24,15 @@ module Gempilot
 
     private
 
-    def debug
-      puts "COMMAND: [#{RUBY} #{option_list.join ' '}]" if @verbose
-
-      threads = []
-      $stdin.raw do
-        PTY.open
-
-        threads << Thread.new do
-          IO.copy_stream reader, $stdout
-        end
-
-        threads << Thread.new do
-          IO.copy_stream $stdin, writer
-        end
-
-        @exit = Process.wait(pid)
-        threads.each { |thread| Thread.kill(thread) }
-
-        # @out = out.read
-        # @err = err.read
-      end
-
-      puts "OUTPUT:  [#{@out}]" if @verbose
-      puts "ERROR:   [#{@err}]" if @verbose
-      puts "EXIT:    [#{@exit.inspect}]" if @verbose
-      puts "PWD:     [#{Dir.pwd}]" if @verbose
-    end
-
     def start(input, &block)
       wait_threads ||= []
       p command
 
-      # wait_threads << wait_thread
       if @debug && !File.exist?(".inuse")
         FileUtils.touch ".inuse"
         threads = []
         $stdin.raw do
           PTY.spawn(command) do |reader, writer, pid|
-            # sin, sout, wait_thread = Open3.popen_run(command)
             threads << Thread.new do
               IO.copy_stream reader, $stdout
             end
@@ -76,46 +45,6 @@ module Gempilot
             threads.each { |thread| Thread.kill(thread) }
           end
         end
-
-        # $stdin.raw do
-        #   master, slave = PTY.open
-        #   begin
-        #     wait_threads << Thread.new do
-        #       IO.copy_stream sout, slave
-        #     end
-        #
-        #     wait_threads << Thread.new do
-        #       IO.copy_stream slave, sin
-        #     end
-        #
-        #     wait_threads << Thread.new do
-        #       IO.copy_stream master, $stdout
-        #     end
-        #
-        #     wait_threads << Thread.new do
-        #       IO.copy_stream $stdin, master
-        #     end
-        #   rescue => e
-        #     exit 1
-        #
-        #     wait_threads.each { |thread| Thread.kill(thread) }
-        #
-        #     sin.close
-        #     sout.close
-        #     master.close
-        #     slave.close
-        #   ensure
-        #     p 'waiting'
-        #     wait_threads.each(&:join)
-        #     p 'here'
-        #     # sin.close
-        #     # sout.close
-        #     # master.close
-        #     # slave.close
-        #     # end
-        #   end
-        # end
-
       else
         fd = checkout_fd
         sin, sout, wait_threads = Open3.pipeline_rw(
@@ -135,7 +64,6 @@ module Gempilot
           raise ArgumentError, "Invalid input type: #{input.class}"
         end
 
-        # Use @silent consistently
         wait_threads << Thread.new { IO.copy_stream(@tee_reader, $stdout) } unless @silent
         sin.close
         @tee_writer.close
@@ -157,10 +85,8 @@ module Gempilot
         next if @used_fds.include?(fd)
 
         begin
-          IO.for_fd(fd) # Test if FD exists
-          # If we get here, FD is in use, continue loop
+          IO.for_fd(fd)
         rescue Errno::EBADF
-          # FD is available
           @used_fds.add(fd)
           return fd
         end
