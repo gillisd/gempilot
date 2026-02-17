@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 
 #require_relative "../../../snick/lib/snick"
 require 'snick'
@@ -71,7 +70,6 @@ module Gempilot
       buf = @working_buffer
         .then { remove_todo _1 }
         .then { remove_comments _1 }
-        .then { add_frozen_string_literal _1 }
         .then { squish_blank_lines(_1) }
         .then { remove_ending_blank_lines(_1) }
         .tap { _1.puts "\nend" }
@@ -200,17 +198,6 @@ module Gempilot
       buffer
         .grep_v(/TODO/)
         .each { new_buffer.puts _1 }
-
-      new_buffer
-    end
-
-    def add_frozen_string_literal(buffer)
-      new_buffer = Buffer.new
-      new_buffer.puts "# frozen_string_literal: true"
-
-      buffer
-        .grep_v(/^\s*# frozen_string_literal:/)
-        .each { |line| new_buffer.puts(line) }
 
       new_buffer
     end

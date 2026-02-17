@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 
 require "command_kit/commands"
 require "command_kit/commands/auto_load"

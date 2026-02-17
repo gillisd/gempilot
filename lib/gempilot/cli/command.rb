@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 
 require "command_kit/command"
 require "command_kit/colors"
