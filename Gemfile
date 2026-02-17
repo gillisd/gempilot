@@ -12,22 +12,19 @@ gem "debug", "~> 1.10"
 gem "irb", "~> 1.15"
 gem "minitest"
 gem "rake", require: false
-gem "snick", path: Pathname.new(Dir.home).join('repos', 'snick').to_s
+gem "snick", path: Pathname.new(__dir__).parent.join("snick").to_s
 
-gem "minitest-reporters", "~> 1.7"
+gem "minitest-reporters"
 
-gem "warning", "~> 1.5"
+gem "warning"
 
-gem "repl_type_completor", "~> 0.1.11"
+gem "repl_type_completor"
 
-gem "observer", "~> 0.1.2"
+gem "observer"
 
-gem "zeitwerk", "~> 2.7"
+gem "zeitwerk"
 
-gem "rbs", "~> 3.9"
+gem "rbs"
 
-gem "modern_rake", "~> 0.1.0", path: "/Users/davidgillis/repos/modern_rake"
-
-gem "rdoc", "~> 6.14"
-
-gem "benchmark", "~> 0.5.0"
+gem "benchmark"
+gem "rdoc"
