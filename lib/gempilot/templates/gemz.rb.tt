@@ -1,4 +1,4 @@
-module Gemz
+module <%= 
   def <%= name %>
     p "This method is called #{__method__}"
   end

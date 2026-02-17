@@ -6,6 +6,24 @@ require 'thor/group'
 require 'thor/shell'
 
 module Gempilot
+  # FOO = 'BAR'
+
+  module Names
+    module CoolName
+
+    end
+
+    module Myname
+
+    end
+
+  end
+
+  module Names::Myname::Foo
+    def bar
+
+    end
+  end
   class ContextBuilder
     def initialize(obj)
       @obj = obj
@@ -20,7 +38,19 @@ module Gempilot
     end
   end
 
+  module Helper
+    def foo
+      puts 'bar'
+    end
+  end
+
   class Generator
+    class BarGenerator
+      def foobar
+
+      end
+
+    end
     include Thor::Actions
     include Thor::Shell
 
@@ -65,7 +95,7 @@ module Gempilot
   class TemplateTask < Rake::TaskLib
     extend Forwardable
 
-    delegate [:template_name, :template]: :@generator
+    delegate [:template_name, :template] => :@generator
 
     def initialize(name)
       @generator = Gempilot::Generator.new(file_name: name)
