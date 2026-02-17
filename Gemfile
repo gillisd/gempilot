@@ -29,3 +29,5 @@ gem "rbs", "~> 3.9"
 gem "modern_rake", "~> 0.1.0", path: "/Users/davidgillis/repos/modern_rake"
 
 gem "rdoc", "~> 6.14"
+
+gem "benchmark", "~> 0.5.0"
