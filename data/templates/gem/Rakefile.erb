@@ -16,7 +16,11 @@ RuboCop::RakeTask.new
 namespace :zeitwerk do
   desc "Verify all files follow Zeitwerk naming conventions"
   task :validate do
-    ruby "-e", "require '<%= @gem_name %>'; <%= @module_name %>::LOADER.eager_load(force: true); puts 'Zeitwerk: All files loaded successfully.'"
+    ruby "-e", <<~RUBY
+      require '<%= @gem_name %>'
+      <%= @module_name %>::LOADER.eager_load(force: true)
+      puts 'Zeitwerk: All files loaded successfully.'
+    RUBY
   end
 end
 

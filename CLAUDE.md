@@ -10,6 +10,7 @@ A CLI tool for creating and managing Ruby gems, built on CommandKit.
 - `gempilot create` — Scaffold a new gem (templates in `data/templates/gem/`)
 - `gempilot new` — Generate a class, module, or command in an existing gem (templates in `data/templates/new/`)
 - `gempilot destroy` — Remove a class, module, or command from an existing gem
+- `gempilot bump` — Bump version in `version.rb` (patch default, or minor/major)
 - `gempilot release` — Thin proxy to `rake release`
 - `gempilot console` — Thin proxy to `bin/console`
 
@@ -33,9 +34,7 @@ A CLI tool for creating and managing Ruby gems, built on CommandKit.
 - RuboCop with framework-specific plugins
 - GitHub Actions CI workflow (`.github/workflows/ci.yml`)
 - `git ls-files`-based gemspec with glob fallback for non-git repos
+- Version management rake tasks in `rakelib/version.rake` (current, bump, commit, revert, release:full)
 
 ### Open Issues
-- `fatal: not a git repository` warnings when `gempilot create` runs outside a git repo (author/email defaults shell out to `git config`)
-- `bundle exec rake rubocop` may not pass clean on a freshly generated gem — needs verification
-- No `gempilot bump patch/minor/major` command to update `version.rb`
 - README/help output doesn't sell the `new`/`destroy` generators as the differentiator vs `bundle gem`

@@ -27,13 +27,13 @@ module Gempilot
 
         option :author, value: {
                           type: String,
-                          default: -> { `git config user.name`.strip }
+                          default: -> { `git config user.name 2>/dev/null`.strip }
                         },
                         desc: "Author name"
 
         option :email, value: {
                          type: String,
-                         default: -> { `git config user.email`.strip }
+                         default: -> { `git config user.email 2>/dev/null`.strip }
                        },
                        desc: "Author email"
 
@@ -68,8 +68,16 @@ module Gempilot
           end
 
           @module_name = CommandKit::Inflector.camelize(@gem_name)
-          @author = options[:author]
-          @email = options[:email]
+
+          @author = options[:author].then { |v| v.to_s.empty? ? nil : v } || begin
+            puts colors.bright_black("The author name for the gemspec and LICENSE.")
+            ask(colors.green("Author name"), required: true)
+          end
+
+          @email = options[:email].then { |v| v.to_s.empty? ? nil : v } || begin
+            puts colors.bright_black("The contact email for the gemspec.")
+            ask(colors.green("Author email"), required: true)
+          end
 
           @summary = options[:summary] || begin
             puts
@@ -132,6 +140,10 @@ module Gempilot
           erb "LICENSE.txt.erb",             "#{@gem_name}/LICENSE.txt"
           erb "lib/gem_name.rb.erb",         "#{@gem_name}/lib/#{@gem_name}.rb"
           erb "lib/gem_name/version.rb.erb", "#{@gem_name}/lib/#{@gem_name}/version.rb"
+
+          # Version management rake tasks
+          mkdir "#{@gem_name}/rakelib"
+          erb "rakelib/version.rake.erb",    "#{@gem_name}/rakelib/version.rake"
 
           # Test files
           if @test_framework == :rspec

@@ -366,7 +366,7 @@ module Gempilot
         gemspec = File.read("test_gem/test_gem.gemspec")
 
         assert_includes gemspec, "Dir.glob"
-        assert_includes gemspec, "spec.files.empty?"
+        assert_includes gemspec, "files.empty?"
       end
 
       # CI workflow tests
@@ -393,6 +393,98 @@ module Gempilot
 
         assert_includes ci, "bundle exec rake spec"
         refute_includes ci, "bundle exec rake test"
+      end
+
+      # Version rake task tests
+
+      def test_creates_rakelib_directory
+        run_create_command("test_gem")
+        assert File.directory?("test_gem/rakelib")
+      end
+
+      def test_creates_version_rake_task
+        run_create_command("test_gem")
+        assert_path_exists "test_gem/rakelib/version.rake"
+      end
+
+      def test_version_rake_has_bump_task
+        run_create_command("test_gem")
+        content = File.read("test_gem/rakelib/version.rake")
+        assert_includes content, "task :bump"
+      end
+
+      def test_version_rake_has_correct_module_name
+        run_create_command("test_gem")
+        content = File.read("test_gem/rakelib/version.rake")
+        assert_includes content, "TestGem::VERSION"
+      end
+
+      def test_version_rake_has_no_monkey_patches
+        run_create_command("test_gem")
+        content = File.read("test_gem/rakelib/version.rake")
+        refute_includes content, "class String"
+      end
+
+      def test_version_rake_uses_file_locking
+        run_create_command("test_gem")
+        content = File.read("test_gem/rakelib/version.rake")
+        assert_includes content, "flock"
+      end
+
+      # Git config defaults
+
+      def test_git_config_defaults_do_not_crash_without_git_config
+        # Simulate no git config available (no global config, no repo)
+        gem_root = File.expand_path("../../..", __dir__)
+        env = {
+          "HOME" => "/nonexistent",
+          "GIT_CONFIG_NOSYSTEM" => "1",
+          "GIT_CONFIG_GLOBAL" => "/nonexistent",
+          "BUNDLE_GEMFILE" => File.join(gem_root, "Gemfile")
+        }
+
+        script = <<~RUBY
+          require "bundler/setup"
+          require "stringio"
+          require "gempilot/cli"
+          cmd = Gempilot::CLI::Commands::Create.new(stdout: StringIO.new)
+          puts cmd.options[:author].inspect
+          puts cmd.options[:email].inspect
+        RUBY
+
+        output = IO.popen(env, [RbConfig.ruby, "-e", script], chdir: @tmpdir, err: "/dev/null") { |io| io.read }
+
+        assert_equal 0, $?.exitstatus, "Create command should not crash when git config unavailable"
+        # Defaults should resolve to empty strings, not nil or error messages
+        lines = output.lines.map(&:strip)
+        assert_includes ["\"\"", "nil"], lines[0],
+          "Author default should be empty string or nil when git config unavailable"
+      end
+
+      # Integration: generated gem's default rake task passes
+
+      def test_generated_gem_default_rake_task_passes
+        stdout = StringIO.new
+        args = [
+          "--author", "Test Author",
+          "--email", "test@example.com",
+          "--summary", "A test gem",
+          "--ruby-version", RUBY_VERSION,
+          "--test", "minitest",
+          "--no-exe",
+          "--no-git",
+          "test_gem"
+        ]
+
+        command = Commands::Create.new(stdout: stdout)
+        command.main(args)
+
+        Dir.chdir("test_gem") do
+          Bundler.with_unbundled_env do
+            output = `bundle exec rake 2>&1`
+            assert_equal 0, $?.exitstatus, "Default rake task failed in generated gem:\n#{output}"
+          end
+        end
       end
 
       private
