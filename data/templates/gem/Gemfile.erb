@@ -5,16 +5,18 @@ gemspec
 <% if @test_framework == :minitest -%>
 gem "minitest"
 gem "minitest-reporters"
-<% elsif @test_framework == :rspec -%>
-gem "rspec", "~> 3.0"
 <% end -%>
 gem "rake"
+<% if @test_framework == :rspec -%>
+gem "rspec", "~> 3.0"
+<% end -%>
 gem "rubocop"
-gem "rubocop-performance"
-gem "rubocop-rake"
+gem "rubocop-md"
 <% if @test_framework == :minitest -%>
 gem "rubocop-minitest"
-<% elsif @test_framework == :rspec -%>
+<% end -%>
+gem "rubocop-performance"
+gem "rubocop-rake"
+<% if @test_framework == :rspec -%>
 gem "rubocop-rspec"
 <% end -%>
-gem "rubocop-md"

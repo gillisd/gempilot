@@ -1,4 +1,5 @@
 
+require "bundler"
 require "command_kit/colors"
 require "command_kit/file_utils"
 require "fileutils"

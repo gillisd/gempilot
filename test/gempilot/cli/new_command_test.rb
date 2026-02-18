@@ -232,6 +232,79 @@ module Gempilot
           "bundle install should run without BUNDLE_GEMFILE set (inside Bundler.with_unbundled_env)"
       end
 
+      def test_generated_files_have_no_leading_blank_lines
+        run_new_command("test_gem")
+
+        files = [
+          "test_gem/lib/test_gem.rb",
+          "test_gem/lib/test_gem/version.rb",
+          "test_gem/test/test_helper.rb",
+          "test_gem/test/test_gem_test.rb",
+          "test_gem/test_gem.gemspec"
+        ]
+
+        files.each do |path|
+          content = File.read(path)
+          refute content.start_with?("\n"),
+            "#{path} should not start with a blank line"
+        end
+      end
+
+      def test_gemfile_gems_are_alphabetically_ordered
+        run_new_command("test_gem")
+
+        gemfile = File.read("test_gem/Gemfile")
+        gem_lines = gemfile.lines.select { |l| l.start_with?('gem "') }
+        gem_names = gem_lines.map { |l| l[/gem "([^"]+)"/, 1] }
+
+        assert_equal gem_names.sort, gem_names,
+          "Gems in Gemfile should be in alphabetical order"
+      end
+
+      def test_version_constant_is_frozen
+        run_new_command("test_gem")
+
+        version_rb = File.read("test_gem/lib/test_gem/version.rb")
+
+        assert_includes version_rb, '.freeze',
+          "VERSION constant should be frozen"
+      end
+
+      def test_rubocop_yml_uses_correct_namespaces
+        run_new_command("test_gem")
+
+        content = File.read("test_gem/.rubocop.yml")
+
+        refute_includes content, "Style/RedundantLineBreak",
+          "Should use Layout/RedundantLineBreak, not Style/RedundantLineBreak"
+      end
+
+      def test_rspec_generated_files_have_no_leading_blank_lines
+        run_new_command("test_gem", "--test", "rspec")
+
+        files = [
+          "test_gem/lib/test_gem.rb",
+          "test_gem/test_gem.gemspec"
+        ]
+
+        files.each do |path|
+          content = File.read(path)
+          refute content.start_with?("\n"),
+            "#{path} should not start with a blank line"
+        end
+      end
+
+      def test_rspec_gemfile_gems_are_alphabetically_ordered
+        run_new_command("test_gem", "--test", "rspec")
+
+        gemfile = File.read("test_gem/Gemfile")
+        gem_lines = gemfile.lines.select { |l| l.start_with?('gem "') }
+        gem_names = gem_lines.map { |l| l[/gem "([^"]+)"/, 1] }
+
+        assert_equal gem_names.sort, gem_names,
+          "Gems in Gemfile should be in alphabetical order"
+      end
+
       def test_rspec_rubocop_has_rspec_plugin
         run_new_command("test_gem", "--test", "rspec")
 
