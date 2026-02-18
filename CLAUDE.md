@@ -10,12 +10,15 @@ A CLI tool for creating and managing Ruby gems, built on CommandKit.
 - `gempilot create` — Scaffold a new gem (templates in `data/templates/gem/`)
 - `gempilot new` — Generate a class, module, or command in an existing gem (templates in `data/templates/new/`)
 - `gempilot destroy` — Remove a class, module, or command from an existing gem
+- `gempilot release` — Thin proxy to `rake release`
+- `gempilot console` — Thin proxy to `bin/console`
 
 ### Architecture
 - Uses Zeitwerk for autoloading
 - Uses CommandKit for CLI framework (commands, options, arguments, interactive prompts)
 - Uses CommandKit::Inflector for name inflection
 - Generator module (`lib/gempilot/cli/generator.rb`) provides template rendering via ERB
+- GemContext module (`lib/gempilot/cli/gem_context.rb`) shared by new, destroy, release, console
 - CommandKit::Commands::AutoLoad maps filenames in `commands/` to command names
 
 ### Testing
@@ -28,3 +31,11 @@ A CLI tool for creating and managing Ruby gems, built on CommandKit.
 - `rake zeitwerk:validate` task to verify naming conventions
 - Choice of minitest or rspec
 - RuboCop with framework-specific plugins
+- GitHub Actions CI workflow (`.github/workflows/ci.yml`)
+- `git ls-files`-based gemspec with glob fallback for non-git repos
+
+### Open Issues
+- `fatal: not a git repository` warnings when `gempilot create` runs outside a git repo (author/email defaults shell out to `git config`)
+- `bundle exec rake rubocop` may not pass clean on a freshly generated gem — needs verification
+- No `gempilot bump patch/minor/major` command to update `version.rb`
+- README/help output doesn't sell the `new`/`destroy` generators as the differentiator vs `bundle gem`
