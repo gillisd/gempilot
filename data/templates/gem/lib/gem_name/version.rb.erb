@@ -1,3 +1,7 @@
-module <%= @module_name %>
-  VERSION = "0.0.1".freeze
-end
+<% @module_parts.each_with_index do |part, i| -%>
+<%= "  " * i %>module <%= part %>
+<% end -%>
+<%= "  " * @module_parts.size %>VERSION = "0.0.1".freeze
+<% @module_parts.size.times do |i| -%>
+<%= "  " * (@module_parts.size - 1 - i) %>end
+<% end -%>

@@ -45,7 +45,7 @@ module Gempilot
         VERSION_PATTERN = /VERSION\s*=\s*"(\d+\.\d+\.\d+)"/
 
         def find_version_file
-          path = File.join("lib", @gem_name, "version.rb")
+          path = File.join("lib", @require_path, "version.rb")
           unless File.exist?(path)
             puts colors.red("Version file not found at #{path}")
             exit 1

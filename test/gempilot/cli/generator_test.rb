@@ -60,6 +60,7 @@ module Gempilot
       def test_erb_renders_template
         @generator.instance_variable_set(:@gem_name, "test_gem")
         @generator.instance_variable_set(:@module_name, "TestGem")
+        @generator.instance_variable_set(:@module_parts, ["TestGem"])
         @generator.instance_variable_set(:@ruby_version, "3.4.8")
 
         dest = File.join(@tmpdir, "version.rb")

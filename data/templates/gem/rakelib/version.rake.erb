@@ -1,9 +1,9 @@
 namespace :version do
-  version_path = File.expand_path("../lib/<%= @gem_name %>/version.rb", __dir__)
+  version_path = File.expand_path("../lib/<%= @require_path %>/version.rb", __dir__)
 
   desc "Display the current version"
   task :current do
-    require_relative "../lib/<%= @gem_name %>/version"
+    require_relative "../lib/<%= @require_path %>/version"
     puts "Current version: #{<%= @module_name %>::VERSION}"
   end
 
@@ -33,7 +33,7 @@ namespace :version do
 
   desc "Commit the version change"
   task :commit do
-    require_relative "../lib/<%= @gem_name %>/version"
+    require_relative "../lib/<%= @require_path %>/version"
     sh "git add #{version_path}"
     sh "git commit -m 'Bump version to #{<%= @module_name %>::VERSION}'"
     puts "Version change committed."

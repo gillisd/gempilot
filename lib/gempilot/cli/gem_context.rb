@@ -14,7 +14,8 @@ module Gempilot
         end
 
         @gem_name = File.basename(gemspec, ".gemspec")
-        @gem_module = CommandKit::Inflector.camelize(@gem_name)
+        @require_path = @gem_name.tr("-", "/")
+        @gem_module = CommandKit::Inflector.camelize(@require_path)
         @test_framework = File.directory?("spec") ? :rspec : :minitest
       end
 
@@ -27,9 +28,10 @@ module Gempilot
       end
 
       def validate_gem_root!(root)
-        return if root == @gem_module
+        expected = @gem_module.split("::").first
+        return if root == expected
 
-        puts colors.red("Expected constant to start with #{@gem_module}, got #{root}")
+        puts colors.red("Expected constant to start with #{expected}, got #{root}")
         exit 1
       end
     end

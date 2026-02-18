@@ -17,7 +17,7 @@ namespace :zeitwerk do
   desc "Verify all files follow Zeitwerk naming conventions"
   task :validate do
     ruby "-e", <<~RUBY
-      require '<%= @gem_name %>'
+      require '<%= @require_path %>'
       <%= @module_name %>::LOADER.eager_load(force: true)
       puts 'Zeitwerk: All files loaded successfully.'
     RUBY

@@ -14,6 +14,9 @@ AllCops:
   Exclude:
   - bin/*
   - vendor/**/*
+<% if @hyphenated -%>
+  - lib/<%= @gem_name %>.rb
+<% end -%>
 Gemspec/RequiredRubyVersion:
   Enabled: false
 Layout/CaseIndentation:

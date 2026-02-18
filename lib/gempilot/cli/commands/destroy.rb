@@ -56,15 +56,15 @@ module Gempilot
           lib_path = File.join("lib", *segments) + ".rb"
 
           if @test_framework == :rspec
-            test_path = File.join("spec", @gem_name, *segments[1..]) + "_spec.rb"
+            test_path = File.join("spec", @require_path, *segments[1..]) + "_spec.rb"
           else
-            test_path = File.join("test", @gem_name, *segments[1..]) + "_test.rb"
+            test_path = File.join("test", @require_path, *segments[1..]) + "_test.rb"
           end
 
           remove_file(lib_path)
           remove_file(test_path)
-          remove_empty_parents(File.dirname(lib_path), File.join("lib", @gem_name))
-          test_root = @test_framework == :rspec ? File.join("spec", @gem_name) : File.join("test", @gem_name)
+          remove_empty_parents(File.dirname(lib_path), File.join("lib", @require_path))
+          test_root = @test_framework == :rspec ? File.join("spec", @require_path) : File.join("test", @require_path)
           remove_empty_parents(File.dirname(test_path), test_root)
         end
 
@@ -74,18 +74,18 @@ module Gempilot
 
           lib_path = File.join("lib", *segments) + ".rb"
           remove_file(lib_path)
-          remove_empty_parents(File.dirname(lib_path), File.join("lib", @gem_name))
+          remove_empty_parents(File.dirname(lib_path), File.join("lib", @require_path))
         end
 
         def destroy_command(name)
           file_name = CommandKit::Inflector.underscore(name)
-          file_path = File.join("lib", @gem_name, "cli", "commands", file_name + ".rb")
+          file_path = File.join("lib", @require_path, "cli", "commands", file_name + ".rb")
           remove_file(file_path)
 
           if @test_framework == :rspec
-            test_path = File.join("spec", @gem_name, "cli", "commands", "#{file_name}_spec.rb")
+            test_path = File.join("spec", @require_path, "cli", "commands", "#{file_name}_spec.rb")
           else
-            test_path = File.join("test", @gem_name, "cli", "commands", "#{file_name}_test.rb")
+            test_path = File.join("test", @require_path, "cli", "commands", "#{file_name}_test.rb")
           end
           remove_file(test_path)
         end

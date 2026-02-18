@@ -67,7 +67,11 @@ module Gempilot
             ask(colors.green("Gem name"), required: true)
           end
 
-          @module_name = CommandKit::Inflector.camelize(@gem_name)
+          @require_path = @gem_name.tr("-", "/")
+          @module_name = CommandKit::Inflector.camelize(@require_path)
+          @module_parts = @module_name.split("::")
+          @base_module = @module_parts.first
+          @hyphenated = @gem_name.include?("-")
 
           @author = options[:author].then { |v| v.to_s.empty? ? nil : v } || begin
             puts colors.bright_black("The author name for the gemspec and LICENSE.")
@@ -122,7 +126,12 @@ module Gempilot
           # Directory structure
           mkdir @gem_name
           mkdir "#{@gem_name}/lib"
-          mkdir "#{@gem_name}/lib/#{@gem_name}"
+          # For hyphenated names, create nested dirs (e.g., lib/gempilot/encryption)
+          @require_path.split("/").reduce("#{@gem_name}/lib") do |dir, part|
+            path = "#{dir}/#{part}"
+            mkdir path
+            path
+          end
           mkdir "#{@gem_name}/bin"
           mkdir "#{@gem_name}/exe" if options[:exe]
 
@@ -139,7 +148,11 @@ module Gempilot
           erb "README.md.erb",               "#{@gem_name}/README.md"
           erb "LICENSE.txt.erb",             "#{@gem_name}/LICENSE.txt"
           erb "lib/gem_name.rb.erb",         "#{@gem_name}/lib/#{@gem_name}.rb"
-          erb "lib/gem_name/version.rb.erb", "#{@gem_name}/lib/#{@gem_name}/version.rb"
+          erb "lib/gem_name/version.rb.erb", "#{@gem_name}/lib/#{@require_path}/version.rb"
+
+          if @hyphenated
+            erb "lib/gem_name_extension.rb.erb", "#{@gem_name}/lib/#{@require_path}.rb"
+          end
 
           # Version management rake tasks
           mkdir "#{@gem_name}/rakelib"

@@ -315,6 +315,100 @@ module Gempilot
         refute_includes rubocop, "rubocop-minitest"
       end
 
+      # Hyphenated gem name tests
+
+      def test_hyphenated_gem_creates_nested_lib_structure
+        run_create_command("gempilot-encryption")
+        assert File.directory?("gempilot-encryption/lib/gempilot")
+        assert File.directory?("gempilot-encryption/lib/gempilot/encryption")
+        assert_path_exists "gempilot-encryption/lib/gempilot/encryption.rb"
+        assert_path_exists "gempilot-encryption/lib/gempilot/encryption/version.rb"
+      end
+
+      def test_hyphenated_gem_uses_for_gem_extension
+        run_create_command("gempilot-encryption")
+        entry = File.read("gempilot-encryption/lib/gempilot/encryption.rb")
+        assert_includes entry, "for_gem_extension"
+        assert_includes entry, "Gempilot"
+      end
+
+      def test_hyphenated_gem_shim_requires_real_path
+        run_create_command("gempilot-encryption")
+        shim = File.read("gempilot-encryption/lib/gempilot-encryption.rb")
+        assert_includes shim, 'require "gempilot/encryption"'
+        refute_includes shim, "zeitwerk"
+      end
+
+      def test_hyphenated_gem_version_has_nested_modules
+        run_create_command("gempilot-encryption")
+        version = File.read("gempilot-encryption/lib/gempilot/encryption/version.rb")
+        assert_includes version, "module Gempilot"
+        assert_includes version, "module Encryption"
+        assert_includes version, "VERSION"
+      end
+
+      def test_hyphenated_gem_templates_use_slash_require_path
+        run_create_command("gempilot-encryption")
+        gemspec = File.read("gempilot-encryption/gempilot-encryption.gemspec")
+        assert_includes gemspec, 'require_relative "lib/gempilot/encryption/version"'
+
+        helper = File.read("gempilot-encryption/test/test_helper.rb")
+        assert_includes helper, 'require "gempilot/encryption"'
+      end
+
+      def test_hyphenated_gem_rakefile_uses_slash_require
+        run_create_command("gempilot-encryption")
+        rakefile = File.read("gempilot-encryption/Rakefile")
+        assert_includes rakefile, "require 'gempilot/encryption'"
+      end
+
+      def test_hyphenated_gem_console_uses_slash_require
+        run_create_command("gempilot-encryption")
+        console = File.read("gempilot-encryption/bin/console")
+        assert_includes console, 'require "gempilot/encryption"'
+      end
+
+      def test_hyphenated_gem_version_rake_uses_slash_path
+        run_create_command("gempilot-encryption")
+        rake = File.read("gempilot-encryption/rakelib/version.rake")
+        assert_includes rake, "lib/gempilot/encryption/version"
+      end
+
+      def test_hyphenated_gem_gemspec_has_correct_module
+        run_create_command("gempilot-encryption")
+        gemspec = File.read("gempilot-encryption/gempilot-encryption.gemspec")
+        assert_includes gemspec, "Gempilot::Encryption::VERSION"
+      end
+
+      def test_hyphenated_gem_zeitwerk_test_uses_correct_module
+        run_create_command("gempilot-encryption")
+        content = File.read("gempilot-encryption/test/zeitwerk_test.rb")
+        assert_includes content, "Gempilot::Encryption::LOADER"
+      end
+
+      def test_hyphenated_gem_test_file_uses_correct_module
+        run_create_command("gempilot-encryption")
+        content = File.read("gempilot-encryption/test/gempilot_encryption_test.rb")
+        assert_includes content, "Gempilot::Encryption::VERSION"
+      end
+
+      def test_non_hyphenated_gem_does_not_use_for_gem_extension
+        run_create_command("test_gem")
+        main = File.read("test_gem/lib/test_gem.rb")
+        assert_includes main, "Zeitwerk::Loader.for_gem"
+        refute_includes main, "for_gem_extension"
+      end
+
+      def test_non_hyphenated_gem_has_flat_module_in_version
+        run_create_command("test_gem")
+        version = File.read("test_gem/lib/test_gem/version.rb")
+        assert_includes version, "module TestGem"
+        assert_includes version, "VERSION"
+        # Should have exactly one module declaration, not nested
+        assert_equal 1, version.scan(/^ *module /).size,
+          "Non-hyphenated gem should have exactly one module wrapper"
+      end
+
       # Zeitwerk validation tests
 
       def test_creates_zeitwerk_test_file
@@ -483,6 +577,30 @@ module Gempilot
           Bundler.with_unbundled_env do
             output = `bundle exec rake 2>&1`
             assert_equal 0, $?.exitstatus, "Default rake task failed in generated gem:\n#{output}"
+          end
+        end
+      end
+
+      def test_hyphenated_gem_default_rake_task_passes
+        stdout = StringIO.new
+        args = [
+          "--author", "Test Author",
+          "--email", "test@example.com",
+          "--summary", "A test gem",
+          "--ruby-version", RUBY_VERSION,
+          "--test", "minitest",
+          "--no-exe",
+          "--no-git",
+          "gempilot-encryption"
+        ]
+
+        command = Commands::Create.new(stdout: stdout)
+        command.main(args)
+
+        Dir.chdir("gempilot-encryption") do
+          Bundler.with_unbundled_env do
+            output = `bundle exec rake 2>&1`
+            assert_equal 0, $?.exitstatus, "Default rake task failed in hyphenated gem:\n#{output}"
           end
         end
       end

@@ -108,7 +108,7 @@ module Gempilot
         def add_command(name)
           file_name = CommandKit::Inflector.underscore(name)
           command_name = CommandKit::Inflector.camelize(name)
-          file_path = File.join("lib", @gem_name, "cli", "commands", file_name + ".rb")
+          file_path = File.join("lib", @require_path, "cli", "commands", file_name + ".rb")
 
           puts
           puts colors.bright_white("Adding command ") + colors.bold(colors.cyan(command_name)) + colors.bright_white("...")
@@ -126,7 +126,7 @@ module Gempilot
 
         def add_command_test_file(command_name, file_name)
           if @test_framework == :rspec
-            test_path = File.join("spec", @gem_name, "cli", "commands", "#{file_name}_spec.rb")
+            test_path = File.join("spec", @require_path, "cli", "commands", "#{file_name}_spec.rb")
             test_dir = File.dirname(test_path)
             mkdir(test_dir) unless File.directory?(test_dir)
 
@@ -141,13 +141,13 @@ module Gempilot
             RUBY
             create_file(test_path, content)
           else
-            test_path = File.join("test", @gem_name, "cli", "commands", "#{file_name}_test.rb")
+            test_path = File.join("test", @require_path, "cli", "commands", "#{file_name}_test.rb")
             test_dir = File.dirname(test_path)
             mkdir(test_dir) unless File.directory?(test_dir)
 
             content = <<~RUBY
               require "test_helper"
-              require "#{@gem_name}/cli"
+              require "#{@require_path}/cli"
               require "stringio"
 
               module #{@gem_module}
@@ -168,7 +168,7 @@ module Gempilot
 
         def add_test_file(namespaces, class_name, segments)
           if @test_framework == :rspec
-            test_path = File.join("spec", @gem_name, *segments[1..]) + "_spec.rb"
+            test_path = File.join("spec", @require_path, *segments[1..]) + "_spec.rb"
             test_dir = File.dirname(test_path)
             mkdir(test_dir) unless File.directory?(test_dir)
 
@@ -181,7 +181,7 @@ module Gempilot
             RUBY
             create_file(test_path, content)
           else
-            test_path = File.join("test", @gem_name, *segments[1..]) + "_test.rb"
+            test_path = File.join("test", @require_path, *segments[1..]) + "_test.rb"
             test_dir = File.dirname(test_path)
             mkdir(test_dir) unless File.directory?(test_dir)
 
