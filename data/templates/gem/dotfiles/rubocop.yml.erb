@@ -1,7 +1,11 @@
 ---
 plugins:
 - rubocop-performance
+<% if @test_framework == :minitest -%>
 - rubocop-minitest
+<% elsif @test_framework == :rspec -%>
+- rubocop-rspec
+<% end -%>
 - rubocop-rake
 - rubocop-md
 AllCops:

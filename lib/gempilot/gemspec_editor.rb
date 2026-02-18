@@ -1,5 +1,3 @@
-
-#require_relative "../../../snick/lib/snick"
 require 'snick'
 require "rubocop"
 module Gempilot

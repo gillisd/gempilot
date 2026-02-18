@@ -1,13 +1,20 @@
-
 source "https://rubygems.org"
 
 gemspec
 
+<% if @test_framework == :minitest -%>
 gem "minitest"
 gem "minitest-reporters"
+<% elsif @test_framework == :rspec -%>
+gem "rspec", "~> 3.0"
+<% end -%>
 gem "rake"
 gem "rubocop"
 gem "rubocop-performance"
 gem "rubocop-rake"
+<% if @test_framework == :minitest -%>
 gem "rubocop-minitest"
+<% elsif @test_framework == :rspec -%>
+gem "rubocop-rspec"
+<% end -%>
 gem "rubocop-md"

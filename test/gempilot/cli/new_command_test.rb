@@ -109,6 +109,79 @@ module Gempilot
         assert_includes version_rb, "module MyCoolGem"
       end
 
+      def test_rubocop_yml_is_valid_yaml
+        run_new_command("test_gem")
+
+        content = File.read("test_gem/.rubocop.yml")
+
+        refute_includes content, "<%"
+        assert_includes content, "rubocop-minitest"
+      end
+
+      # RSpec support tests
+
+      def test_rspec_creates_spec_directory
+        run_new_command("test_gem", "--test", "rspec")
+
+        assert File.directory?("test_gem/spec")
+        refute File.directory?("test_gem/test")
+      end
+
+      def test_rspec_creates_spec_files
+        run_new_command("test_gem", "--test", "rspec")
+
+        assert_path_exists "test_gem/spec/spec_helper.rb"
+        assert_path_exists "test_gem/spec/test_gem_spec.rb"
+        assert_path_exists "test_gem/.rspec"
+      end
+
+      def test_rspec_spec_helper_content
+        run_new_command("test_gem", "--test", "rspec")
+
+        helper = File.read("test_gem/spec/spec_helper.rb")
+
+        assert_includes helper, 'require "test_gem"'
+        assert_includes helper, "RSpec.configure"
+        assert_includes helper, "disable_monkey_patching!"
+      end
+
+      def test_rspec_spec_file_content
+        run_new_command("test_gem", "--test", "rspec")
+
+        spec_file = File.read("test_gem/spec/test_gem_spec.rb")
+
+        assert_includes spec_file, "RSpec.describe TestGem"
+        assert_includes spec_file, "TestGem::VERSION"
+      end
+
+      def test_rspec_gemfile_has_rspec_gem
+        run_new_command("test_gem", "--test", "rspec")
+
+        gemfile = File.read("test_gem/Gemfile")
+
+        assert_includes gemfile, 'gem "rspec"'
+        refute_includes gemfile, 'gem "minitest"'
+      end
+
+      def test_rspec_rakefile_has_rspec_task
+        run_new_command("test_gem", "--test", "rspec")
+
+        rakefile = File.read("test_gem/Rakefile")
+
+        assert_includes rakefile, "rspec/core/rake_task"
+        assert_includes rakefile, ":spec"
+        refute_includes rakefile, "minitest"
+      end
+
+      def test_rspec_rubocop_has_rspec_plugin
+        run_new_command("test_gem", "--test", "rspec")
+
+        rubocop = File.read("test_gem/.rubocop.yml")
+
+        assert_includes rubocop, "rubocop-rspec"
+        refute_includes rubocop, "rubocop-minitest"
+      end
+
       private
 
       def run_new_command(gem_name, *extra_args)

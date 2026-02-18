@@ -1,9 +1,20 @@
-
 require "bundler/gem_tasks"
+<% if @test_framework == :minitest -%>
 require "minitest/test_task"
+<% elsif @test_framework == :rspec -%>
+require "rspec/core/rake_task"
+<% end -%>
 require "rubocop/rake_task"
 
+<% if @test_framework == :minitest -%>
 Minitest::TestTask.create
+<% elsif @test_framework == :rspec -%>
+RSpec::Core::RakeTask.new(:spec)
+<% end -%>
 RuboCop::RakeTask.new
 
+<% if @test_framework == :minitest -%>
 task default: [:test, :rubocop]
+<% elsif @test_framework == :rspec -%>
+task default: [:spec, :rubocop]
+<% end -%>
