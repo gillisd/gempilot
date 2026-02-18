@@ -13,6 +13,13 @@ RSpec::Core::RakeTask.new(:spec)
 <% end -%>
 RuboCop::RakeTask.new
 
+namespace :zeitwerk do
+  desc "Verify all files follow Zeitwerk naming conventions"
+  task :validate do
+    ruby "-e", "require '<%= @gem_name %>'; <%= @module_name %>::LOADER.eager_load(force: true); puts 'Zeitwerk: All files loaded successfully.'"
+  end
+end
+
 <% if @test_framework == :minitest -%>
 task default: [:test, :rubocop]
 <% elsif @test_framework == :rspec -%>

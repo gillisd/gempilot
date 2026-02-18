@@ -26,7 +26,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_dependency "command_kit"
-  spec.add_dependency "command_mapper"
+
   spec.add_dependency "rake"
   spec.add_dependency "zeitwerk"
   spec.metadata["rubygems_mfa_required"] = "true"

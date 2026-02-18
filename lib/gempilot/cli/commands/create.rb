@@ -137,10 +137,12 @@ module Gempilot
           if @test_framework == :rspec
             erb "spec/spec_helper.rb.erb",   "#{@gem_name}/spec/spec_helper.rb"
             erb "spec/gem_name_spec.rb.erb", "#{@gem_name}/spec/#{@gem_name.tr('-', '_')}_spec.rb"
+            erb "spec/zeitwerk_spec.rb.erb", "#{@gem_name}/spec/zeitwerk_spec.rb"
             erb "rspec.erb",                 "#{@gem_name}/.rspec"
           else
             erb "test/test_helper.rb.erb",   "#{@gem_name}/test/test_helper.rb"
             erb "test/gem_name_test.rb.erb", "#{@gem_name}/test/#{@gem_name.tr('-', '_')}_test.rb"
+            erb "test/zeitwerk_test.rb.erb", "#{@gem_name}/test/zeitwerk_test.rb"
           end
 
           # Dev files

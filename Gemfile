@@ -12,7 +12,7 @@ gem "debug", "~> 1.10"
 gem "irb", "~> 1.15"
 gem "minitest"
 gem "rake", require: false
-gem "snick", path: Pathname.new(__dir__).parent.join("snick").to_s
+
 
 gem "minitest-reporters"
 

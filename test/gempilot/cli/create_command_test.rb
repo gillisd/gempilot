@@ -46,7 +46,8 @@ module Gempilot
         main_rb = File.read("test_gem/lib/test_gem.rb")
 
         assert_includes main_rb, 'require "zeitwerk"'
-        assert_includes main_rb, "Zeitwerk::Loader.for_gem"
+        assert_includes main_rb, "LOADER = Zeitwerk::Loader.for_gem"
+        assert_includes main_rb, "LOADER.setup"
         assert_includes main_rb, "module TestGem"
       end
 
@@ -312,6 +313,39 @@ module Gempilot
 
         assert_includes rubocop, "rubocop-rspec"
         refute_includes rubocop, "rubocop-minitest"
+      end
+
+      # Zeitwerk validation tests
+
+      def test_creates_zeitwerk_test_file
+        run_create_command("test_gem")
+
+        assert_path_exists "test_gem/test/zeitwerk_test.rb"
+
+        content = File.read("test_gem/test/zeitwerk_test.rb")
+
+        assert_includes content, "class ZeitwerkTest < Minitest::Test"
+        assert_includes content, "TestGem::LOADER.eager_load(force: true)"
+      end
+
+      def test_rspec_creates_zeitwerk_spec_file
+        run_create_command("test_gem", "--test", "rspec")
+
+        assert_path_exists "test_gem/spec/zeitwerk_spec.rb"
+
+        content = File.read("test_gem/spec/zeitwerk_spec.rb")
+
+        assert_includes content, 'RSpec.describe "Zeitwerk"'
+        assert_includes content, "TestGem::LOADER.eager_load(force: true)"
+      end
+
+      def test_rakefile_includes_zeitwerk_validate_task
+        run_create_command("test_gem")
+
+        rakefile = File.read("test_gem/Rakefile")
+
+        assert_includes rakefile, "namespace :zeitwerk"
+        assert_includes rakefile, "eager_load"
       end
 
       private

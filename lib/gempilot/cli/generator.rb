@@ -78,9 +78,13 @@ module Gempilot
 
       def sh(command, *arguments)
         print_action "run", [command, *arguments].join(" ")
-        Bundler.with_unbundled_env do
+        success = Bundler.with_unbundled_env do
           system(command, *arguments)
         end
+        unless success
+          puts colors.yellow("Warning: '#{[command, *arguments].join(' ')}' exited with non-zero status")
+        end
+        success
       end
     end
   end
