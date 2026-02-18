@@ -9,7 +9,11 @@ module Gempilot
       def setup
         @tmpdir = Dir.mktmpdir("new_command_test")
         @original_dir = Dir.pwd
+
         Dir.chdir(@tmpdir)
+        FileUtils.mkdir_p("lib/my_gem")
+        FileUtils.mkdir_p("test")
+        File.write("my_gem.gemspec", 'Gem::Specification.new { |s| s.name = "my_gem" }')
       end
 
       def teardown
@@ -17,325 +21,160 @@ module Gempilot
         FileUtils.rm_rf(@tmpdir)
       end
 
-      def test_creates_gem_directory_structure
-        run_new_command("test_gem")
+      # --- Class generation ---
 
-        assert File.directory?("test_gem")
-        assert File.directory?("test_gem/lib")
-        assert File.directory?("test_gem/lib/test_gem")
-        assert File.directory?("test_gem/test")
-        assert File.directory?("test_gem/bin")
+      def test_new_class_creates_lib_file
+        run_new_command("class", "MyGem::Authentication")
+        assert_path_exists "lib/my_gem/authentication.rb"
       end
 
-      def test_creates_gemspec
-        run_new_command("test_gem")
-
-        gemspec = File.read("test_gem/test_gem.gemspec")
-
-        assert_includes gemspec, 'spec.name = "test_gem"'
-        assert_includes gemspec, "TestGem::VERSION"
-        assert_includes gemspec, '"Test Author"'
-        assert_includes gemspec, '"test@example.com"'
-        assert_includes gemspec, '"A test gem"'
-        refute_includes gemspec, "TODO"
+      def test_new_class_creates_correct_module_nesting
+        run_new_command("class", "MyGem::Authentication")
+        content = File.read("lib/my_gem/authentication.rb")
+        assert_includes content, "module MyGem"
+        assert_includes content, "class Authentication"
       end
 
-      def test_creates_lib_with_zeitwerk
-        run_new_command("test_gem")
-
-        main_rb = File.read("test_gem/lib/test_gem.rb")
-
-        assert_includes main_rb, 'require "zeitwerk"'
-        assert_includes main_rb, "Zeitwerk::Loader.for_gem"
-        assert_includes main_rb, "module TestGem"
+      def test_new_class_with_nested_constant_creates_directories
+        run_new_command("class", "MyGem::Services::Authentication")
+        assert File.directory?("lib/my_gem/services")
+        assert_path_exists "lib/my_gem/services/authentication.rb"
       end
 
-      def test_creates_version_file
-        run_new_command("test_gem")
-
-        version_rb = File.read("test_gem/lib/test_gem/version.rb")
-
-        assert_includes version_rb, "module TestGem"
-        assert_includes version_rb, 'VERSION = "0.0.1"'
+      def test_new_class_with_nested_constant_has_correct_nesting
+        run_new_command("class", "MyGem::Services::Authentication")
+        content = File.read("lib/my_gem/services/authentication.rb")
+        assert_includes content, "module MyGem"
+        assert_includes content, "module Services"
+        assert_includes content, "class Authentication"
       end
 
-      def test_creates_test_helper
-        run_new_command("test_gem")
-
-        test_helper = File.read("test_gem/test/test_helper.rb")
-
-        assert_includes test_helper, "minitest/autorun"
-        assert_includes test_helper, "minitest/reporters"
-        assert_includes test_helper, 'require "test_gem"'
+      def test_new_class_with_deeply_nested_constant
+        run_new_command("class", "MyGem::Services::Auth::TokenValidator")
+        content = File.read("lib/my_gem/services/auth/token_validator.rb")
+        assert_includes content, "module MyGem"
+        assert_includes content, "module Services"
+        assert_includes content, "module Auth"
+        assert_includes content, "class TokenValidator"
       end
 
-      def test_creates_test_file
-        run_new_command("test_gem")
-
-        test_file = File.read("test_gem/test/test_gem_test.rb")
-
-        assert_includes test_file, "class TestGemTest < Minitest::Test"
-        assert_includes test_file, "TestGem::VERSION"
+      def test_new_class_does_not_create_frozen_string_literal
+        run_new_command("class", "MyGem::Authentication")
+        content = File.read("lib/my_gem/authentication.rb")
+        refute_includes content, "frozen_string_literal"
       end
 
-      def test_bin_scripts_are_executable
-        run_new_command("test_gem")
-
-        assert File.executable?("test_gem/bin/console")
-        assert File.executable?("test_gem/bin/setup")
+      def test_new_class_with_constant_notation
+        run_new_command("class", "MyGem::SomeNameSpace::NewClass")
+        assert_path_exists "lib/my_gem/some_name_space/new_class.rb"
+        content = File.read("lib/my_gem/some_name_space/new_class.rb")
+        assert_includes content, "module MyGem"
+        assert_includes content, "module SomeNameSpace"
+        assert_includes content, "class NewClass"
       end
 
-      def test_creates_config_files
-        run_new_command("test_gem")
+      # --- Test file generation ---
 
-        assert_path_exists "test_gem/.rubocop.yml"
-        assert_path_exists "test_gem/.gitignore"
-        assert_path_exists "test_gem/.ruby-version"
+      def test_new_class_creates_minitest_file
+        run_new_command("class", "MyGem::Authentication")
+        assert_path_exists "test/my_gem/authentication_test.rb"
+        content = File.read("test/my_gem/authentication_test.rb")
+        assert_includes content, 'require "test_helper"'
+        assert_includes content, "module MyGem"
+        assert_includes content, "Minitest::Test"
       end
 
-      def test_exe_flag_creates_executable
-        run_new_command("test_gem", "--exe")
-
-        assert File.directory?("test_gem/exe")
-        assert_path_exists "test_gem/exe/test_gem"
-        assert File.executable?("test_gem/exe/test_gem")
+      def test_new_class_creates_rspec_file_when_spec_dir_exists
+        FileUtils.rm_rf("test")
+        FileUtils.mkdir_p("spec")
+        run_new_command("class", "MyGem::Authentication")
+        assert_path_exists "spec/my_gem/authentication_spec.rb"
+        content = File.read("spec/my_gem/authentication_spec.rb")
+        assert_includes content, 'require "spec_helper"'
+        assert_includes content, "RSpec.describe MyGem::Authentication"
       end
 
-      def test_inflects_module_name_correctly
-        run_new_command("my_cool_gem")
-
-        version_rb = File.read("my_cool_gem/lib/my_cool_gem/version.rb")
-
-        assert_includes version_rb, "module MyCoolGem"
+      def test_new_class_creates_nested_test_file
+        run_new_command("class", "MyGem::Services::Authentication")
+        assert_path_exists "test/my_gem/services/authentication_test.rb"
       end
 
-      def test_rubocop_yml_is_valid_yaml
-        run_new_command("test_gem")
+      # --- Module generation ---
 
-        content = File.read("test_gem/.rubocop.yml")
-
-        refute_includes content, "<%"
-        assert_includes content, "rubocop-minitest"
+      def test_new_module_creates_lib_file
+        run_new_command("module", "MyGem::Middleware")
+        assert_path_exists "lib/my_gem/middleware.rb"
+        content = File.read("lib/my_gem/middleware.rb")
+        assert_includes content, "module MyGem"
+        assert_includes content, "module Middleware"
+        refute_includes content, "class"
       end
 
-      # RSpec support tests
-
-      def test_rspec_creates_spec_directory
-        run_new_command("test_gem", "--test", "rspec")
-
-        assert File.directory?("test_gem/spec")
-        refute File.directory?("test_gem/test")
+      def test_new_module_does_not_create_test_file
+        run_new_command("module", "MyGem::Middleware")
+        refute_path_exists "test/my_gem/middleware_test.rb"
       end
 
-      def test_rspec_creates_spec_files
-        run_new_command("test_gem", "--test", "rspec")
-
-        assert_path_exists "test_gem/spec/spec_helper.rb"
-        assert_path_exists "test_gem/spec/test_gem_spec.rb"
-        assert_path_exists "test_gem/.rspec"
+      def test_new_module_with_nested_constant
+        run_new_command("module", "MyGem::Services::Concerns")
+        content = File.read("lib/my_gem/services/concerns.rb")
+        assert_includes content, "module MyGem"
+        assert_includes content, "module Services"
+        assert_includes content, "module Concerns"
       end
 
-      def test_rspec_spec_helper_content
-        run_new_command("test_gem", "--test", "rspec")
+      # --- Command generation ---
 
-        helper = File.read("test_gem/spec/spec_helper.rb")
+      def test_new_command_creates_command_file
+        FileUtils.mkdir_p("lib/my_gem/cli/commands")
+        run_new_command("command", "deploy")
 
-        assert_includes helper, 'require "test_gem"'
-        assert_includes helper, "RSpec.configure"
-        assert_includes helper, "disable_monkey_patching!"
+        assert_path_exists "lib/my_gem/cli/commands/deploy.rb"
+
+        content = File.read("lib/my_gem/cli/commands/deploy.rb")
+
+        assert_includes content, "class Deploy < Command"
+        assert_includes content, "module MyGem"
+        assert_includes content, "module Commands"
+        assert_includes content, "description"
       end
 
-      def test_rspec_spec_file_content
-        run_new_command("test_gem", "--test", "rspec")
+      # --- Error handling ---
 
-        spec_file = File.read("test_gem/spec/test_gem_spec.rb")
-
-        assert_includes spec_file, "RSpec.describe TestGem"
-        assert_includes spec_file, "TestGem::VERSION"
-      end
-
-      def test_rspec_gemfile_has_rspec_gem
-        run_new_command("test_gem", "--test", "rspec")
-
-        gemfile = File.read("test_gem/Gemfile")
-
-        assert_includes gemfile, 'gem "rspec"'
-        refute_includes gemfile, 'gem "minitest"'
-      end
-
-      def test_rspec_rakefile_has_rspec_task
-        run_new_command("test_gem", "--test", "rspec")
-
-        rakefile = File.read("test_gem/Rakefile")
-
-        assert_includes rakefile, "rspec/core/rake_task"
-        assert_includes rakefile, ":spec"
-        refute_includes rakefile, "minitest"
-      end
-
-      def test_git_branch_flag_passes_branch_to_git_init
-        sh_calls = []
+      def test_new_fails_without_gemspec
+        FileUtils.rm("my_gem.gemspec")
         stdout = StringIO.new
-        args = [
-          "--author", "Test Author",
-          "--email", "test@example.com",
-          "--summary", "A test gem",
-          "--ruby-version", "3.4.8",
-          "--test", "minitest",
-          "--no-exe",
-          "--git",
-          "--branch", "develop",
-          "test_gem"
-        ]
-
         command = Commands::New.new(stdout: stdout)
-        command.define_singleton_method(:sh) do |cmd, *arguments|
-          sh_calls << [cmd, *arguments]
-        end
-        command.main(args)
 
-        git_init_call = sh_calls.find { |call| call[0] == "git" && call[1] == "init" }
+        exit_code = command.main(["class", "MyGem::Foo"])
 
-        assert git_init_call, "Expected a 'git init' call"
-        assert_includes git_init_call, "-b"
-        assert_includes git_init_call, "develop"
+        assert_equal 1, exit_code
       end
 
-      def test_sh_runs_inside_unbundled_env
-        system_calls = []
+      def test_new_fails_with_unknown_type
         stdout = StringIO.new
-        args = [
-          "--author", "Test Author",
-          "--email", "test@example.com",
-          "--summary", "A test gem",
-          "--ruby-version", "3.4.8",
-          "--test", "minitest",
-          "--no-exe",
-          "--no-git",
-          "test_gem"
-        ]
-
         command = Commands::New.new(stdout: stdout)
-        # Stub system (not sh) so the real sh method runs with Bundler.with_unbundled_env
-        command.define_singleton_method(:system) do |cmd, *arguments|
-          system_calls << {
-            command: [cmd, *arguments],
-            bundle_gemfile: ENV["BUNDLE_GEMFILE"]
-          }
-          true
-        end
-        command.main(args)
 
-        bundle_call = system_calls.find { |c| c[:command].first == "bundle" }
-        assert bundle_call, "Expected a 'bundle' system call"
-        assert_nil bundle_call[:bundle_gemfile],
-          "bundle install should run without BUNDLE_GEMFILE set (inside Bundler.with_unbundled_env)"
+        exit_code = command.main(["widget", "MyGem::Foo"])
+
+        assert_equal 1, exit_code
       end
 
-      def test_generated_files_have_no_leading_blank_lines
-        run_new_command("test_gem")
+      def test_new_fails_with_wrong_gem_module
+        stdout = StringIO.new
+        command = Commands::New.new(stdout: stdout)
 
-        files = [
-          "test_gem/lib/test_gem.rb",
-          "test_gem/lib/test_gem/version.rb",
-          "test_gem/test/test_helper.rb",
-          "test_gem/test/test_gem_test.rb",
-          "test_gem/test_gem.gemspec"
-        ]
+        exit_code = command.main(["class", "WrongGem::Foo"])
 
-        files.each do |path|
-          content = File.read(path)
-          refute content.start_with?("\n"),
-            "#{path} should not start with a blank line"
-        end
-      end
-
-      def test_gemfile_gems_are_alphabetically_ordered
-        run_new_command("test_gem")
-
-        gemfile = File.read("test_gem/Gemfile")
-        gem_lines = gemfile.lines.select { |l| l.start_with?('gem "') }
-        gem_names = gem_lines.map { |l| l[/gem "([^"]+)"/, 1] }
-
-        assert_equal gem_names.sort, gem_names,
-          "Gems in Gemfile should be in alphabetical order"
-      end
-
-      def test_version_constant_is_frozen
-        run_new_command("test_gem")
-
-        version_rb = File.read("test_gem/lib/test_gem/version.rb")
-
-        assert_includes version_rb, '.freeze',
-          "VERSION constant should be frozen"
-      end
-
-      def test_rubocop_yml_uses_correct_namespaces
-        run_new_command("test_gem")
-
-        content = File.read("test_gem/.rubocop.yml")
-
-        refute_includes content, "Style/RedundantLineBreak",
-          "Should use Layout/RedundantLineBreak, not Style/RedundantLineBreak"
-      end
-
-      def test_rspec_generated_files_have_no_leading_blank_lines
-        run_new_command("test_gem", "--test", "rspec")
-
-        files = [
-          "test_gem/lib/test_gem.rb",
-          "test_gem/test_gem.gemspec"
-        ]
-
-        files.each do |path|
-          content = File.read(path)
-          refute content.start_with?("\n"),
-            "#{path} should not start with a blank line"
-        end
-      end
-
-      def test_rspec_gemfile_gems_are_alphabetically_ordered
-        run_new_command("test_gem", "--test", "rspec")
-
-        gemfile = File.read("test_gem/Gemfile")
-        gem_lines = gemfile.lines.select { |l| l.start_with?('gem "') }
-        gem_names = gem_lines.map { |l| l[/gem "([^"]+)"/, 1] }
-
-        assert_equal gem_names.sort, gem_names,
-          "Gems in Gemfile should be in alphabetical order"
-      end
-
-      def test_rspec_rubocop_has_rspec_plugin
-        run_new_command("test_gem", "--test", "rspec")
-
-        rubocop = File.read("test_gem/.rubocop.yml")
-
-        assert_includes rubocop, "rubocop-rspec"
-        refute_includes rubocop, "rubocop-minitest"
+        assert_equal 1, exit_code
       end
 
       private
 
-      def run_new_command(gem_name, *extra_args)
+      def run_new_command(type, path)
         stdout = StringIO.new
-        args = [
-          "--author", "Test Author",
-          "--email", "test@example.com",
-          "--summary", "A test gem",
-          "--ruby-version", "3.4.8",
-          "--test", "minitest",
-          "--no-exe",
-          "--no-git",
-          *extra_args,
-          gem_name
-        ]
-
         command = Commands::New.new(stdout: stdout)
-        # Stub bundle install to avoid network calls in tests
-        command.define_singleton_method(:sh) do |cmd, *arguments|
-          # Skip actual shell commands in tests
-        end
-        command.main(args)
+        command.main([type, path])
       end
     end
   end

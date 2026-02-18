@@ -1,4 +1,3 @@
-
 require_relative "../command"
 require_relative "../generator"
 require "command_kit/inflector"
@@ -9,176 +8,178 @@ module Gempilot
       class New < Command
         include Generator
 
-        template_dir File.join(Gempilot::ROOT, "data", "templates", "gem")
+        template_dir File.join(Gempilot::ROOT, "data", "templates", "new")
 
-        usage "[options] GEM_NAME"
-        description "Create a new gem"
+        usage "[options] TYPE CONSTANT"
+        description "Generate a class, module, or command in an existing gem"
 
         examples [
-          "my_gem",
-          "--test rspec my_gem",
-          "--exe --git my_gem",
-          "--git --branch main my_gem",
-          "--summary 'A web scraper' my_gem"
+          "class MyGem::Authentication",
+          "class MyGem::Services::Authentication",
+          "module MyGem::Middleware",
+          "command deploy"
         ]
 
-        option :summary, value: { type: String },
-                         desc: "Gem summary"
+        argument :type, required: false,
+                        desc: "Type to generate (class, module, command)"
 
-        option :author, value: {
-                          type: String,
-                          default: -> { `git config user.name`.strip }
-                        },
-                        desc: "Author name"
+        argument :path, required: false,
+                        desc: "Fully-qualified constant (e.g., MyGem::Services::Auth) or command name"
 
-        option :email, value: {
-                         type: String,
-                         default: -> { `git config user.email`.strip }
-                       },
-                       desc: "Author email"
-
-        option :ruby_version, value: {
-                                type: String,
-                                default: RUBY_VERSION
-                              },
-                              desc: "Minimum Ruby version"
-
-        option :test, value: {
-                        type: { "minitest" => :minitest, "rspec" => :rspec }
-                      },
-                      desc: "Test framework"
-
-        option :exe, long: '--[no-]exe', desc: "Create an executable"
-
-        option :git, long: '--[no-]git', desc: "Initialize git repo"
-
-        option :branch, value: { type: String },
-                        desc: "Git branch name"
-
-        argument :gem_name, required: false,
-                            desc: "Name of the gem"
-
-        def run(gem_name = nil)
-          puts colors.bold("Creating gem...")
-          puts
-
-          @gem_name = gem_name || begin
-            puts colors.bright_black("The gem name determines the directory, require path, and gemspec name.")
-            ask(colors.green("Gem name"), required: true)
+        def run(type = nil, path = nil)
+          type = type || begin
+            puts colors.bright_black("What kind of component do you want to add?")
+            ask_multiple_choice(colors.green("Type"), %w[class module command])
           end
 
-          @module_name = CommandKit::Inflector.camelize(@gem_name)
-          @author = options[:author]
-          @email = options[:email]
+          detect_gem_context
 
-          @summary = options[:summary] || begin
+          path = path || begin
             puts
-            puts colors.bright_black("A short (one line) summary of what your gem does.")
-            ask(colors.green("Summary"), default: "A new Ruby gem")
+            puts colors.bright_black("Fully-qualified constant name (e.g., #{@gem_module}::Services::Authentication).")
+            ask(colors.green("Constant"), required: true)
           end
 
-          @ruby_version = options[:ruby_version]
-
-          @test_framework = options[:test] || begin
-            puts
-            puts colors.bright_black("Choose a test framework for your gem:")
-            puts "  * #{colors.bold("Minitest")} - https://github.com/minitest/minitest"
-            puts "  * #{colors.bold("RSpec")}    - https://rspec.info"
-            ask_multiple_choice(colors.green("Test framework"), {"minitest" => :minitest, "rspec" => :rspec})
-          end
-
-          unless options.has_key?(:exe)
-            puts
-            puts colors.bright_black("An executable in exe/ lets users run your gem from the command line.")
-            options[:exe] = ask_yes_or_no(colors.green("Create an executable"), default: false)
-          end
-
-          unless options.has_key?(:git)
-            puts
-            puts colors.bright_black("Initialize a git repository with an initial commit.")
-            options[:git] = ask_yes_or_no(colors.green("Initialize git repo"), default: true)
-          end
-
-          if options[:git]
-            @branch = options[:branch] || begin
-              puts
-              puts colors.bright_black("The default branch name for the new git repository.")
-              ask(colors.green("Branch name"), default: "master")
-            end
-          end
-
-          puts
-          puts colors.bright_white("Creating gem '") + colors.bold(colors.cyan(@gem_name)) + colors.bright_white("'...")
-          puts
-
-          # Directory structure
-          mkdir @gem_name
-          mkdir "#{@gem_name}/lib"
-          mkdir "#{@gem_name}/lib/#{@gem_name}"
-          mkdir "#{@gem_name}/bin"
-          mkdir "#{@gem_name}/exe" if options[:exe]
-
-          if @test_framework == :rspec
-            mkdir "#{@gem_name}/spec"
+          case type
+          when "class"   then add_class(path)
+          when "module"  then add_module(path)
+          when "command" then add_command(path)
           else
-            mkdir "#{@gem_name}/test"
-          end
-
-          # Core files
-          erb "gemspec.erb",                  "#{@gem_name}/#{@gem_name}.gemspec"
-          erb "Gemfile.erb",                  "#{@gem_name}/Gemfile"
-          erb "Rakefile.erb",                 "#{@gem_name}/Rakefile"
-          erb "README.md.erb",               "#{@gem_name}/README.md"
-          erb "LICENSE.txt.erb",             "#{@gem_name}/LICENSE.txt"
-          erb "lib/gem_name.rb.erb",         "#{@gem_name}/lib/#{@gem_name}.rb"
-          erb "lib/gem_name/version.rb.erb", "#{@gem_name}/lib/#{@gem_name}/version.rb"
-
-          # Test files
-          if @test_framework == :rspec
-            erb "spec/spec_helper.rb.erb",   "#{@gem_name}/spec/spec_helper.rb"
-            erb "spec/gem_name_spec.rb.erb", "#{@gem_name}/spec/#{@gem_name.tr('-', '_')}_spec.rb"
-            erb "rspec.erb",                 "#{@gem_name}/.rspec"
-          else
-            erb "test/test_helper.rb.erb",   "#{@gem_name}/test/test_helper.rb"
-            erb "test/gem_name_test.rb.erb", "#{@gem_name}/test/#{@gem_name.tr('-', '_')}_test.rb"
-          end
-
-          # Dev files
-          erb "bin/console.erb",             "#{@gem_name}/bin/console"
-          erb "bin/setup.erb",               "#{@gem_name}/bin/setup"
-          chmod "+x", "#{@gem_name}/bin/console"
-          chmod "+x", "#{@gem_name}/bin/setup"
-
-          # Config files
-          erb "dotfiles/rubocop.yml.erb",    "#{@gem_name}/.rubocop.yml"
-          cp "dotfiles/gitignore",           "#{@gem_name}/.gitignore"
-          erb "dotfiles/ruby-version.erb",   "#{@gem_name}/.ruby-version"
-
-          # Optional executable
-          if options[:exe]
-            erb "exe/gem_name.erb", "#{@gem_name}/exe/#{@gem_name}"
-            chmod "+x", "#{@gem_name}/exe/#{@gem_name}"
-          end
-
-          # Bundle install
-          cd @gem_name do
-            sh "bundle", "install"
-          end
-
-          # Git init
-          if options[:git]
-            cd @gem_name do
-              sh "git", "init", "-q", "-b", @branch
-              sh "git", "add", "."
-              sh "git", "commit", "-q", "-m", "Initial commit."
-            end
+            puts colors.red("Unknown type '#{type}'. Use class, module, or command.")
+            exit 1
           end
         end
 
         private
 
-        def minor_version_for(version)
-          version.split(".")[0..1].join(".")
+        def detect_gem_context
+          gemspec = Dir.glob("*.gemspec").first
+
+          unless gemspec
+            puts colors.red("No gemspec found in current directory. Run this from your gem's root.")
+            exit 1
+          end
+
+          @gem_name = File.basename(gemspec, ".gemspec")
+          @gem_module = CommandKit::Inflector.camelize(@gem_name)
+          @test_framework = File.directory?("spec") ? :rspec : :minitest
+        end
+
+        def build_nested_source(namespaces, type_keyword, name)
+          lines = []
+          namespaces.each_with_index do |ns, i|
+            lines << "#{"  " * i}module #{ns}"
+          end
+
+          depth = namespaces.length
+          lines << "#{"  " * depth}#{type_keyword} #{name}"
+          lines << "#{"  " * depth}end"
+
+          namespaces.length.times do |i|
+            lines << "#{"  " * (namespaces.length - 1 - i)}end"
+          end
+
+          lines.join("\n") + "\n"
+        end
+
+        def parse_constant(constant)
+          parts = constant.split("::")
+          namespaces = parts[0...-1]
+          name = parts.last
+          segments = parts.map { |p| CommandKit::Inflector.underscore(p) }
+          [namespaces, name, segments]
+        end
+
+        def validate_gem_root!(root)
+          return if root == @gem_module
+
+          puts colors.red("Expected constant to start with #{@gem_module}, got #{root}")
+          exit 1
+        end
+
+        def add_class(constant)
+          namespaces, class_name, segments = parse_constant(constant)
+          validate_gem_root!(namespaces.first)
+          file_path = File.join("lib", *segments) + ".rb"
+
+          puts
+          puts colors.bright_white("Adding class ") + colors.bold(colors.cyan("#{namespaces.join('::')}::#{class_name}")) + colors.bright_white("...")
+          puts
+
+          dir = File.dirname(file_path)
+          mkdir(dir) unless File.directory?(dir)
+
+          source = build_nested_source(namespaces, "class", class_name)
+          create_file(file_path, source)
+
+          add_test_file(namespaces, class_name, segments)
+        end
+
+        def add_module(constant)
+          namespaces, mod_name, segments = parse_constant(constant)
+          validate_gem_root!(namespaces.first)
+          file_path = File.join("lib", *segments) + ".rb"
+
+          puts
+          puts colors.bright_white("Adding module ") + colors.bold(colors.cyan("#{namespaces.join('::')}::#{mod_name}")) + colors.bright_white("...")
+          puts
+
+          dir = File.dirname(file_path)
+          mkdir(dir) unless File.directory?(dir)
+
+          source = build_nested_source(namespaces, "module", mod_name)
+          create_file(file_path, source)
+        end
+
+        def add_command(name)
+          file_name = CommandKit::Inflector.underscore(name)
+          command_name = CommandKit::Inflector.camelize(name)
+          file_path = File.join("lib", @gem_name, "cli", "commands", file_name + ".rb")
+
+          puts
+          puts colors.bright_white("Adding command ") + colors.bold(colors.cyan(command_name)) + colors.bright_white("...")
+          puts
+
+          dir = File.dirname(file_path)
+          mkdir(dir) unless File.directory?(dir)
+
+          @command_name = command_name
+          @command_file_name = file_name
+          erb "command.rb.erb", file_path
+        end
+
+        def add_test_file(namespaces, class_name, segments)
+          if @test_framework == :rspec
+            test_path = File.join("spec", @gem_name, *segments[1..]) + "_spec.rb"
+            test_dir = File.dirname(test_path)
+            mkdir(test_dir) unless File.directory?(test_dir)
+
+            content = <<~RUBY
+              require "spec_helper"
+
+              RSpec.describe #{namespaces.join('::')}::#{class_name} do
+                pending "add some examples"
+              end
+            RUBY
+            create_file(test_path, content)
+          else
+            test_path = File.join("test", @gem_name, *segments[1..]) + "_test.rb"
+            test_dir = File.dirname(test_path)
+            mkdir(test_dir) unless File.directory?(test_dir)
+
+            content = <<~RUBY
+              require "test_helper"
+
+              module #{namespaces.first}
+                class #{(namespaces[1..] + [class_name]).join('::')}Test < Minitest::Test
+                  def test_placeholder
+                    assert true
+                  end
+                end
+              end
+            RUBY
+            create_file(test_path, content)
+          end
         end
       end
     end
