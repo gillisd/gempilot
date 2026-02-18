@@ -1,5 +1,6 @@
 require_relative "../command"
 require_relative "../generator"
+require_relative "../gem_context"
 require "command_kit/inflector"
 
 module Gempilot
@@ -7,6 +8,7 @@ module Gempilot
     module Commands
       class New < Command
         include Generator
+        include GemContext
 
         template_dir File.join(Gempilot::ROOT, "data", "templates", "new")
 
@@ -52,19 +54,6 @@ module Gempilot
 
         private
 
-        def detect_gem_context
-          gemspec = Dir.glob("*.gemspec").first
-
-          unless gemspec
-            puts colors.red("No gemspec found in current directory. Run this from your gem's root.")
-            exit 1
-          end
-
-          @gem_name = File.basename(gemspec, ".gemspec")
-          @gem_module = CommandKit::Inflector.camelize(@gem_name)
-          @test_framework = File.directory?("spec") ? :rspec : :minitest
-        end
-
         def build_nested_source(namespaces, type_keyword, name)
           lines = []
           namespaces.each_with_index do |ns, i|
@@ -80,21 +69,6 @@ module Gempilot
           end
 
           lines.join("\n") + "\n"
-        end
-
-        def parse_constant(constant)
-          parts = constant.split("::")
-          namespaces = parts[0...-1]
-          name = parts.last
-          segments = parts.map { |p| CommandKit::Inflector.underscore(p) }
-          [namespaces, name, segments]
-        end
-
-        def validate_gem_root!(root)
-          return if root == @gem_module
-
-          puts colors.red("Expected constant to start with #{@gem_module}, got #{root}")
-          exit 1
         end
 
         def add_class(constant)
@@ -146,6 +120,50 @@ module Gempilot
           @command_name = command_name
           @command_file_name = file_name
           erb "command.rb.erb", file_path
+
+          add_command_test_file(command_name, file_name)
+        end
+
+        def add_command_test_file(command_name, file_name)
+          if @test_framework == :rspec
+            test_path = File.join("spec", @gem_name, "cli", "commands", "#{file_name}_spec.rb")
+            test_dir = File.dirname(test_path)
+            mkdir(test_dir) unless File.directory?(test_dir)
+
+            content = <<~RUBY
+              require "spec_helper"
+
+              RSpec.describe #{@gem_module}::CLI::Commands::#{command_name} do
+                it "is defined" do
+                  expect(described_class).not_to be_nil
+                end
+              end
+            RUBY
+            create_file(test_path, content)
+          else
+            test_path = File.join("test", @gem_name, "cli", "commands", "#{file_name}_test.rb")
+            test_dir = File.dirname(test_path)
+            mkdir(test_dir) unless File.directory?(test_dir)
+
+            content = <<~RUBY
+              require "test_helper"
+              require "#{@gem_name}/cli"
+              require "stringio"
+
+              module #{@gem_module}
+                class CLI
+                  class #{command_name}Test < Minitest::Test
+                    def test_placeholder
+                      stdout = StringIO.new
+                      command = Commands::#{command_name}.new(stdout: stdout)
+                      assert command
+                    end
+                  end
+                end
+              end
+            RUBY
+            create_file(test_path, content)
+          end
         end
 
         def add_test_file(namespaces, class_name, segments)

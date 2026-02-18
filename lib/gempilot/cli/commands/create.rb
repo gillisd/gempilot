@@ -156,6 +156,11 @@ module Gempilot
           cp "dotfiles/gitignore",           "#{@gem_name}/.gitignore"
           erb "dotfiles/ruby-version.erb",   "#{@gem_name}/.ruby-version"
 
+          # CI
+          mkdir "#{@gem_name}/.github"
+          mkdir "#{@gem_name}/.github/workflows"
+          erb "dotfiles/github/workflows/ci.yml.erb", "#{@gem_name}/.github/workflows/ci.yml"
+
           # Optional executable
           if options[:exe]
             erb "exe/gem_name.erb", "#{@gem_name}/exe/#{@gem_name}"

@@ -348,6 +348,53 @@ module Gempilot
         assert_includes rakefile, "eager_load"
       end
 
+      # Gemspec tests
+
+      def test_gemspec_uses_git_ls_files
+        run_create_command("test_gem")
+
+        gemspec = File.read("test_gem/test_gem.gemspec")
+
+        assert_includes gemspec, "git"
+        assert_includes gemspec, "ls-files"
+        assert_includes gemspec, "IO.popen"
+      end
+
+      def test_gemspec_has_glob_fallback
+        run_create_command("test_gem")
+
+        gemspec = File.read("test_gem/test_gem.gemspec")
+
+        assert_includes gemspec, "Dir.glob"
+        assert_includes gemspec, "spec.files.empty?"
+      end
+
+      # CI workflow tests
+
+      def test_creates_ci_workflow
+        run_create_command("test_gem")
+
+        assert_path_exists "test_gem/.github/workflows/ci.yml"
+      end
+
+      def test_ci_workflow_has_test_step
+        run_create_command("test_gem")
+
+        ci = File.read("test_gem/.github/workflows/ci.yml")
+
+        assert_includes ci, "bundle exec rake test"
+        assert_includes ci, "bundle exec rake rubocop"
+      end
+
+      def test_rspec_ci_workflow_has_spec_step
+        run_create_command("test_gem", "--test", "rspec")
+
+        ci = File.read("test_gem/.github/workflows/ci.yml")
+
+        assert_includes ci, "bundle exec rake spec"
+        refute_includes ci, "bundle exec rake test"
+      end
+
       private
 
       def run_create_command(gem_name, *extra_args)

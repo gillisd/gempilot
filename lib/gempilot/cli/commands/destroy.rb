@@ -1,4 +1,5 @@
 require_relative "../command"
+require_relative "../gem_context"
 require "command_kit/inflector"
 require "fileutils"
 
@@ -6,6 +7,7 @@ module Gempilot
   class CLI
     module Commands
       class Destroy < Command
+        include GemContext
         usage "[options] TYPE CONSTANT"
         description "Remove a class, module, or command from an existing gem"
 
@@ -47,34 +49,6 @@ module Gempilot
 
         private
 
-        def detect_gem_context
-          gemspec = Dir.glob("*.gemspec").first
-
-          unless gemspec
-            puts colors.red("No gemspec found in current directory. Run this from your gem's root.")
-            exit 1
-          end
-
-          @gem_name = File.basename(gemspec, ".gemspec")
-          @gem_module = CommandKit::Inflector.camelize(@gem_name)
-          @test_framework = File.directory?("spec") ? :rspec : :minitest
-        end
-
-        def parse_constant(constant)
-          parts = constant.split("::")
-          namespaces = parts[0...-1]
-          name = parts.last
-          segments = parts.map { |p| CommandKit::Inflector.underscore(p) }
-          [namespaces, name, segments]
-        end
-
-        def validate_gem_root!(root)
-          return if root == @gem_module
-
-          puts colors.red("Expected constant to start with #{@gem_module}, got #{root}")
-          exit 1
-        end
-
         def destroy_class(constant)
           namespaces, _class_name, segments = parse_constant(constant)
           validate_gem_root!(namespaces.first)
@@ -107,6 +81,13 @@ module Gempilot
           file_name = CommandKit::Inflector.underscore(name)
           file_path = File.join("lib", @gem_name, "cli", "commands", file_name + ".rb")
           remove_file(file_path)
+
+          if @test_framework == :rspec
+            test_path = File.join("spec", @gem_name, "cli", "commands", "#{file_name}_spec.rb")
+          else
+            test_path = File.join("test", @gem_name, "cli", "commands", "#{file_name}_test.rb")
+          end
+          remove_file(test_path)
         end
 
         def remove_file(path)

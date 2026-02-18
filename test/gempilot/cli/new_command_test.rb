@@ -139,6 +139,29 @@ module Gempilot
         assert_includes content, "description"
       end
 
+      def test_new_command_creates_minitest_file
+        FileUtils.mkdir_p("lib/my_gem/cli/commands")
+        run_new_command("command", "deploy")
+
+        assert_path_exists "test/my_gem/cli/commands/deploy_test.rb"
+        content = File.read("test/my_gem/cli/commands/deploy_test.rb")
+        assert_includes content, 'require "test_helper"'
+        assert_includes content, "Minitest::Test"
+        assert_includes content, "Commands::Deploy"
+      end
+
+      def test_new_command_creates_rspec_file_when_spec_dir_exists
+        FileUtils.rm_rf("test")
+        FileUtils.mkdir_p("spec")
+        FileUtils.mkdir_p("lib/my_gem/cli/commands")
+        run_new_command("command", "deploy")
+
+        assert_path_exists "spec/my_gem/cli/commands/deploy_spec.rb"
+        content = File.read("spec/my_gem/cli/commands/deploy_spec.rb")
+        assert_includes content, 'require "spec_helper"'
+        assert_includes content, "RSpec.describe MyGem::CLI::Commands::Deploy"
+      end
+
       # --- Error handling ---
 
       def test_new_fails_without_gemspec

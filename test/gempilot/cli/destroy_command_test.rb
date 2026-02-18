@@ -113,6 +113,32 @@ module Gempilot
         refute_path_exists "lib/my_gem/cli/commands/deploy.rb"
       end
 
+      def test_destroy_command_removes_test_file
+        FileUtils.mkdir_p("lib/my_gem/cli/commands")
+        File.write("lib/my_gem/cli/commands/deploy.rb", "# command")
+        FileUtils.mkdir_p("test/my_gem/cli/commands")
+        File.write("test/my_gem/cli/commands/deploy_test.rb", "# test")
+
+        run_destroy_command("command", "deploy")
+
+        refute_path_exists "lib/my_gem/cli/commands/deploy.rb"
+        refute_path_exists "test/my_gem/cli/commands/deploy_test.rb"
+      end
+
+      def test_destroy_command_removes_rspec_test_file
+        FileUtils.rm_rf("test")
+        FileUtils.mkdir_p("spec")
+        FileUtils.mkdir_p("lib/my_gem/cli/commands")
+        File.write("lib/my_gem/cli/commands/deploy.rb", "# command")
+        FileUtils.mkdir_p("spec/my_gem/cli/commands")
+        File.write("spec/my_gem/cli/commands/deploy_spec.rb", "# spec")
+
+        run_destroy_command("command", "deploy")
+
+        refute_path_exists "lib/my_gem/cli/commands/deploy.rb"
+        refute_path_exists "spec/my_gem/cli/commands/deploy_spec.rb"
+      end
+
       # --- Error handling ---
 
       def test_destroy_fails_without_gemspec
