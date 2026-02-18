@@ -24,33 +24,33 @@ module Gempilot
       # --- Class generation ---
 
       def test_add_class_creates_lib_file
-        run_add_command("class", "authentication")
+        run_add_command("class", "MyGem::Authentication")
         assert_path_exists "lib/my_gem/authentication.rb"
       end
 
       def test_add_class_creates_correct_module_nesting
-        run_add_command("class", "authentication")
+        run_add_command("class", "MyGem::Authentication")
         content = File.read("lib/my_gem/authentication.rb")
         assert_includes content, "module MyGem"
         assert_includes content, "class Authentication"
       end
 
-      def test_add_class_with_nested_path_creates_directories
-        run_add_command("class", "services/authentication")
+      def test_add_class_with_nested_constant_creates_directories
+        run_add_command("class", "MyGem::Services::Authentication")
         assert File.directory?("lib/my_gem/services")
         assert_path_exists "lib/my_gem/services/authentication.rb"
       end
 
-      def test_add_class_with_nested_path_has_correct_nesting
-        run_add_command("class", "services/authentication")
+      def test_add_class_with_nested_constant_has_correct_nesting
+        run_add_command("class", "MyGem::Services::Authentication")
         content = File.read("lib/my_gem/services/authentication.rb")
         assert_includes content, "module MyGem"
         assert_includes content, "module Services"
         assert_includes content, "class Authentication"
       end
 
-      def test_add_class_with_deeply_nested_path
-        run_add_command("class", "services/auth/token_validator")
+      def test_add_class_with_deeply_nested_constant
+        run_add_command("class", "MyGem::Services::Auth::TokenValidator")
         content = File.read("lib/my_gem/services/auth/token_validator.rb")
         assert_includes content, "module MyGem"
         assert_includes content, "module Services"
@@ -58,16 +58,25 @@ module Gempilot
         assert_includes content, "class TokenValidator"
       end
 
-      def test_add_class_creates_frozen_string_literal
-        run_add_command("class", "authentication")
+      def test_add_class_does_not_create_frozen_string_literal
+        run_add_command("class", "MyGem::Authentication")
         content = File.read("lib/my_gem/authentication.rb")
-        assert content.start_with?("# frozen_string_literal: true")
+        refute_includes content, "frozen_string_literal"
+      end
+
+      def test_add_class_with_constant_notation
+        run_add_command("class", "MyGem::SomeNameSpace::NewClass")
+        assert_path_exists "lib/my_gem/some_name_space/new_class.rb"
+        content = File.read("lib/my_gem/some_name_space/new_class.rb")
+        assert_includes content, "module MyGem"
+        assert_includes content, "module SomeNameSpace"
+        assert_includes content, "class NewClass"
       end
 
       # --- Test file generation ---
 
       def test_add_class_creates_minitest_file
-        run_add_command("class", "authentication")
+        run_add_command("class", "MyGem::Authentication")
         assert_path_exists "test/my_gem/authentication_test.rb"
         content = File.read("test/my_gem/authentication_test.rb")
         assert_includes content, 'require "test_helper"'
@@ -78,7 +87,7 @@ module Gempilot
       def test_add_class_creates_rspec_file_when_spec_dir_exists
         FileUtils.rm_rf("test")
         FileUtils.mkdir_p("spec")
-        run_add_command("class", "authentication")
+        run_add_command("class", "MyGem::Authentication")
         assert_path_exists "spec/my_gem/authentication_spec.rb"
         content = File.read("spec/my_gem/authentication_spec.rb")
         assert_includes content, 'require "spec_helper"'
@@ -86,14 +95,14 @@ module Gempilot
       end
 
       def test_add_class_creates_nested_test_file
-        run_add_command("class", "services/authentication")
+        run_add_command("class", "MyGem::Services::Authentication")
         assert_path_exists "test/my_gem/services/authentication_test.rb"
       end
 
       # --- Module generation ---
 
       def test_add_module_creates_lib_file
-        run_add_command("module", "middleware")
+        run_add_command("module", "MyGem::Middleware")
         assert_path_exists "lib/my_gem/middleware.rb"
         content = File.read("lib/my_gem/middleware.rb")
         assert_includes content, "module MyGem"
@@ -102,12 +111,12 @@ module Gempilot
       end
 
       def test_add_module_does_not_create_test_file
-        run_add_command("module", "middleware")
+        run_add_command("module", "MyGem::Middleware")
         refute_path_exists "test/my_gem/middleware_test.rb"
       end
 
-      def test_add_module_with_nested_path
-        run_add_command("module", "services/concerns")
+      def test_add_module_with_nested_constant
+        run_add_command("module", "MyGem::Services::Concerns")
         content = File.read("lib/my_gem/services/concerns.rb")
         assert_includes content, "module MyGem"
         assert_includes content, "module Services"
@@ -137,7 +146,7 @@ module Gempilot
         stdout = StringIO.new
         command = Commands::Add.new(stdout: stdout)
 
-        exit_code = command.main(["class", "foo"])
+        exit_code = command.main(["class", "MyGem::Foo"])
 
         assert_equal 1, exit_code
       end
@@ -146,7 +155,16 @@ module Gempilot
         stdout = StringIO.new
         command = Commands::Add.new(stdout: stdout)
 
-        exit_code = command.main(["widget", "foo"])
+        exit_code = command.main(["widget", "MyGem::Foo"])
+
+        assert_equal 1, exit_code
+      end
+
+      def test_add_fails_with_wrong_gem_module
+        stdout = StringIO.new
+        command = Commands::Add.new(stdout: stdout)
+
+        exit_code = command.main(["class", "WrongGem::Foo"])
 
         assert_equal 1, exit_code
       end

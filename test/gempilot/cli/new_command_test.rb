@@ -201,6 +201,37 @@ module Gempilot
         assert_includes git_init_call, "develop"
       end
 
+      def test_sh_runs_inside_unbundled_env
+        system_calls = []
+        stdout = StringIO.new
+        args = [
+          "--author", "Test Author",
+          "--email", "test@example.com",
+          "--summary", "A test gem",
+          "--ruby-version", "3.4.8",
+          "--test", "minitest",
+          "--no-exe",
+          "--no-git",
+          "test_gem"
+        ]
+
+        command = Commands::New.new(stdout: stdout)
+        # Stub system (not sh) so the real sh method runs with Bundler.with_unbundled_env
+        command.define_singleton_method(:system) do |cmd, *arguments|
+          system_calls << {
+            command: [cmd, *arguments],
+            bundle_gemfile: ENV["BUNDLE_GEMFILE"]
+          }
+          true
+        end
+        command.main(args)
+
+        bundle_call = system_calls.find { |c| c[:command].first == "bundle" }
+        assert bundle_call, "Expected a 'bundle' system call"
+        assert_nil bundle_call[:bundle_gemfile],
+          "bundle install should run without BUNDLE_GEMFILE set (inside Bundler.with_unbundled_env)"
+      end
+
       def test_rspec_rubocop_has_rspec_plugin
         run_new_command("test_gem", "--test", "rspec")
 

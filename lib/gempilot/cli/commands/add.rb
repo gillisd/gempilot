@@ -10,13 +10,13 @@ module Gempilot
 
         template_dir File.join(Gempilot::ROOT, "data", "templates", "add")
 
-        usage "[options] TYPE PATH"
+        usage "[options] TYPE CONSTANT"
         description "Add a class, module, or command to an existing gem"
 
         examples [
-          "class authentication",
-          "class services/authentication",
-          "module middleware",
+          "class MyGem::Authentication",
+          "class MyGem::Services::Authentication",
+          "module MyGem::Middleware",
           "command deploy"
         ]
 
@@ -24,7 +24,7 @@ module Gempilot
                         desc: "Type to generate (class, module, command)"
 
         argument :path, required: false,
-                        desc: "Path relative to gem namespace (e.g., services/authentication)"
+                        desc: "Fully-qualified constant (e.g., MyGem::Services::Auth) or command name"
 
         def run(type = nil, path = nil)
           type = type || begin
@@ -32,13 +32,13 @@ module Gempilot
             ask_multiple_choice(colors.green("Type"), %w[class module command])
           end
 
+          detect_gem_context
+
           path = path || begin
             puts
-            puts colors.bright_black("Path relative to the gem namespace (e.g., services/authentication).")
-            ask(colors.green("Path"), required: true)
+            puts colors.bright_black("Fully-qualified constant name (e.g., #{@gem_module}::Services::Authentication).")
+            ask(colors.green("Constant"), required: true)
           end
-
-          detect_gem_context
 
           case type
           when "class"   then add_class(path)
@@ -82,17 +82,25 @@ module Gempilot
           lines.join("\n") + "\n"
         end
 
-        def parse_path(path)
-          segments = path.tr("-", "_").split("/")
-          modules = segments[0...-1].map { |s| CommandKit::Inflector.camelize(s) }
-          name = CommandKit::Inflector.camelize(segments.last)
-          [segments, modules, name]
+        def parse_constant(constant)
+          parts = constant.split("::")
+          namespaces = parts[0...-1]
+          name = parts.last
+          segments = parts.map { |p| CommandKit::Inflector.underscore(p) }
+          [namespaces, name, segments]
         end
 
-        def add_class(path)
-          segments, intermediate_modules, class_name = parse_path(path)
-          namespaces = [@gem_module] + intermediate_modules
-          file_path = File.join("lib", @gem_name, *segments) + ".rb"
+        def validate_gem_root!(root)
+          return if root == @gem_module
+
+          puts colors.red("Expected constant to start with #{@gem_module}, got #{root}")
+          exit 1
+        end
+
+        def add_class(constant)
+          namespaces, class_name, segments = parse_constant(constant)
+          validate_gem_root!(namespaces.first)
+          file_path = File.join("lib", *segments) + ".rb"
 
           puts
           puts colors.bright_white("Adding class ") + colors.bold(colors.cyan("#{namespaces.join('::')}::#{class_name}")) + colors.bright_white("...")
@@ -101,16 +109,16 @@ module Gempilot
           dir = File.dirname(file_path)
           mkdir(dir) unless File.directory?(dir)
 
-          source = "# frozen_string_literal: true\n\n" + build_nested_source(namespaces, "class", class_name)
+          source = build_nested_source(namespaces, "class", class_name)
           create_file(file_path, source)
 
           add_test_file(namespaces, class_name, segments)
         end
 
-        def add_module(path)
-          segments, intermediate_modules, mod_name = parse_path(path)
-          namespaces = [@gem_module] + intermediate_modules
-          file_path = File.join("lib", @gem_name, *segments) + ".rb"
+        def add_module(constant)
+          namespaces, mod_name, segments = parse_constant(constant)
+          validate_gem_root!(namespaces.first)
+          file_path = File.join("lib", *segments) + ".rb"
 
           puts
           puts colors.bright_white("Adding module ") + colors.bold(colors.cyan("#{namespaces.join('::')}::#{mod_name}")) + colors.bright_white("...")
@@ -119,13 +127,14 @@ module Gempilot
           dir = File.dirname(file_path)
           mkdir(dir) unless File.directory?(dir)
 
-          source = "# frozen_string_literal: true\n\n" + build_nested_source(namespaces, "module", mod_name)
+          source = build_nested_source(namespaces, "module", mod_name)
           create_file(file_path, source)
         end
 
-        def add_command(path)
-          segments, _, command_name = parse_path(path)
-          file_path = File.join("lib", @gem_name, "cli", "commands", segments.last + ".rb")
+        def add_command(name)
+          file_name = CommandKit::Inflector.underscore(name)
+          command_name = CommandKit::Inflector.camelize(name)
+          file_path = File.join("lib", @gem_name, "cli", "commands", file_name + ".rb")
 
           puts
           puts colors.bright_white("Adding command ") + colors.bold(colors.cyan(command_name)) + colors.bright_white("...")
@@ -135,19 +144,17 @@ module Gempilot
           mkdir(dir) unless File.directory?(dir)
 
           @command_name = command_name
-          @command_file_name = segments.last
+          @command_file_name = file_name
           erb "command.rb.erb", file_path
         end
 
         def add_test_file(namespaces, class_name, segments)
           if @test_framework == :rspec
-            test_path = File.join("spec", @gem_name, *segments) + "_spec.rb"
+            test_path = File.join("spec", @gem_name, *segments[1..]) + "_spec.rb"
             test_dir = File.dirname(test_path)
             mkdir(test_dir) unless File.directory?(test_dir)
 
             content = <<~RUBY
-              # frozen_string_literal: true
-
               require "spec_helper"
 
               RSpec.describe #{namespaces.join('::')}::#{class_name} do
@@ -156,13 +163,11 @@ module Gempilot
             RUBY
             create_file(test_path, content)
           else
-            test_path = File.join("test", @gem_name, *segments) + "_test.rb"
+            test_path = File.join("test", @gem_name, *segments[1..]) + "_test.rb"
             test_dir = File.dirname(test_path)
             mkdir(test_dir) unless File.directory?(test_dir)
 
             content = <<~RUBY
-              # frozen_string_literal: true
-
               require "test_helper"
 
               module #{namespaces.first}

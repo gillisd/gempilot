@@ -77,7 +77,9 @@ module Gempilot
 
       def sh(command, *arguments)
         print_action "run", [command, *arguments].join(" ")
-        system(command, *arguments)
+        Bundler.with_unbundled_env do
+          system(command, *arguments)
+        end
       end
     end
   end
