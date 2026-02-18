@@ -1,4 +1,3 @@
-
 require "test_helper"
 require "gempilot/cli"
 require "tmpdir"
@@ -32,6 +31,7 @@ module Gempilot
         run_new_command("test_gem")
 
         gemspec = File.read("test_gem/test_gem.gemspec")
+
         assert_includes gemspec, 'spec.name = "test_gem"'
         assert_includes gemspec, "TestGem::VERSION"
         assert_includes gemspec, '"Test Author"'
@@ -44,6 +44,7 @@ module Gempilot
         run_new_command("test_gem")
 
         main_rb = File.read("test_gem/lib/test_gem.rb")
+
         assert_includes main_rb, 'require "zeitwerk"'
         assert_includes main_rb, "Zeitwerk::Loader.for_gem"
         assert_includes main_rb, "module TestGem"
@@ -53,14 +54,16 @@ module Gempilot
         run_new_command("test_gem")
 
         version_rb = File.read("test_gem/lib/test_gem/version.rb")
+
         assert_includes version_rb, "module TestGem"
-        assert_includes version_rb, 'VERSION = "0.1.0"'
+        assert_includes version_rb, 'VERSION = "0.0.1"'
       end
 
       def test_creates_test_helper
         run_new_command("test_gem")
 
         test_helper = File.read("test_gem/test/test_helper.rb")
+
         assert_includes test_helper, "minitest/autorun"
         assert_includes test_helper, "minitest/reporters"
         assert_includes test_helper, 'require "test_gem"'
@@ -70,6 +73,7 @@ module Gempilot
         run_new_command("test_gem")
 
         test_file = File.read("test_gem/test/test_gem_test.rb")
+
         assert_includes test_file, "class TestGemTest < Minitest::Test"
         assert_includes test_file, "TestGem::VERSION"
       end
@@ -84,16 +88,16 @@ module Gempilot
       def test_creates_config_files
         run_new_command("test_gem")
 
-        assert File.exist?("test_gem/.rubocop.yml")
-        assert File.exist?("test_gem/.gitignore")
-        assert File.exist?("test_gem/.ruby-version")
+        assert_path_exists "test_gem/.rubocop.yml"
+        assert_path_exists "test_gem/.gitignore"
+        assert_path_exists "test_gem/.ruby-version"
       end
 
       def test_exe_flag_creates_executable
         run_new_command("test_gem", "--exe")
 
         assert File.directory?("test_gem/exe")
-        assert File.exist?("test_gem/exe/test_gem")
+        assert_path_exists "test_gem/exe/test_gem"
         assert File.executable?("test_gem/exe/test_gem")
       end
 
@@ -101,6 +105,7 @@ module Gempilot
         run_new_command("my_cool_gem")
 
         version_rb = File.read("my_cool_gem/lib/my_cool_gem/version.rb")
+
         assert_includes version_rb, "module MyCoolGem"
       end
 

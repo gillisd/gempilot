@@ -83,9 +83,9 @@ module Gempilot
           chmod "+x", "#{gem_name}/bin/setup"
 
           # Config files
-          cp ".rubocop.yml",                 "#{gem_name}/.rubocop.yml"
-          cp ".gitignore",                   "#{gem_name}/.gitignore"
-          erb ".ruby-version.erb",           "#{gem_name}/.ruby-version"
+          cp "dotfiles/rubocop.yml.erb",                 "#{gem_name}/.rubocop.yml"
+          cp "dotfiles/gitignore",                   "#{gem_name}/.gitignore"
+          erb "dotfiles/ruby-version.erb",           "#{gem_name}/.ruby-version"
 
           # Optional executable
           if options[:exe]
