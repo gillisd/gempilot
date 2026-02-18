@@ -1,0 +1,17 @@
+# frozen_string_literal: true
+
+require_relative "../command"
+
+module <%= @gem_module %>
+  class CLI
+    module Commands
+      class <%= @command_name %> < Command
+        description "TODO: describe the <%= @command_file_name %> command"
+
+        def run
+          puts "TODO: implement <%= @command_file_name %>"
+        end
+      end
+    end
+  end
+end

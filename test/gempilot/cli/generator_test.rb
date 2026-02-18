@@ -84,6 +84,16 @@ module Gempilot
 
         assert result
       end
+
+      def test_create_file_writes_content
+        path = File.join(@tmpdir, "test_output.rb")
+        content = "# hello\n"
+
+        @generator.create_file(path, content)
+
+        assert_path_exists path
+        assert_equal content, File.read(path)
+      end
     end
   end
 end

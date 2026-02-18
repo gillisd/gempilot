@@ -53,6 +53,11 @@ module Gempilot
         ::FileUtils.touch(path)
       end
 
+      def create_file(path, content)
+        print_action "create", path
+        File.write(path, content)
+      end
+
       def chmod(mode, path)
         print_action "chmod", path
         ::FileUtils.chmod(mode, path)
