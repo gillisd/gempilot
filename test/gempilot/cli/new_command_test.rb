@@ -173,6 +173,34 @@ module Gempilot
         refute_includes rakefile, "minitest"
       end
 
+      def test_git_branch_flag_passes_branch_to_git_init
+        sh_calls = []
+        stdout = StringIO.new
+        args = [
+          "--author", "Test Author",
+          "--email", "test@example.com",
+          "--summary", "A test gem",
+          "--ruby-version", "3.4.8",
+          "--test", "minitest",
+          "--no-exe",
+          "--git",
+          "--branch", "develop",
+          "test_gem"
+        ]
+
+        command = Commands::New.new(stdout: stdout)
+        command.define_singleton_method(:sh) do |cmd, *arguments|
+          sh_calls << [cmd, *arguments]
+        end
+        command.main(args)
+
+        git_init_call = sh_calls.find { |call| call[0] == "git" && call[1] == "init" }
+
+        assert git_init_call, "Expected a 'git init' call"
+        assert_includes git_init_call, "-b"
+        assert_includes git_init_call, "develop"
+      end
+
       def test_rspec_rubocop_has_rspec_plugin
         run_new_command("test_gem", "--test", "rspec")
 
@@ -191,6 +219,9 @@ module Gempilot
           "--email", "test@example.com",
           "--summary", "A test gem",
           "--ruby-version", "3.4.8",
+          "--test", "minitest",
+          "--no-exe",
+          "--no-git",
           *extra_args,
           gem_name
         ]
