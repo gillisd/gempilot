@@ -94,13 +94,13 @@ module Gempilot
           end
 
           # Bundle install
-          Dir.chdir(gem_name) do
+          cd gem_name do
             sh "bundle", "install"
           end
 
           # Git init
           if options[:git]
-            Dir.chdir(gem_name) do
+            cd gem_name do
               sh "git", "init", "-q", "-b", "main"
               sh "git", "add", "."
               sh "git", "commit", "-q", "-m", "Initial commit."
