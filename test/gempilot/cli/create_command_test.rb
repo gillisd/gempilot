@@ -20,11 +20,11 @@ module Gempilot
       def test_creates_gem_directory_structure
         run_create_command("test_gem")
 
-        assert File.directory?("test_gem")
-        assert File.directory?("test_gem/lib")
-        assert File.directory?("test_gem/lib/test_gem")
-        assert File.directory?("test_gem/test")
-        assert File.directory?("test_gem/bin")
+        assert_predicate Pathname("test_gem"), :directory?
+        assert_predicate Pathname("test_gem/lib"), :directory?
+        assert_predicate Pathname("test_gem/lib/test_gem"), :directory?
+        assert_predicate Pathname("test_gem/test"), :directory?
+        assert_predicate Pathname("test_gem/bin"), :directory?
       end
 
       def test_creates_gemspec
@@ -82,8 +82,8 @@ module Gempilot
       def test_bin_scripts_are_executable
         run_create_command("test_gem")
 
-        assert File.executable?("test_gem/bin/console")
-        assert File.executable?("test_gem/bin/setup")
+        assert_predicate Pathname("test_gem/bin/console"), :executable?
+        assert_predicate Pathname("test_gem/bin/setup"), :executable?
       end
 
       def test_creates_config_files
@@ -97,9 +97,9 @@ module Gempilot
       def test_exe_flag_creates_executable
         run_create_command("test_gem", "--exe")
 
-        assert File.directory?("test_gem/exe")
+        assert_predicate Pathname("test_gem/exe"), :directory?
         assert_path_exists "test_gem/exe/test_gem"
-        assert File.executable?("test_gem/exe/test_gem")
+        assert_predicate Pathname("test_gem/exe/test_gem"), :executable?
       end
 
       def test_inflects_module_name_correctly
@@ -124,8 +124,8 @@ module Gempilot
       def test_rspec_creates_spec_directory
         run_create_command("test_gem", "--test", "rspec")
 
-        assert File.directory?("test_gem/spec")
-        refute File.directory?("test_gem/test")
+        assert_predicate Pathname("test_gem/spec"), :directory?
+        refute_predicate Pathname("test_gem/test"), :directory?
       end
 
       def test_rspec_creates_spec_files
@@ -197,7 +197,7 @@ module Gempilot
 
         git_init_call = sh_calls.find { |call| call[0] == "git" && call[1] == "init" }
 
-        assert git_init_call, "Expected a 'git init' call"
+        refute_nil git_init_call, "Expected a 'git init' call"
         assert_includes git_init_call, "-b"
         assert_includes git_init_call, "develop"
       end
@@ -228,7 +228,7 @@ module Gempilot
         command.main(args)
 
         bundle_call = system_calls.find { |c| c[:command].first == "bundle" }
-        assert bundle_call, "Expected a 'bundle' system call"
+        refute_nil bundle_call, "Expected a 'bundle' system call"
         assert_nil bundle_call[:bundle_gemfile],
           "bundle install should run without BUNDLE_GEMFILE set (inside Bundler.with_unbundled_env)"
       end
@@ -319,8 +319,8 @@ module Gempilot
 
       def test_hyphenated_gem_creates_nested_lib_structure
         run_create_command("gempilot-encryption")
-        assert File.directory?("gempilot-encryption/lib/gempilot")
-        assert File.directory?("gempilot-encryption/lib/gempilot/encryption")
+        assert_predicate Pathname("gempilot-encryption/lib/gempilot"), :directory?
+        assert_predicate Pathname("gempilot-encryption/lib/gempilot/encryption"), :directory?
         assert_path_exists "gempilot-encryption/lib/gempilot/encryption.rb"
         assert_path_exists "gempilot-encryption/lib/gempilot/encryption/version.rb"
       end
@@ -493,7 +493,7 @@ module Gempilot
 
       def test_creates_rakelib_directory
         run_create_command("test_gem")
-        assert File.directory?("test_gem/rakelib")
+        assert_predicate Pathname("test_gem/rakelib"), :directory?
       end
 
       def test_creates_version_rake_task
