@@ -37,7 +37,7 @@ module Gempilot
 
       def test_new_class_with_nested_constant_creates_directories
         run_new_command("class", "MyGem::Services::Authentication")
-        assert File.directory?("lib/my_gem/services")
+        assert_predicate Pathname("lib/my_gem/services"), :directory?
         assert_path_exists "lib/my_gem/services/authentication.rb"
       end
 
