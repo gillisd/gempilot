@@ -9,7 +9,7 @@ gem "rubocop-performance"
 gem "rubocop-rake"
 
 gem "debug", "~> 1.10"
-gem "irb", "~> 1.15"
+gem "irb", "~> 1.17"
 gem "minitest"
 gem "rake", require: false
 
