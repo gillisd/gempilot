@@ -14,17 +14,9 @@ gem "irb", "~> 1.17"
 gem "minitest"
 gem "rake", require: false
 
-gem "minitest-reporters"
-
-gem "warning"
-
-gem "repl_type_completor"
-
-gem "observer"
-
-gem "zeitwerk"
-
-gem "rbs"
-
 gem "benchmark"
+gem "minitest-reporters"
 gem "rdoc"
+gem "repl_type_completor"
+gem "warning"
+gem "zeitwerk"
