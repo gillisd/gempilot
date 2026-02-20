@@ -3,7 +3,6 @@ plugins:
   - rubocop-performance
   - rubocop-minitest
   - rubocop-md
-  - rubocop-prefer_pathname
 AllCops:
   TargetRubyVersion: 4.0
   NewCops: enable
