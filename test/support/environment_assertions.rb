@@ -15,6 +15,7 @@ module Support
 
     def assert_file_contains(filename, content)
       file_content = expand_path(filename).read
+
       assert_includes file_content, content, "Expected #{filename} to contain #{content}"
     end
 
@@ -38,4 +39,3 @@ module Support
     end
   end
 end
-

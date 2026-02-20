@@ -40,7 +40,7 @@ module Gempilot
         command.main([])
 
         assert system_calls.any? { |call| call.include?("rake") && call.include?("release") },
-          "Expected rake release to be called"
+               "Expected rake release to be called"
       end
     end
   end

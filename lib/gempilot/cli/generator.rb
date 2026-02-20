@@ -1,4 +1,3 @@
-
 require "bundler"
 require "command_kit/colors"
 require "command_kit/file_utils"
@@ -27,16 +26,16 @@ module Gempilot
 
       attr_reader :template_dir
 
-      def initialize(**kwargs)
-        super(**kwargs)
+      def initialize(**)
+        super
 
-        unless (@template_dir = self.class.template_dir)
-          raise NotImplementedError, "#{self.class} did not define template_dir"
-        end
+        return if (@template_dir = self.class.template_dir)
+
+        raise NotImplementedError, "#{self.class} did not define template_dir"
       end
 
-      def print_action(command, source = nil, dest)
-        line = String.new
+      def print_action(command, dest, source = nil)
+        line = +""
         line << "\t" << colors.bold(colors.green(command))
         line << "\t" << colors.green(source) if source
         line << "\t" << colors.green(dest) if dest
@@ -65,27 +64,31 @@ module Gempilot
       end
 
       def cp(source, dest)
-        print_action "cp", source, dest
+        print_action "cp", dest, source
         ::FileUtils.cp(File.join(@template_dir, source), dest)
       end
 
       def erb(source, dest = nil)
-        print_action "erb", source, dest if dest
+        print_action "erb", dest, source if dest
 
         source_path = File.join(@template_dir, source)
         super(source_path, dest)
       end
 
+      # rubocop:disable Style/ArgumentsForwarding
       def sh(command, *arguments)
         print_action "run", [command, *arguments].join(" ")
         success = Bundler.with_unbundled_env do
           system(command, *arguments)
         end
         unless success
-          puts colors.yellow("Warning: '#{[command, *arguments].join(' ')}' exited with non-zero status")
+          puts colors.yellow(
+            "Warning: '#{[command, *arguments].join(' ')}' exited with non-zero status"
+          )
         end
         success
       end
+      # rubocop:enable Style/ArgumentsForwarding
     end
   end
 end

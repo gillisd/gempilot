@@ -83,7 +83,7 @@ module Gempilot
       def test_sh_runs_command
         result = @generator.sh("true")
 
-        assert_equal true, result
+        assert result
       end
 
       def test_create_file_writes_content

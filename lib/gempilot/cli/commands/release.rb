@@ -13,17 +13,18 @@ module Gempilot
         def run
           detect_gem_context
 
-          puts colors.bright_white("Releasing ") + colors.bold(colors.cyan(@gem_name)) + colors.bright_white("...")
+          gem_label = colors.bold(colors.cyan(@gem_name))
+          puts "#{colors.bright_white('Releasing ')}#{gem_label}#{colors.bright_white('...')}"
           puts
 
           success = Bundler.with_unbundled_env do
             system("bundle", "exec", "rake", "release")
           end
 
-          unless success
-            puts colors.red("Release failed. Check the output above for errors.")
-            exit 1
-          end
+          return if success
+
+          puts colors.red("Release failed. Check the output above for errors.")
+          exit 1
         end
       end
     end
