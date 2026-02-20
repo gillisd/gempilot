@@ -38,3 +38,12 @@ A CLI tool for creating and managing Ruby gems, built on CommandKit.
 
 ### Notes
 - AutoLoad uses block form in `cli.rb` with explicit `summary:` per command (lazy loading means descriptions aren't available at help time without this)
+
+
+## ISSUES
+
+1. After installing gem, I get error
+```
+gempilot
+/Users/davidgillis/.rbenv/versions/4.0.1/lib/ruby/gems/4.0.0/gems/gempilot-0.1.0/Gemfile not found
+```
