@@ -20,7 +20,9 @@ module Gempilot
             exit 1
           end
 
-          puts colors.bright_white("Starting console for ") + colors.bold(colors.cyan(@gem_name)) + colors.bright_white("...")
+          label = colors.bold(colors.cyan(@gem_name))
+          prefix = colors.bright_white("Starting console for ")
+          puts "#{prefix}#{label}#{colors.bright_white('...')}"
           puts
 
           Bundler.with_unbundled_env do

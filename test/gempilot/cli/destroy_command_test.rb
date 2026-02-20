@@ -25,6 +25,7 @@ module Gempilot
       def test_destroy_class_removes_lib_file
         create_class_file("lib/my_gem/authentication.rb")
         run_destroy_command("class", "MyGem::Authentication")
+
         refute_path_exists "lib/my_gem/authentication.rb"
       end
 
@@ -32,6 +33,7 @@ module Gempilot
         create_class_file("lib/my_gem/authentication.rb")
         create_test_file("test/my_gem/authentication_test.rb")
         run_destroy_command("class", "MyGem::Authentication")
+
         refute_path_exists "test/my_gem/authentication_test.rb"
       end
 
@@ -45,10 +47,10 @@ module Gempilot
 
         refute_path_exists "lib/my_gem/services/authentication.rb"
         refute_predicate Pathname("lib/my_gem/services"), :directory?,
-          "Empty parent directory lib/my_gem/services should be removed"
+                         "Empty parent directory lib/my_gem/services should be removed"
         refute_path_exists "test/my_gem/services/authentication_test.rb"
         refute_predicate Pathname("test/my_gem/services"), :directory?,
-          "Empty parent directory test/my_gem/services should be removed"
+                         "Empty parent directory test/my_gem/services should be removed"
       end
 
       def test_destroy_class_preserves_non_empty_parent_dirs
@@ -60,7 +62,7 @@ module Gempilot
 
         refute_path_exists "lib/my_gem/services/authentication.rb"
         assert_predicate Pathname("lib/my_gem/services"), :directory?,
-          "Non-empty parent directory should be preserved"
+                         "Non-empty parent directory should be preserved"
         assert_path_exists "lib/my_gem/services/authorization.rb"
       end
 
@@ -89,6 +91,7 @@ module Gempilot
       def test_destroy_module_removes_lib_file
         create_class_file("lib/my_gem/middleware.rb")
         run_destroy_command("module", "MyGem::Middleware")
+
         refute_path_exists "lib/my_gem/middleware.rb"
       end
 

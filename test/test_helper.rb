@@ -1,4 +1,3 @@
-require "pathname"
 require "rake"
 require "forwardable"
 require "minitest/autorun"

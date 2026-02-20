@@ -29,12 +29,14 @@ module Gempilot
       def test_bump_defaults_to_patch
         run_bump_command
         content = File.read("lib/my_gem/version.rb")
+
         assert_includes content, 'VERSION = "1.2.4"'
       end
 
       def test_bump_patch_explicit
         run_bump_command("patch")
         content = File.read("lib/my_gem/version.rb")
+
         assert_includes content, 'VERSION = "1.2.4"'
       end
 
@@ -43,6 +45,7 @@ module Gempilot
       def test_bump_minor
         run_bump_command("minor")
         content = File.read("lib/my_gem/version.rb")
+
         assert_includes content, 'VERSION = "1.3.0"'
       end
 
@@ -51,6 +54,7 @@ module Gempilot
       def test_bump_major
         run_bump_command("major")
         content = File.read("lib/my_gem/version.rb")
+
         assert_includes content, 'VERSION = "2.0.0"'
       end
 
@@ -59,6 +63,7 @@ module Gempilot
       def test_bump_preserves_module_wrapper
         run_bump_command("patch")
         content = File.read("lib/my_gem/version.rb")
+
         assert_includes content, "module MyGem"
         assert_includes content, "end"
       end
@@ -66,6 +71,7 @@ module Gempilot
       def test_bump_preserves_freeze
         run_bump_command("patch")
         content = File.read("lib/my_gem/version.rb")
+
         assert_includes content, ".freeze"
       end
 
@@ -79,6 +85,7 @@ module Gempilot
         RUBY
         run_bump_command("patch")
         content = File.read("lib/my_gem/version.rb")
+
         assert_includes content, 'VERSION = "0.1.1"'
       end
 
@@ -89,6 +96,7 @@ module Gempilot
         stdout = StringIO.new
         command = Commands::Bump.new(stdout: stdout)
         exit_code = command.main([])
+
         assert_equal 1, exit_code
       end
 
@@ -97,6 +105,7 @@ module Gempilot
         stdout = StringIO.new
         command = Commands::Bump.new(stdout: stdout)
         exit_code = command.main([])
+
         assert_equal 1, exit_code
       end
 
@@ -104,6 +113,7 @@ module Gempilot
         stdout = StringIO.new
         command = Commands::Bump.new(stdout: stdout)
         exit_code = command.main(["hotfix"])
+
         assert_equal 1, exit_code
       end
 
@@ -116,6 +126,7 @@ module Gempilot
         stdout = StringIO.new
         command = Commands::Bump.new(stdout: stdout)
         exit_code = command.main([])
+
         assert_equal 1, exit_code
       end
 
@@ -126,6 +137,7 @@ module Gempilot
         command = Commands::Bump.new(stdout: stdout)
         command.main(["patch"])
         output = stdout.string
+
         assert_includes output, "1.2.3"
         assert_includes output, "1.2.4"
       end

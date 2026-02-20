@@ -1,38 +1,69 @@
 # Gempilot
 
-TODO: Delete this and the text below, and describe your gem
+A CLI for creating and managing Ruby gems — like `bundle gem`, but with generators.
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/gempilot`. To experiment with that code, run `bin/console` for an interactive prompt.
+## Why gempilot?
+
+`bundle gem` scaffolds a gem and then you're on your own. Gempilot keeps helping:
+
+- **Generators** — `gempilot new class/module/command` creates files with proper Zeitwerk naming, module nesting, and matching test files. `gempilot destroy` reverses them cleanly.
+- **Zeitwerk autoloading** — generated gems use Zeitwerk out of the box with a validation rake task.
+- **Version management** — `gempilot bump patch/minor/major` edits `version.rb` directly. Generated gems include rake tasks for version bumps and tagged releases.
+- **CI included** — every gem gets a GitHub Actions workflow with tests and RuboCop.
+- **Test framework choice** — pick minitest or rspec at creation time; templates adapt accordingly.
 
 ## Installation
 
-TODO: Replace `UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG` with your gem name right after releasing it to RubyGems.org. Please do not do it earlier due to security reasons. Alternatively, replace this section with instructions to install your gem from git if you don't plan to release to RubyGems.org.
-
-Install the gem and add to the application's Gemfile by executing:
-
 ```bash
-bundle add UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
+gem install gempilot
 ```
 
-If bundler is not being used to manage dependencies, install the gem by executing:
+## Quick start
 
 ```bash
-gem install UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
+# Create a new gem
+gempilot create my_gem
+
+cd my_gem
+
+# Generate a class with a matching test file
+gempilot new class models/user
+
+# Generate a command (CommandKit subcommand)
+gempilot new command import
+
+# Remove a generated file and its test
+gempilot destroy class models/user
+
+# Bump the version
+gempilot bump minor
+
+# Run tests, then release
+bundle exec rake test
+gempilot release
 ```
 
-## Usage
+## Commands
 
-TODO: Write usage instructions here
+| Command | Description |
+|---------|-------------|
+| `gempilot create NAME` | Scaffold a new gem with Zeitwerk, CI, and version tasks |
+| `gempilot new TYPE NAME` | Generate a class, module, or command in an existing gem |
+| `gempilot destroy TYPE NAME` | Remove a generated class, module, or command |
+| `gempilot bump [LEVEL]` | Bump the gem version (patch, minor, or major) |
+| `gempilot release` | Release the gem to RubyGems (delegates to `rake release`) |
+| `gempilot console` | Start an interactive console with the gem loaded |
 
-## Development
+Run `gempilot COMMAND --help` for detailed usage on any command.
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+## What a generated gem includes
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
-
-## Contributing
-
-Bug reports and pull requests are welcome on GitHub at https://github.com/gillisd/gempilot.
+- [Zeitwerk](https://github.com/fxn/zeitwerk) autoloading with `rake zeitwerk:validate`
+- Test framework (minitest or rspec) with a Zeitwerk validation test
+- RuboCop with framework-appropriate plugins
+- GitHub Actions CI (`.github/workflows/ci.yml`)
+- Version management rake tasks (`version:current`, `version:bump`, `version:commit`, `release:full`)
+- `git ls-files`-based gemspec with `Dir.glob` fallback for non-git repos
 
 ## License
 

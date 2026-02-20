@@ -1,7 +1,6 @@
+require "tmpdir"
 
-require 'tmpdir'
-
-::Rake.module_eval do
+Rake.module_eval do
   def application
     Thread.current[:__application]
   end
@@ -20,10 +19,10 @@ module Support
 
     def_delegators :application, :invoke_task, :in_namespace
     def_delegators :application, :trace, :display_prerequisites
-    def_delegators :'self.class', :directory, :task, :file
+    def_delegators :"self.class", :directory, :task, :file
 
-    def self.create(**kwargs)
-      env = new(**kwargs)
+    def self.create(**)
+      env = new(**)
       env.start
     end
 
@@ -62,8 +61,8 @@ module Support
       raise "File not found: #{pathname}"
     end
 
-    def chdir(*args, **kwargs, &block)
-      FileUtils.chdir(*args, **kwargs, &block)
+    def chdir(...)
+      FileUtils.chdir(...)
     end
 
     def mkdir_p(dirname)
@@ -89,7 +88,7 @@ module Support
         .then { |it| it.exist? ? it.realpath : it.cleanpath }
     end
 
-    def open(filename, mode = 'r', &)
+    def open(filename, mode = "r", &)
       pathname = path_for filename
       mkdir_p pathname.parent
       @objects.add pathname
@@ -98,24 +97,24 @@ module Support
       raise "File not found: #{pathname.to_path}"
     end
 
-    def ln(source, target, **kwargs)
+    def ln(source, target, **)
       source_path = path_for source
       target_path = path_for target
 
       mkdir_p target_path.parent
       @objects.add target_path
-      FileUtils.ln source_path, target_path, **kwargs
+      FileUtils.ln(source_path, target_path, **)
     rescue Errno::ENOENT
       raise "File not found: #{source_path.to_path}"
     end
 
-    def ln_s(source, target, **kwargs)
+    def ln_s(source, target, **)
       source_path = path_for source
       target_path = path_for target
 
       mkdir_p target_path.parent
       @objects.add target_path
-      FileUtils.ln_s source_path, target_path, **kwargs
+      FileUtils.ln_s(source_path, target_path, **)
     rescue Errno::ENOENT
       raise "File not found: #{source_path.to_path}"
     rescue Errno::EEXIST
@@ -123,9 +122,10 @@ module Support
     end
 
     def write(filename, content)
-      open(filename, 'w') do |file|
-        file.write content
-      end
+      pathname = path_for filename
+      mkdir_p pathname.parent
+      @objects.add pathname
+      pathname.open("w") { |f| f.write content }
     rescue Errno::ENOENT
       raise "File not found: #{pathname.to_path}"
     end
@@ -164,17 +164,22 @@ module Support
         end
       end
 
-      FileUtils.rmdir workdir rescue nil
+      begin
+        FileUtils.rmdir workdir
+      rescue StandardError
+        nil
+      end
       Rake.application = nil
     end
 
     def wrap_pathname(object)
       expanded = Pathname
-                   .new(object)
-                   .expand_path
+        .new(object)
+        .expand_path
       if expanded.exist?
         return expanded.realpath
       end
+
       expanded
     end
 
@@ -187,7 +192,7 @@ module Support
 
     def remove_object(object, method:)
       if (path = wrap_pathname(object)) && @objects.member?(path)
-        if ensure_safe_operation!(path)
+        if safe_operation?(path)
           FileUtils.send(method, path)
         else
           warn "YOU ALMOST DELETED YOUR PROJECT DIR. THERE IS A BUG."
@@ -207,7 +212,7 @@ module Support
     end
 
     def add_object(object, method:)
-      if (path = wrap_pathname(object)) && ensure_safe_operation!(path)
+      if (path = wrap_pathname(object)) && safe_operation?(path)
         @objects.add wrap_pathname(object)
         FileUtils.send(method, object)
       else
@@ -223,12 +228,12 @@ module Support
       end
     end
 
-    def ensure_safe_operation!(path)
+    def safe_operation?(path)
       path.to_s.match?(%r{^/(?:private/)?var/folders/})
     end
 
     def save_rakefile
-      touch 'Rakefile'
+      touch "Rakefile"
     end
   end
 end

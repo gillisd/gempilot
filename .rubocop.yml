@@ -9,6 +9,7 @@ AllCops:
   Exclude:
     - bin/*
     - vendor/**/*
+    - docs/**/*
 Gemspec/RequiredRubyVersion:
   Enabled: false
 Layout/CaseIndentation:
@@ -70,7 +71,6 @@ Layout/LineLength:
   Max: 100
   Exclude:
     - "**/spec/**/*.rb"
-    - remap.gemspec
 Layout/MultilineHashKeyLineBreaks:
   Enabled: true
 Layout/MultilineMethodArgumentLineBreaks:
@@ -79,8 +79,6 @@ Layout/MultilineMethodCallBraceLayout:
   EnforcedStyle: symmetrical
 Layout/MultilineMethodCallIndentation:
   EnforcedStyle: indented
-Layout/RedundantLineBreak:
-  Enabled: true
 Layout/SpaceAroundMethodCallOperator:
   Enabled: true
 Layout/SpaceInLambdaLiteral:
@@ -90,11 +88,9 @@ Lint/AmbiguousBlockAssociation:
 Lint/ConstantDefinitionInBlock:
   Enabled: false
 Lint/EmptyBlock:
-  Exclude:
-    - lib/remap/base.rb
+  Enabled: true
 Lint/EmptyClass:
-  Exclude:
-    - lib/remap/nothing.rb
+  Enabled: false
 Lint/EmptyFile:
   Enabled: false
 Lint/RaiseException:
@@ -106,8 +102,7 @@ Lint/StructNewOverride:
 Lint/UnusedMethodArgument:
   Enabled: false
 Lint/Void:
-  Exclude:
-    - spec/unit/remap/state/extension_spec.rb
+  Enabled: true
 Metrics/AbcSize:
   Max: 40
 Metrics/BlockLength:
@@ -123,9 +118,7 @@ Naming/MethodName:
 Naming/MethodParameterName:
   Enabled: false
 Naming/PredicatePrefix:
-  Exclude:
-    - lib/remap/result.rb
-    - lib/remap/failure.rb
+  Enabled: true
 Performance/BlockGivenWithExplicitBlock:
   Enabled: true
 Style/Alias:
@@ -192,5 +185,7 @@ Style/BlockDelimiters:
   Enabled: false
 Style/ItBlockParameter:
   Enabled: false
-Style/RedundantLineBreak:
+Minitest/MultipleAssertions:
+  Max: 10
+Layout/RedundantLineBreak:
   Enabled: false

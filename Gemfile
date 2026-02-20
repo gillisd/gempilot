@@ -13,7 +13,6 @@ gem "irb", "~> 1.15"
 gem "minitest"
 gem "rake", require: false
 
-
 gem "minitest-reporters"
 
 gem "warning"
