@@ -6,6 +6,7 @@ gem "rubocop"
 gem "rubocop-md"
 gem "rubocop-minitest"
 gem "rubocop-performance"
+gem "rubocop-prefer_pathname"
 gem "rubocop-rake"
 
 gem "debug", "~> 1.10"
