@@ -42,8 +42,4 @@ A CLI tool for creating and managing Ruby gems, built on CommandKit.
 
 ## ISSUES
 
-1. After installing gem, I get error
-```
-gempilot
-/Users/davidgillis/.rbenv/versions/4.0.1/lib/ruby/gems/4.0.0/gems/gempilot-0.1.0/Gemfile not found
-```
+1. RESOLVED — `exe/gempilot` had unconditional `ENV["BUNDLE_GEMFILE"]` and `require "bundler/setup"`, causing `Gemfile not found` after `gem install`. Removed both lines; RubyGems handles load paths for installed gems. (Ronin avoids this with a conditional `Gemfile.lock` check, but gempilot's `exe/`+`bin/` separation makes that unnecessary.)
