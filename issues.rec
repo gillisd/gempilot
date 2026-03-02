@@ -1,0 +1,18 @@
+%rec: Issue
+%key: Id
+%type: Id int
+%type: Title line
+%type: Description line
+%type: Updated date
+%auto: Id Updated
+%mandatory: Title Description
+
+Id: 0
+Updated: Mon, 02 Mar 2026 10:31:07 -0500
+Title: Rake build triggers gem to be built twice?
+Description: Why am I seeing 2 messages about gempilot being built to pkg/gempilot-0.1.0.gem
+
+Id: 1
+Updated: Mon, 02 Mar 2026 10:31:39 -0500
+Title: rubocop-rake is not active
+Description: It should be active for this project
