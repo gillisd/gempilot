@@ -8,4 +8,8 @@ Minitest::TestTask.create
 
 RuboCop::RakeTask.new
 
-task default: [:test, :rubocop]
+multitask test_rubocop: [:test, :rubocop]
+
+task safe_build: [:test_rubocop, :build]
+
+task default: [:safe_build]
