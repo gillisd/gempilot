@@ -16,3 +16,13 @@ Id: 1
 Updated: Mon, 02 Mar 2026 10:31:39 -0500
 Title: rubocop-rake is not active
 Description: It should be active for this project
+
+Id: 2
+Updated: Mon, 02 Mar 2026 10:37:33 -0500
+Title: Error handling should be graceful
+Description: I did "gempilot create", and entered "A foo" as the title, and it crashed horrifically. This particular example should have validation at the minimum. Need to also use command kit's error bubbling/handling mechanism to swallow errors and print message to user. Can always use verbose or debug mode to see full trace.
+
+Id: 3
+Updated: Mon, 02 Mar 2026 11:25:24 -0500
+Title: Reduce dependencies
+Description:
