@@ -10,6 +10,13 @@ require "rubocop/rake_task"
 Minitest::TestTask.create
 <% elsif @test_framework == :rspec -%>
 RSpec::Core::RakeTask.new(:spec)
+
+namespace :spec do
+  desc "Prints the specification suite in documentation format and exits"
+  task :print do
+    exec('--format', 'documentation', '--dry-run')
+  end
+end
 <% end -%>
 RuboCop::RakeTask.new
 
