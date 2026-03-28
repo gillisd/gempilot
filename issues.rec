@@ -46,3 +46,8 @@ Id: 7
 Updated: Sat, 28 Mar 2026 12:48:05 -0400
 Title: Rake task version:bump should support "dev increments", like "0.2.1.dev3". Perhaps a task like "version:bump:dev" is created to allow for this
 Description: open
+
+Id: 8
+Updated: Sat, 28 Mar 2026 12:55:14 -0400
+Title: Hundreds of rubocop failures exist
+Description: These need to be addressed
