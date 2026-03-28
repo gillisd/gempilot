@@ -31,3 +31,18 @@ Id: 4
 Updated: Tue, 10 Mar 2026 17:40:50 -0400
 Title: irb is required now as a gem
 Description: Needs to go in template gemfile
+
+Id: 5
+Updated: Sat, 28 Mar 2026 12:46:06 -0400
+Title: Add a version:* rake task that supports just bumping and committing
+Description: Right now the only "combo" rake task for bumping version is the one that releases in full. Should make a composite one for more generalized purposes
+
+Id: 6
+Updated: Sat, 28 Mar 2026 12:46:54 -0400
+Title: Rake task version:commit should add version tag to commit
+Description: The commit should be tagged with git tag upon committing, as this is a key part of releasing
+
+Id: 7
+Updated: Sat, 28 Mar 2026 12:48:05 -0400
+Title: Rake task version:bump should support "dev increments", like "0.2.1.dev3". Perhaps a task like "version:bump:dev" is created to allow for this
+Description: open
