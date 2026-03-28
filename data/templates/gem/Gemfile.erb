@@ -4,7 +4,7 @@ gemspec
 
 <% if @test_framework == :minitest -%>
 gem "minitest"
-gem "minitest-reporters"
+gem "minitest-reporters", github: "minitest-reporters/minitest-reporters"
 <% end -%>
 gem "rake"
 <% if @test_framework == :rspec -%>
