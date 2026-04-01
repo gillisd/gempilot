@@ -6,6 +6,7 @@ require "fileutils"
 module Gempilot
   class CLI
     module Commands
+      ## Removes a class, module, or command from an existing gem.
       class Destroy < Command
         include GemContext
 

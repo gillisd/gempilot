@@ -5,6 +5,7 @@ require "bundler"
 module Gempilot
   class CLI
     module Commands
+      ## Launches an IRB session via the gem's +bin/console+ script.
       class Console < Command
         include GemContext
 

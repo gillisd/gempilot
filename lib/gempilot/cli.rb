@@ -5,6 +5,7 @@ require "command_kit/options/version"
 require_relative "../gempilot"
 
 module Gempilot
+  ## Top-level command router for the gempilot CLI.
   class CLI
     include CommandKit::Commands
     include CommandKit::Commands::AutoLoad.new(

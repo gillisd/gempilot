@@ -4,6 +4,7 @@ require_relative "../gem_context"
 module Gempilot
   class CLI
     module Commands
+      ## Bumps the VERSION constant in an existing gem's +version.rb+.
       class Bump < Command
         include GemContext
 

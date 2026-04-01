@@ -6,6 +6,7 @@ require "command_kit/inflector"
 module Gempilot
   class CLI
     module Commands
+      ## Generates a new class, module, or command inside an existing gem.
       class New < Command
         include Generator
         include GemContext
