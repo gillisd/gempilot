@@ -3,7 +3,7 @@ source "https://rubygems.org"
 gemspec
 
 gem "rubocop"
-gem "rubocop-md"
+gem "rubocop-claude"
 gem "rubocop-minitest"
 gem "rubocop-performance"
 gem "rubocop-rake"
