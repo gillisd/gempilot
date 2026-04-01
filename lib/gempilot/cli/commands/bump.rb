@@ -24,25 +24,36 @@ module Gempilot
         VERSION_PATTERN = /VERSION\s*=\s*"(\d+\.\d+\.\d+)"/
         def run(segment = "patch")
           detect_gem_context
-
-          segment = segment.downcase
-          unless %w[patch minor major].include?(segment)
-            puts colors.red("Unknown segment '#{segment}'. Use patch, minor, or major.")
-            exit 1
-          end
-
+          segment = validate_segment(segment)
           version_path = find_version_file
           old_version, new_version = bump_version(version_path, segment)
-
-          puts colors.bright_white("Bumped ") +
-               colors.bold(colors.cyan(@gem_name)) +
-               colors.bright_white(" from ") +
-               colors.yellow(old_version) +
-               colors.bright_white(" to ") +
-               colors.green(new_version)
+          print_bump_result(old_version, new_version)
         end
 
         private
+
+        def validate_segment(segment)
+          segment = segment.downcase
+          return segment if %w[patch minor major].include?(segment)
+
+          puts colors.red("Unknown segment '#{segment}'. Use patch, minor, or major.")
+          exit 1
+        end
+
+        def print_bump_result(old_version, new_version)
+          label = colored_gem_name
+          from = format_version_segment(" from ", colors.yellow(old_version))
+          to = format_version_segment(" to ", colors.green(new_version))
+          puts colors.bright_white("Bumped ") + label + from + to
+        end
+
+        def colored_gem_name
+          colors.bold(colors.cyan(@gem_name))
+        end
+
+        def format_version_segment(prefix, colored_version)
+          colors.bright_white(prefix) + colored_version
+        end
 
         def find_version_file
           path = File.join("lib", @require_path, "version.rb")
@@ -54,6 +65,13 @@ module Gempilot
         end
 
         def bump_version(path, segment)
+          old_version = read_current_version(path)
+          new_version = increment(old_version, segment)
+          write_new_version(path, new_version)
+          [old_version, new_version]
+        end
+
+        def read_current_version(path)
           source = File.read(path)
           match = source.match(VERSION_PATTERN)
 
@@ -62,19 +80,17 @@ module Gempilot
             exit 1
           end
 
-          old_version = match[1]
-          new_version = increment(old_version, segment)
+          match[1]
+        end
 
+        def write_new_version(path, new_version)
           File.open(path, File::RDWR, 0o644) do |f|
             f.flock(File::LOCK_EX)
             content = f.read
-            new_content = content.sub(VERSION_PATTERN, "VERSION = \"#{new_version}\"")
             f.rewind
-            f.write(new_content)
+            f.write(content.sub(VERSION_PATTERN, "VERSION = \"#{new_version}\""))
             f.truncate(f.pos)
           end
-
-          [old_version, new_version]
         end
 
         def increment(version, segment)

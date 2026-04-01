@@ -26,19 +26,26 @@ module Gempilot
                         desc: "Fully-qualified constant (e.g., MyGem::Services::Auth) or command name"
 
         def run(type = nil, path = nil)
-          type ||= begin
-            puts colors.bright_black("What kind of component do you want to destroy?")
-            ask_multiple_choice(colors.green("Type"), %w[class module command])
-          end
-
+          type ||= prompt_for_type
           detect_gem_context
+          path ||= prompt_for_path
+          dispatch_destroy(type, path)
+        end
 
-          path ||= begin
-            puts
-            puts colors.bright_black("Fully-qualified constant name (e.g., #{@gem_module}::Services::Authentication).")
-            ask(colors.green("Constant"), required: true)
-          end
+        private
 
+        def prompt_for_type
+          puts colors.bright_black("What kind of component do you want to destroy?")
+          ask_multiple_choice(colors.green("Type"), %w[class module command])
+        end
+
+        def prompt_for_path
+          puts
+          puts colors.bright_black("Fully-qualified constant name (e.g., #{@gem_module}::Services::Authentication).")
+          ask(colors.green("Constant"), required: true)
+        end
+
+        def dispatch_destroy(type, path)
           case type
           when "class"   then destroy_class(path)
           when "module"  then destroy_module(path)
@@ -49,22 +56,27 @@ module Gempilot
           end
         end
 
-        private
-
         def destroy_class(constant)
           namespaces, _class_name, segments = parse_constant(constant)
           validate_gem_root!(namespaces.first)
 
           lib_path = "#{File.join("lib", *segments)}.rb"
-
-          test_path = if @test_framework == :rspec
-                        "#{File.join("spec", @require_path, *segments[1..])}_spec.rb"
-                      else
-                        "#{File.join("test", @require_path, *segments[1..])}_test.rb"
-                      end
+          test_path = test_path_for(segments)
 
           remove_file(lib_path)
           remove_file(test_path)
+          cleanup_empty_dirs(lib_path, test_path)
+        end
+
+        def test_path_for(segments)
+          if @test_framework == :rspec
+            "#{File.join("spec", @require_path, *segments[1..])}_spec.rb"
+          else
+            "#{File.join("test", @require_path, *segments[1..])}_test.rb"
+          end
+        end
+
+        def cleanup_empty_dirs(lib_path, test_path)
           remove_empty_parents(File.dirname(lib_path), File.join("lib", @require_path))
           test_root = @test_framework == :rspec ? File.join("spec", @require_path) : File.join("test", @require_path)
           remove_empty_parents(File.dirname(test_path), test_root)
