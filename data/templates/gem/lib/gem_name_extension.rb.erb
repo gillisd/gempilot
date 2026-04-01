@@ -1,11 +1,19 @@
 require "zeitwerk"
 
 <% @module_parts.each_with_index do |part, i| -%>
+<%= "  " * i %>##
+<% if i == 0 -%>
+<%= "  " * i %># Top-level namespace for the <%= @gem_name %> gem.
+<% else -%>
+<%= "  " * i %># Extension namespace for <%= @module_parts[0..i].join("::") %>.
+<% end -%>
 <%= "  " * i %>module <%= part %>
 <% end -%>
 <%= "  " * @module_parts.size %>LOADER = Zeitwerk::Loader.for_gem_extension(<%= @base_module %>)
 <%= "  " * @module_parts.size %>LOADER.setup
 
+<%= "  " * @module_parts.size %>##
+<%= "  " * @module_parts.size %># Base error class for <%= @gem_name %>.
 <%= "  " * @module_parts.size %>class Error < StandardError; end
 <% @module_parts.size.times do |i| -%>
 <%= "  " * (@module_parts.size - 1 - i) %>end

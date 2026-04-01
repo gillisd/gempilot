@@ -1,185 +1,203 @@
----
+# ===========================================================================
+# RuboCop Configuration
+#
+# Base: Stock RuboCop defaults
+# AI guardrails: rubocop-claude plugin (all Claude/ cops + stricter metrics)
+# Performance: rubocop-performance (with chain-hostile cops disabled)
+#
+# Philosophy: idiomatic Ruby, pipeline-style chaining, strict for AI agents,
+# readable for humans.
+# ===========================================================================
+
 plugins:
-- rubocop-performance
+  - rubocop-claude
 <% if @test_framework == :minitest -%>
-- rubocop-minitest
+  - rubocop-minitest
 <% elsif @test_framework == :rspec -%>
-- rubocop-rspec
+  - rubocop-rspec
 <% end -%>
-- rubocop-rake
-- rubocop-md
+  - rubocop-performance
+  - rubocop-rake
+
 AllCops:
-  TargetRubyVersion: <%= minor_version_for @ruby_version %>
   NewCops: enable
+  TargetRubyVersion: <%= minor_version_for @ruby_version %>
   Exclude:
-  - bin/*
-  - vendor/**/*
+    - bin/*
+    - vendor/**/*
 <% if @hyphenated -%>
-  - lib/<%= @gem_name %>.rb
+    - lib/<%= @gem_name %>.rb
 <% end -%>
-Gemspec/RequiredRubyVersion:
-  Enabled: false
-Layout/CaseIndentation:
-  EnforcedStyle: end
-Layout/ClassStructure:
-  ExpectedOrder:
-  - module_inclusion
-  - constants
-  - association
-  - public_attribute_macros
-  - public_delegate
-  - macros
-  - public_class_methods
-  - initializer
-  - public_methods
-  - protected_attribute_macros
-  - protected_methods
-  - private_attribute_macros
-  - private_delegate
-  - private_methods
-  Enabled: true
-  Categories:
-    association:
-    - has_many
-    - has_one
-    attribute_macros:
-    - attr_accessor
-    - attr_reader
-    - attr_writer
-    - attribute
-    macros:
-    - validates
-    - validate
-    module_inclusion:
-    - include
-    - prepend
-    - extend
-Layout/ClosingParenthesisIndentation:
-  Enabled: true
-Layout/DefEndAlignment:
-  Enabled: true
-Layout/DotPosition:
-  EnforcedStyle: leading
-Layout/EmptyLinesAroundAttributeAccessor:
-  Enabled: true
-Layout/FirstArgumentIndentation:
-  EnforcedStyle: consistent
-Layout/FirstArrayElementIndentation:
-  EnforcedStyle: consistent
-Layout/FirstArrayElementLineBreak:
-  Enabled: true
-Layout/FirstHashElementIndentation:
-  EnforcedStyle: consistent
-Layout/FirstHashElementLineBreak:
-  Enabled: true
-Layout/HashAlignment:
-  Enabled: true
-Layout/MultilineHashKeyLineBreaks:
-  Enabled: true
-Layout/MultilineMethodArgumentLineBreaks:
-  Enabled: true
-Layout/MultilineMethodCallBraceLayout:
-  EnforcedStyle: symmetrical
-Layout/MultilineMethodCallIndentation:
-  EnforcedStyle: indented
-Layout/RedundantLineBreak:
-  Enabled: true
-Layout/SpaceAroundMethodCallOperator:
-  Enabled: true
-Layout/SpaceInLambdaLiteral:
-  EnforcedStyle: require_space
-Lint/AmbiguousBlockAssociation:
-  Enabled: false
-Lint/ConstantDefinitionInBlock:
-  Enabled: false
-Lint/EmptyFile:
-  Enabled: false
-Lint/RaiseException:
-  Enabled: true
-Lint/ShadowedException:
-  Enabled: false
-Lint/StructNewOverride:
-  Enabled: true
-Lint/UnusedMethodArgument:
-  Enabled: false
-Metrics/AbcSize:
-  Max: 40
-Metrics/BlockLength:
-  Enabled: false
-Metrics/ClassLength:
-  Enabled: false
-Metrics/MethodLength:
-  Enabled: false
-Metrics/ModuleLength:
-  Enabled: false
-Naming/MethodName:
-  Enabled: false
-Naming/MethodParameterName:
-  Enabled: false
-Performance/BlockGivenWithExplicitBlock:
-  Enabled: true
-Style/Alias:
-  EnforcedStyle: prefer_alias
-Style/BeginBlock:
-  Enabled: false
-Style/BlockDelimiters:
-  Enabled: false
-Style/CaseEquality:
-  Enabled: false
-Style/ClassAndModuleChildren:
-  Enabled: false
-Style/Documentation:
-  Enabled: false
-Style/EmptyCaseCondition:
-  Enabled: false
-Style/EndBlock:
-  Enabled: false
-Style/ExponentialNotation:
-  Enabled: true
-Style/FormatString:
-  EnforcedStyle: percent
-Style/FormatStringToken:
-  EnforcedStyle: unannotated
-Style/FrozenStringLiteralComment:
-  Enabled: false
-Style/GlobalVars:
-  Enabled: false
-Style/HashEachMethods:
-  Enabled: true
-Style/HashTransformKeys:
-  Enabled: true
-Style/HashTransformValues:
-  Enabled: true
-Style/IfUnlessModifier:
-  Enabled: false
-Style/ItAssignment:
-  Enabled: false
-Style/ItBlockParameter:
-  Enabled: false
-Style/Lambda:
-  EnforcedStyle: literal
-Style/MixinUsage:
-  Enabled: false
-Style/MultilineBlockChain:
-  Enabled: false
-Style/OpenStructUse:
-  Enabled: false
-Style/SignalException:
-  Enabled: false
-Style/SlicingWithRange:
-  Enabled: true
-Style/SpecialGlobalVars:
-  Enabled: false
-Style/StabbyLambdaParentheses:
-  EnforcedStyle: require_no_parentheses
+
+# ===========================================================================
+# Overrides from stock — personal style preferences
+# ===========================================================================
+
+# Double quotes everywhere. One less decision to make.
 Style/StringLiterals:
   EnforcedStyle: double_quotes
-Style/SymbolArray:
-  EnforcedStyle: brackets
-Style/SymbolProc:
-  Enabled: false
-Style/TrailingCommaInHashLiteral:
-  EnforcedStyleForMultiline: no_comma
-Style/WordArray:
-  EnforcedStyle: brackets
 
+Style/StringLiteralsInInterpolation:
+  EnforcedStyle: double_quotes
+
+# Frozen string literal is transitional cruft. Ruby 3.4 has chilled strings,
+# full default freeze is coming in a future Ruby.
+Style/FrozenStringLiteralComment:
+  EnforcedStyle: never
+
+# Pipeline style. Chaining multi-line blocks is the whole point.
+Style/MultilineBlockChain:
+  Enabled: false
+
+# Block delimiters are a taste call. Pipeline code uses braces for chaining,
+# do/end for side effects. No cop captures this nuance.
+Style/BlockDelimiters:
+  Enabled: false
+
+# Write arrays like arrays.
+Style/WordArray:
+  Enabled: false
+
+Style/SymbolArray:
+  Enabled: false
+
+# Argument indentation: consistent 2-space indent, not aligned to first arg.
+Layout/FirstArgumentIndentation:
+  EnforcedStyle: consistent
+
+# Dot-aligned chaining. Dots form a visual column.
+Layout/MultilineMethodCallIndentation:
+  EnforcedStyle: aligned
+
+# ===========================================================================
+# Overrides from rubocop-claude — loosen where pipeline style conflicts
+# ===========================================================================
+
+Claude/NoOverlyDefensiveCode:
+  MaxSafeNavigationChain: 2
+
+Style/SafeNavigation:
+  MaxChainLength: 2
+
+# Allow `return a, b` for tuple-style returns.
+Style/RedundantReturn:
+  AllowMultipleReturnValues: true
+
+# ===========================================================================
+# Overrides from rubocop-performance — disable chain-hostile cops
+# ===========================================================================
+
+Performance/ChainArrayAllocation:
+  Enabled: false
+
+Performance/MapMethodChain:
+  Enabled: false
+
+# ===========================================================================
+# Additional tightening — not set by stock or rubocop-claude
+# ===========================================================================
+
+# Short blocks push toward small chained steps instead of fat lambdas.
+Metrics/BlockLength:
+  Max: 8
+  CountAsOne:
+    - array
+    - hash
+    - heredoc
+    - method_call
+  AllowedMethods:
+    - command
+<% if @test_framework == :minitest -%>
+    - test
+<% elsif @test_framework == :rspec -%>
+    - describe
+    - context
+    - shared_examples
+    - shared_examples_for
+    - shared_context
+<% end -%>
+  Exclude:
+    - "<%= @gem_name %>.gemspec"
+    - "rakelib/**/*"
+
+# Gemspec and rake files use patterns that trigger Claude cops legitimately.
+Claude/NoFancyUnicode:
+  Exclude:
+    - "<%= @gem_name %>.gemspec"
+
+Claude/MysteryRegex:
+  Exclude:
+    - "rakelib/**/*"
+
+# Zeitwerk loaders are mutable by design — only flag literal mutable values.
+Style/MutableConstant:
+  EnforcedStyle: literals
+
+<% if @test_framework == :minitest -%>
+# Minitest tests can legitimately need many assertions per method
+# when verifying multi-step operations.
+Minitest/MultipleAssertions:
+  Max: 10
+<% elsif @test_framework == :rspec -%>
+# Shared test contexts legitimately define many helpers.
+RSpec/MultipleMemoizedHelpers:
+  Max: 10
+<% end -%>
+
+# Anonymous forwarding (*, **, &) breaks TruffleRuby, JRuby, and
+# Ruby < 3.2. Named args are explicit and portable.
+Style/ArgumentsForwarding:
+  Enabled: false
+
+# Explicit begin/rescue/end is clearer than implicit method-body rescue.
+Style/RedundantBegin:
+  Enabled: false
+
+# Compact class names are fine for small files and tests.
+Style/ClassAndModuleChildren:
+  Enabled: false
+
+# Classes get rdoc.
+Style/Documentation:
+  Enabled: true
+  Exclude:
+<% if @test_framework == :minitest -%>
+    - "test/**/*"
+<% elsif @test_framework == :rspec -%>
+    - "spec/**/*"
+<% end -%>
+
+# Trailing commas in multiline literals and arguments.
+Style/TrailingCommaInArrayLiteral:
+  EnforcedStyleForMultiline: comma
+
+Style/TrailingCommaInHashLiteral:
+  EnforcedStyleForMultiline: comma
+
+Style/TrailingCommaInArguments:
+  EnforcedStyleForMultiline: comma
+
+<% if @test_framework == :rspec -%>
+# ===========================================================================
+# RSpec — rubocop-rspec overrides
+# ===========================================================================
+
+# Not every describe block wraps a class.
+RSpec/DescribeClass:
+  Enabled: false
+
+# Subject placement is a readability call, not a rule.
+RSpec/LeadingSubject:
+  Enabled: false
+
+# Block style for expect { }.to change { } reads like a sentence.
+RSpec/ExpectChange:
+  EnforcedStyle: block
+
+RSpec/NamedSubject:
+  Enabled: false
+
+# have_file_content matcher accepts a filename string in expect()
+RSpec/ExpectActual:
+  Enabled: false
+<% end -%>
