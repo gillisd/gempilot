@@ -20,10 +20,10 @@ module Gempilot
             system("bundle", "exec", "rake", "release")
           end
 
-          unless success
-            puts colors.red("Release failed. Check the output above for errors.")
-            exit 1
-          end
+          return if success
+
+          puts colors.red("Release failed. Check the output above for errors.")
+          exit 1
         end
       end
     end

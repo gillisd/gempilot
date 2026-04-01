@@ -1,4 +1,3 @@
-
 require_relative "../command"
 require_relative "../generator"
 require "command_kit/inflector"
@@ -19,7 +18,7 @@ module Gempilot
           "--test rspec my_gem",
           "--exe --git my_gem",
           "--git --branch main my_gem",
-          "--summary 'A web scraper' my_gem"
+          "--summary 'A web scraper' my_gem",
         ]
 
         option :summary, value: { type: String },
@@ -27,30 +26,30 @@ module Gempilot
 
         option :author, value: {
                           type: String,
-                          default: -> { `git config user.name 2>/dev/null`.strip }
+                          default: -> { `git config user.name 2>/dev/null`.strip },
                         },
                         desc: "Author name"
 
         option :email, value: {
                          type: String,
-                         default: -> { `git config user.email 2>/dev/null`.strip }
+                         default: -> { `git config user.email 2>/dev/null`.strip },
                        },
                        desc: "Author email"
 
         option :ruby_version, value: {
                                 type: String,
-                                default: RUBY_VERSION
+                                default: RUBY_VERSION,
                               },
                               desc: "Minimum Ruby version"
 
         option :test, value: {
-                        type: { "minitest" => :minitest, "rspec" => :rspec }
+                        type: { "minitest" => :minitest, "rspec" => :rspec },
                       },
                       desc: "Test framework"
 
-        option :exe, long: '--[no-]exe', desc: "Create an executable"
+        option :exe, long: "--[no-]exe", desc: "Create an executable"
 
-        option :git, long: '--[no-]git', desc: "Initialize git repo"
+        option :git, long: "--[no-]git", desc: "Initialize git repo"
 
         option :branch, value: { type: String },
                         desc: "Git branch name"
@@ -96,16 +95,16 @@ module Gempilot
             puts colors.bright_black("Choose a test framework for your gem:")
             puts "  * #{colors.bold("Minitest")} - https://github.com/minitest/minitest"
             puts "  * #{colors.bold("RSpec")}    - https://rspec.info"
-            ask_multiple_choice(colors.green("Test framework"), {"minitest" => :minitest, "rspec" => :rspec})
+            ask_multiple_choice(colors.green("Test framework"), { "minitest" => :minitest, "rspec" => :rspec })
           end
 
-          unless options.has_key?(:exe)
+          unless options.key?(:exe)
             puts
             puts colors.bright_black("An executable in exe/ lets users run your gem from the command line.")
             options[:exe] = ask_yes_or_no(colors.green("Create an executable"), default: false)
           end
 
-          unless options.has_key?(:git)
+          unless options.key?(:git)
             puts
             puts colors.bright_black("Initialize a git repository with an initial commit.")
             options[:git] = ask_yes_or_no(colors.green("Initialize git repo"), default: true)
@@ -150,23 +149,21 @@ module Gempilot
           erb "lib/gem_name.rb.erb",         "#{@gem_name}/lib/#{@gem_name}.rb"
           erb "lib/gem_name/version.rb.erb", "#{@gem_name}/lib/#{@require_path}/version.rb"
 
-          if @hyphenated
-            erb "lib/gem_name_extension.rb.erb", "#{@gem_name}/lib/#{@require_path}.rb"
-          end
+          erb "lib/gem_name_extension.rb.erb", "#{@gem_name}/lib/#{@require_path}.rb" if @hyphenated
 
           # Version management rake tasks
           mkdir "#{@gem_name}/rakelib"
-          erb "rakelib/version.rake.erb",    "#{@gem_name}/rakelib/version.rake"
+          erb "rakelib/version.rake.erb", "#{@gem_name}/rakelib/version.rake"
 
           # Test files
           if @test_framework == :rspec
             erb "spec/spec_helper.rb.erb",   "#{@gem_name}/spec/spec_helper.rb"
-            erb "spec/gem_name_spec.rb.erb", "#{@gem_name}/spec/#{@gem_name.tr('-', '_')}_spec.rb"
+            erb "spec/gem_name_spec.rb.erb", "#{@gem_name}/spec/#{@gem_name.tr("-", "_")}_spec.rb"
             erb "spec/zeitwerk_spec.rb.erb", "#{@gem_name}/spec/zeitwerk_spec.rb"
             erb "rspec.erb",                 "#{@gem_name}/.rspec"
           else
             erb "test/test_helper.rb.erb",   "#{@gem_name}/test/test_helper.rb"
-            erb "test/gem_name_test.rb.erb", "#{@gem_name}/test/#{@gem_name.tr('-', '_')}_test.rb"
+            erb "test/gem_name_test.rb.erb", "#{@gem_name}/test/#{@gem_name.tr("-", "_")}_test.rb"
             erb "test/zeitwerk_test.rb.erb", "#{@gem_name}/test/zeitwerk_test.rb"
           end
 
@@ -198,12 +195,12 @@ module Gempilot
           end
 
           # Git init
-          if options[:git]
-            cd @gem_name do
-              sh "git", "init", "-q", "-b", @branch
-              sh "git", "add", "."
-              sh "git", "commit", "-q", "-m", "Initial commit."
-            end
+          return unless options[:git]
+
+          cd @gem_name do
+            sh "git", "init", "-q", "-b", @branch
+            sh "git", "add", "."
+            sh "git", "commit", "-q", "-m", "Initial commit."
           end
         end
 

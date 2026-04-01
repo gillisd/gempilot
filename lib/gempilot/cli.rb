@@ -1,4 +1,3 @@
-
 require "command_kit/commands"
 require "command_kit/commands/auto_load"
 require "command_kit/options/version"
@@ -9,8 +8,8 @@ module Gempilot
   class CLI
     include CommandKit::Commands
     include CommandKit::Commands::AutoLoad.new(
-      dir:       "#{__dir__}/cli/commands",
-      namespace: "#{self}::Commands"
+      dir: "#{__dir__}/cli/commands",
+      namespace: "#{self}::Commands",
     )
     include CommandKit::Options::Version
 

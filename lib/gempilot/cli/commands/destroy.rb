@@ -8,13 +8,14 @@ module Gempilot
     module Commands
       class Destroy < Command
         include GemContext
+
         usage "[options] TYPE CONSTANT"
         description "Remove a class, module, or command from an existing gem"
 
         examples [
           "class MyGem::Services::Authentication",
           "module MyGem::Middleware",
-          "command deploy"
+          "command deploy",
         ]
 
         argument :type, required: false,
@@ -24,14 +25,14 @@ module Gempilot
                         desc: "Fully-qualified constant (e.g., MyGem::Services::Auth) or command name"
 
         def run(type = nil, path = nil)
-          type = type || begin
+          type ||= begin
             puts colors.bright_black("What kind of component do you want to destroy?")
             ask_multiple_choice(colors.green("Type"), %w[class module command])
           end
 
           detect_gem_context
 
-          path = path || begin
+          path ||= begin
             puts
             puts colors.bright_black("Fully-qualified constant name (e.g., #{@gem_module}::Services::Authentication).")
             ask(colors.green("Constant"), required: true)
@@ -53,13 +54,13 @@ module Gempilot
           namespaces, _class_name, segments = parse_constant(constant)
           validate_gem_root!(namespaces.first)
 
-          lib_path = File.join("lib", *segments) + ".rb"
+          lib_path = "#{File.join("lib", *segments)}.rb"
 
-          if @test_framework == :rspec
-            test_path = File.join("spec", @require_path, *segments[1..]) + "_spec.rb"
-          else
-            test_path = File.join("test", @require_path, *segments[1..]) + "_test.rb"
-          end
+          test_path = if @test_framework == :rspec
+                        "#{File.join("spec", @require_path, *segments[1..])}_spec.rb"
+                      else
+                        "#{File.join("test", @require_path, *segments[1..])}_test.rb"
+                      end
 
           remove_file(lib_path)
           remove_file(test_path)
@@ -72,21 +73,21 @@ module Gempilot
           namespaces, _mod_name, segments = parse_constant(constant)
           validate_gem_root!(namespaces.first)
 
-          lib_path = File.join("lib", *segments) + ".rb"
+          lib_path = "#{File.join("lib", *segments)}.rb"
           remove_file(lib_path)
           remove_empty_parents(File.dirname(lib_path), File.join("lib", @require_path))
         end
 
         def destroy_command(name)
           file_name = CommandKit::Inflector.underscore(name)
-          file_path = File.join("lib", @require_path, "cli", "commands", file_name + ".rb")
+          file_path = File.join("lib", @require_path, "cli", "commands", "#{file_name}.rb")
           remove_file(file_path)
 
-          if @test_framework == :rspec
-            test_path = File.join("spec", @require_path, "cli", "commands", "#{file_name}_spec.rb")
-          else
-            test_path = File.join("test", @require_path, "cli", "commands", "#{file_name}_test.rb")
-          end
+          test_path = if @test_framework == :rspec
+                        File.join("spec", @require_path, "cli", "commands", "#{file_name}_spec.rb")
+                      else
+                        File.join("test", @require_path, "cli", "commands", "#{file_name}_test.rb")
+                      end
           remove_file(test_path)
         end
 
@@ -111,11 +112,11 @@ module Gempilot
         end
 
         def print_remove(path)
-          puts "\t#{colors.bold(colors.red('remove'))}\t#{colors.red(path)}"
+          puts "\t#{colors.bold(colors.red("remove"))}\t#{colors.red(path)}"
         end
 
         def print_skip(path)
-          puts "\t#{colors.bold(colors.yellow('skip'))}\t#{colors.yellow(path)}"
+          puts "\t#{colors.bold(colors.yellow("skip"))}\t#{colors.yellow(path)}"
         end
       end
     end

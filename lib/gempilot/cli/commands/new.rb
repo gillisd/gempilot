@@ -19,7 +19,7 @@ module Gempilot
           "class MyGem::Authentication",
           "class MyGem::Services::Authentication",
           "module MyGem::Middleware",
-          "command deploy"
+          "command deploy",
         ]
 
         argument :type, required: false,
@@ -29,14 +29,14 @@ module Gempilot
                         desc: "Fully-qualified constant (e.g., MyGem::Services::Auth) or command name"
 
         def run(type = nil, path = nil)
-          type = type || begin
+          type ||= begin
             puts colors.bright_black("What kind of component do you want to add?")
             ask_multiple_choice(colors.green("Type"), %w[class module command])
           end
 
           detect_gem_context
 
-          path = path || begin
+          path ||= begin
             puts
             puts colors.bright_black("Fully-qualified constant name (e.g., #{@gem_module}::Services::Authentication).")
             ask(colors.green("Constant"), required: true)
@@ -68,16 +68,16 @@ module Gempilot
             lines << "#{"  " * (namespaces.length - 1 - i)}end"
           end
 
-          lines.join("\n") + "\n"
+          "#{lines.join("\n")}\n"
         end
 
         def add_class(constant)
           namespaces, class_name, segments = parse_constant(constant)
           validate_gem_root!(namespaces.first)
-          file_path = File.join("lib", *segments) + ".rb"
+          file_path = "#{File.join("lib", *segments)}.rb"
 
           puts
-          puts colors.bright_white("Adding class ") + colors.bold(colors.cyan("#{namespaces.join('::')}::#{class_name}")) + colors.bright_white("...")
+          puts colors.bright_white("Adding class ") + colors.bold(colors.cyan("#{namespaces.join("::")}::#{class_name}")) + colors.bright_white("...")
           puts
 
           dir = File.dirname(file_path)
@@ -92,10 +92,10 @@ module Gempilot
         def add_module(constant)
           namespaces, mod_name, segments = parse_constant(constant)
           validate_gem_root!(namespaces.first)
-          file_path = File.join("lib", *segments) + ".rb"
+          file_path = "#{File.join("lib", *segments)}.rb"
 
           puts
-          puts colors.bright_white("Adding module ") + colors.bold(colors.cyan("#{namespaces.join('::')}::#{mod_name}")) + colors.bright_white("...")
+          puts colors.bright_white("Adding module ") + colors.bold(colors.cyan("#{namespaces.join("::")}::#{mod_name}")) + colors.bright_white("...")
           puts
 
           dir = File.dirname(file_path)
@@ -108,7 +108,7 @@ module Gempilot
         def add_command(name)
           file_name = CommandKit::Inflector.underscore(name)
           command_name = CommandKit::Inflector.camelize(name)
-          file_path = File.join("lib", @require_path, "cli", "commands", file_name + ".rb")
+          file_path = File.join("lib", @require_path, "cli", "commands", "#{file_name}.rb")
 
           puts
           puts colors.bright_white("Adding command ") + colors.bold(colors.cyan(command_name)) + colors.bright_white("...")
@@ -139,7 +139,6 @@ module Gempilot
                 end
               end
             RUBY
-            create_file(test_path, content)
           else
             test_path = File.join("test", @require_path, "cli", "commands", "#{file_name}_test.rb")
             test_dir = File.dirname(test_path)
@@ -162,26 +161,25 @@ module Gempilot
                 end
               end
             RUBY
-            create_file(test_path, content)
           end
+          create_file(test_path, content)
         end
 
         def add_test_file(namespaces, class_name, segments)
           if @test_framework == :rspec
-            test_path = File.join("spec", @require_path, *segments[1..]) + "_spec.rb"
+            test_path = "#{File.join("spec", @require_path, *segments[1..])}_spec.rb"
             test_dir = File.dirname(test_path)
             mkdir(test_dir) unless File.directory?(test_dir)
 
             content = <<~RUBY
               require "spec_helper"
 
-              RSpec.describe #{namespaces.join('::')}::#{class_name} do
+              RSpec.describe #{namespaces.join("::")}::#{class_name} do
                 pending "add some examples"
               end
             RUBY
-            create_file(test_path, content)
           else
-            test_path = File.join("test", @require_path, *segments[1..]) + "_test.rb"
+            test_path = "#{File.join("test", @require_path, *segments[1..])}_test.rb"
             test_dir = File.dirname(test_path)
             mkdir(test_dir) unless File.directory?(test_dir)
 
@@ -189,15 +187,15 @@ module Gempilot
               require "test_helper"
 
               module #{namespaces.first}
-                class #{(namespaces[1..] + [class_name]).join('::')}Test < Minitest::Test
+                class #{(namespaces[1..] + [class_name]).join("::")}Test < Minitest::Test
                   def test_placeholder
                     assert true
                   end
                 end
               end
             RUBY
-            create_file(test_path, content)
           end
+          create_file(test_path, content)
         end
       end
     end

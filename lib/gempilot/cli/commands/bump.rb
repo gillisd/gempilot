@@ -14,12 +14,13 @@ module Gempilot
           "",
           "patch",
           "minor",
-          "major"
+          "major",
         ]
 
         argument :segment, required: false,
                            desc: "Version segment to bump: patch (default), minor, or major"
 
+        VERSION_PATTERN = /VERSION\s*=\s*"(\d+\.\d+\.\d+)"/
         def run(segment = "patch")
           detect_gem_context
 
@@ -41,8 +42,6 @@ module Gempilot
         end
 
         private
-
-        VERSION_PATTERN = /VERSION\s*=\s*"(\d+\.\d+\.\d+)"/
 
         def find_version_file
           path = File.join("lib", @require_path, "version.rb")

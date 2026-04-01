@@ -1,4 +1,3 @@
-
 require "command_kit/command"
 require "command_kit/colors"
 require "command_kit/interactive"

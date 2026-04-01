@@ -1,4 +1,3 @@
-
 require "bundler"
 require "command_kit/colors"
 require "command_kit/file_utils"
@@ -28,15 +27,15 @@ module Gempilot
       attr_reader :template_dir
 
       def initialize(**kwargs)
-        super(**kwargs)
+        super
 
-        unless (@template_dir = self.class.template_dir)
-          raise NotImplementedError, "#{self.class} did not define template_dir"
-        end
+        return if (@template_dir = self.class.template_dir)
+
+        raise NotImplementedError, "#{self.class} did not define template_dir"
       end
 
       def print_action(command, source = nil, dest)
-        line = String.new
+        line = +""
         line << "\t" << colors.bold(colors.green(command))
         line << "\t" << colors.green(source) if source
         line << "\t" << colors.green(dest) if dest
@@ -81,9 +80,7 @@ module Gempilot
         success = Bundler.with_unbundled_env do
           system(command, *arguments)
         end
-        unless success
-          puts colors.yellow("Warning: '#{[command, *arguments].join(' ')}' exited with non-zero status")
-        end
+        puts colors.yellow("Warning: '#{[command, *arguments].join(" ")}' exited with non-zero status") unless success
         success
       end
     end

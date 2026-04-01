@@ -1,7 +1,6 @@
+require "tmpdir"
 
-require 'tmpdir'
-
-::Rake.module_eval do
+Rake.module_eval do
   def application
     Thread.current[:__application]
   end
@@ -20,7 +19,7 @@ module Support
 
     def_delegators :application, :invoke_task, :in_namespace
     def_delegators :application, :trace, :display_prerequisites
-    def_delegators :'self.class', :directory, :task, :file
+    def_delegators :"self.class", :directory, :task, :file
 
     def self.create(**kwargs)
       env = new(**kwargs)
@@ -89,7 +88,7 @@ module Support
         .then { |it| it.exist? ? it.realpath : it.cleanpath }
     end
 
-    def open(filename, mode = 'r', &)
+    def open(filename, mode = "r", &)
       pathname = path_for filename
       mkdir_p pathname.parent
       @objects.add pathname
@@ -123,7 +122,7 @@ module Support
     end
 
     def write(filename, content)
-      open(filename, 'w') do |file|
+      open(filename, "w") do |file|
         file.write content
       end
     rescue Errno::ENOENT
@@ -150,7 +149,7 @@ module Support
       remove_object object, method: :rmdir
     end
 
-    def stop
+    def stop # rubocop:disable Metrics/MethodLength
       @objects.each do |object|
         case [object.file?, object.directory?, object.exist?]
         in true, false, true
@@ -164,7 +163,7 @@ module Support
         end
       end
 
-      FileUtils.rmdir workdir rescue nil
+      FileUtils.rmdir workdir rescue nil # rubocop:disable Style/RescueModifier
       Rake.application = nil
     end
 
@@ -172,16 +171,11 @@ module Support
       expanded = Pathname
                    .new(object)
                    .expand_path
-      if expanded.exist?
-        return expanded.realpath
-      end
+
+      return expanded.realpath if expanded.exist?
+
       expanded
     end
-
-    # def invoke_task(name, *args)
-    #   task = lookup(name.to_sym)
-    #   task.invoke(*args)
-    # end
 
     private
 
@@ -228,7 +222,7 @@ module Support
     end
 
     def save_rakefile
-      touch 'Rakefile'
+      touch "Rakefile"
     end
   end
 end

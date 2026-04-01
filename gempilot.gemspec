@@ -1,4 +1,3 @@
-
 require_relative "lib/gempilot/version"
 
 Gem::Specification.new do |spec|

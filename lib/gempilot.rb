@@ -1,4 +1,3 @@
-
 require "zeitwerk"
 
 autoload :Open3, "open3"
@@ -7,7 +6,7 @@ loader.inflector.inflect("cli" => "CLI")
 loader.setup
 
 module Gempilot
-  ROOT = File.expand_path(File.join(__dir__, ".."))
+  ROOT = File.expand_path(File.join(__dir__, "..")).freeze
 
   class Error < StandardError; end
   class CommandError < Error; end
