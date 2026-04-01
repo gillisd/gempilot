@@ -11,9 +11,13 @@ Rake.module_eval do
 end
 
 module Support
+  ## Manages a temporary working directory and tracked filesystem objects
+  ## for integration tests that need isolated file operations.
   class Environment
     extend Forwardable
     extend Rake::DSL
+
+    TMPDIR_PATTERN = %r{^/(?:private/)?var/folders/}
 
     attr_reader :workdir, :original_dir
 
@@ -61,8 +65,8 @@ module Support
       raise "File not found: #{pathname}"
     end
 
-    def chdir(*args, **kwargs, &block)
-      FileUtils.chdir(*args, **kwargs, &block)
+    def chdir(*args, **kwargs, &)
+      FileUtils.chdir(*args, **kwargs, &)
     end
 
     def mkdir_p(dirname)
@@ -85,10 +89,10 @@ module Support
 
       resolved
         .expand_path
-        .then { |it| it.exist? ? it.realpath : it.cleanpath }
+        .then { |expanded| expanded.exist? ? expanded.realpath : expanded.cleanpath }
     end
 
-    def open(filename, mode = "r", &)
+    def open_file(filename, mode = "r", &)
       pathname = path_for filename
       mkdir_p pathname.parent
       @objects.add pathname
@@ -122,7 +126,7 @@ module Support
     end
 
     def write(filename, content)
-      open(filename, "w") do |file|
+      open_file(filename, "w") do |file|
         file.write content
       end
     rescue Errno::ENOENT
@@ -149,28 +153,15 @@ module Support
       remove_object object, method: :rmdir
     end
 
-    def stop # rubocop:disable Metrics/MethodLength
-      @objects.each do |object|
-        case [object.file?, object.directory?, object.exist?]
-        in true, false, true
-          safe_unlink object
-        in false, true, true
-          rm_rf object
-        in false, false, false
-          # pass
-        else
-          raise "Unexpected pathname #{object} is not a file or directory. This is a bug."
-        end
-      end
-
-      FileUtils.rmdir workdir rescue nil # rubocop:disable Style/RescueModifier
+    def stop
+      cleanup_tracked_objects
+      remove_workdir
       Rake.application = nil
     end
 
     def wrap_pathname(object)
-      expanded = Pathname
-                   .new(object)
-                   .expand_path
+      expanded = Pathname.new(object)
+                         .expand_path
 
       return expanded.realpath if expanded.exist?
 
@@ -179,50 +170,60 @@ module Support
 
     private
 
-    def remove_object(object, method:)
-      if (path = wrap_pathname(object)) && @objects.member?(path)
-        if ensure_safe_operation!(path)
-          FileUtils.send(method, path)
+    def cleanup_tracked_objects
+      @objects.each do |object|
+        case [object.file?, object.directory?, object.exist?]
+        in true, false, true
+          safe_unlink object
+        in false, true, true
+          rm_rf object
+        in false, false, false
+          nil
         else
-          warn "YOU ALMOST DELETED YOUR PROJECT DIR. THERE IS A BUG."
-          warn
-          warn "OBJECT: #{object}"
-          warn "METHOD: #{method}"
-          warn
-          warn "OBJECTS: #{@objects.to_a.join("\n")}"
-          warn
-          warn caller
-          exit 1
+          raise "Unexpected pathname #{object} is not a file or directory. This is a bug."
         end
-        return
       end
+    end
 
-      raise ArgumentError, "I do not manage #{path}"
+    def remove_workdir
+      FileUtils.rmdir workdir
+    rescue Errno::ENOTEMPTY, Errno::ENOENT
+      nil
+    end
+
+    def remove_object(object, method:)
+      path = wrap_pathname(object)
+      raise ArgumentError, "I do not manage #{path}" unless @objects.member?(path)
+
+      if safe_operation?(path)
+        FileUtils.send(method, path)
+      else
+        abort_unsafe_operation(object, method)
+      end
     end
 
     def add_object(object, method:)
-      if (path = wrap_pathname(object)) && ensure_safe_operation!(path)
+      path = wrap_pathname(object)
+
+      if safe_operation?(path)
         @objects.add wrap_pathname(object)
         FileUtils.send(method, object)
       else
-        warn "You tried to add a file to your project dir. THIS IS A BUG."
-        warn
-        warn "OBJECT: #{object}"
-        warn "METHOD: #{method}"
-        warn
-        warn "OBJECTS: #{@objects.to_a.join("\n")}"
-        warn
-        warn caller
-        exit 1
+        abort_unsafe_operation(object, method)
       end
     end
 
-    def ensure_safe_operation!(path)
-      path.to_s.match?(%r{^/(?:private/)?var/folders/})
+    def abort_unsafe_operation(object, method)
+      warn "UNSAFE OPERATION BLOCKED. THIS IS A BUG."
+      warn "OBJECT: #{object}"
+      warn "METHOD: #{method}"
+      warn "OBJECTS: #{@objects.to_a.join("\n")}"
+      warn caller
+      exit 1
     end
 
-    def save_rakefile
-      touch "Rakefile"
+    def safe_operation?(path)
+      path.to_s.match?(TMPDIR_PATTERN)
     end
   end
 end

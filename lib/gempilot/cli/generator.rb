@@ -36,7 +36,7 @@ module Gempilot
         raise NotImplementedError, "#{self.class} did not define template_dir"
       end
 
-      def print_action(command, source = nil, dest)
+      def print_action(command, dest, source: nil)
         line = +""
         line << "\t" << colors.bold(colors.green(command))
         line << "\t" << colors.green(source) if source
@@ -66,12 +66,12 @@ module Gempilot
       end
 
       def cp(source, dest)
-        print_action "cp", source, dest
+        print_action "cp", dest, source: source
         ::FileUtils.cp(File.join(@template_dir, source), dest)
       end
 
       def erb(source, dest = nil)
-        print_action "erb", source, dest if dest
+        print_action("erb", dest, source: source) if dest
 
         source_path = File.join(@template_dir, source)
         super(source_path, dest)

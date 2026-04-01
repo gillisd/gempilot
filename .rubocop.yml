@@ -103,6 +103,23 @@ Metrics/BlockLength:
     - command
   Exclude:
     - "test/**/*"
+    - "gempilot.gemspec"
+
+Metrics/ClassLength:
+  Exclude:
+    - "test/**/*"
+
+Metrics/MethodLength:
+  Exclude:
+    - "test/**/*"
+
+Metrics/AbcSize:
+  Exclude:
+    - "test/**/*"
+
+Claude/NoFancyUnicode:
+  Exclude:
+    - "gempilot.gemspec"
 
 # Minitest tests legitimately define many assertions per test method
 # when testing multi-file generators. Default is 3, too tight.

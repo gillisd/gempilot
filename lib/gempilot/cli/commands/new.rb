@@ -67,7 +67,7 @@ module Gempilot
         end
 
         def build_closing_lines(namespaces)
-          namespaces.length.times.map do |i|
+          Array.new(namespaces.length) do |i|
             "#{"  " * (namespaces.length - 1 - i)}end"
           end
         end
