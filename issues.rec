@@ -1,53 +1,71 @@
 %rec: Issue
 %key: Id
-%type: Id int
+%typedef: text_t regexp /.*/
+%typedef: Status_t enum open in_progress closed
+%type: Id uuid
 %type: Title line
-%type: Description line
+%type: Description text_t
 %type: Updated date
+%type: Status Status_t
 %auto: Id Updated
 %mandatory: Title Description
 
-Id: 0
+Id: 6F683910-2EFA-4356-B1FE-3E4FE3E20A38
 Updated: Mon, 02 Mar 2026 10:31:07 -0500
 Title: Rake build triggers gem to be built twice?
 Description: Why am I seeing 2 messages about gempilot being built to pkg/gempilot-0.1.0.gem
+Status: open
 
-Id: 1
+Id: 011FB117-BC52-453F-A8E8-6955FE3EBCE8
 Updated: Mon, 02 Mar 2026 10:31:39 -0500
 Title: rubocop-rake is not active
 Description: It should be active for this project
+Status: open
 
-Id: 2
+Id: F0833E66-A35C-4054-884B-F90C81F08838
 Updated: Mon, 02 Mar 2026 10:37:33 -0500
 Title: Error handling should be graceful
 Description: I did "gempilot create", and entered "A foo" as the title, and it crashed horrifically. This particular example should have validation at the minimum. Need to also use command kit's error bubbling/handling mechanism to swallow errors and print message to user. Can always use verbose or debug mode to see full trace.
+Status: open
 
-Id: 3
+Id: 741FFD05-9BD7-44EB-BB99-E7D705F12681
 Updated: Mon, 02 Mar 2026 11:25:24 -0500
 Title: Reduce dependencies
 Description:
+Status: open
 
-Id: 4
+Id: 131EA3CE-2F3D-4E37-9D9B-A25E0A651F1B
 Updated: Tue, 10 Mar 2026 17:40:50 -0400
 Title: irb is required now as a gem
 Description: Needs to go in template gemfile
+Status: open
 
-Id: 5
+Id: 3178AC5C-09A9-44A9-ACE1-11BED0BA7276
 Updated: Sat, 28 Mar 2026 12:46:06 -0400
 Title: Add a version:* rake task that supports just bumping and committing
 Description: Right now the only "combo" rake task for bumping version is the one that releases in full. Should make a composite one for more generalized purposes
+Status: open
 
-Id: 6
+Id: E6EB289D-BE84-4872-8012-D936707989B1
 Updated: Sat, 28 Mar 2026 12:46:54 -0400
 Title: Rake task version:commit should add version tag to commit
 Description: The commit should be tagged with git tag upon committing, as this is a key part of releasing
+Status: open
 
-Id: 7
+Id: 7825507C-ABD2-4618-A591-BCDB54152C6B
 Updated: Sat, 28 Mar 2026 12:48:05 -0400
 Title: Rake task version:bump should support "dev increments", like "0.2.1.dev3". Perhaps a task like "version:bump:dev" is created to allow for this
 Description: open
+Status: open
 
-Id: 8
+Id: 5E4D51AB-F9BF-4C72-8165-F1B900799FA7
 Updated: Sat, 28 Mar 2026 12:55:14 -0400
 Title: Hundreds of rubocop failures exist
 Description: These need to be addressed
+Status: open
+
+Id: 74D0FD90-0421-4452-8591-2798EE6FD23E
+Updated: Sat, 28 Mar 2026 12:59:40 -0400
+Title: Publish gem
+Description: At some point the repo should be moved to public viz, and the gem should be published.
+Status: open
