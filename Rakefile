@@ -6,6 +6,9 @@ Bundler::GemHelper.install_tasks name: "gempilot"
 require "minitest/test_task"
 Minitest::TestTask.create
 
+require "rspec/core/rake_task"
+RSpec::Core::RakeTask.new(:spec)
+
 RuboCop::RakeTask.new
 
-task default: [:test, :rubocop]
+task default: [:test, :spec, :rubocop]
