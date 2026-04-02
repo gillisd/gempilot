@@ -7,6 +7,6 @@ class TestGempilot < Minitest::Test
 
   def test_root_is_defined
     assert_kind_of String, Gempilot::ROOT
-    assert File.directory?(Gempilot::ROOT)
+    assert_predicate Pathname(Gempilot::ROOT), :directory?
   end
 end

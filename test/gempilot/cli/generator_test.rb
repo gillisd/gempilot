@@ -33,7 +33,7 @@ module Gempilot
         path = File.join(@tmpdir, "new_dir")
         @generator.mkdir(path)
 
-        assert File.directory?(path)
+        assert_predicate Pathname(path), :directory?
       end
 
       def test_mkdir_prints_action
@@ -77,7 +77,7 @@ module Gempilot
         File.write(path, "#!/bin/sh\n")
         @generator.chmod("+x", path)
 
-        assert File.executable?(path)
+        assert_predicate Pathname(path), :executable?
       end
 
       def test_sh_runs_command

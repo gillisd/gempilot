@@ -36,5 +36,10 @@ A CLI tool for creating and managing Ruby gems, built on CommandKit.
 - `git ls-files`-based gemspec with glob fallback for non-git repos
 - Version management rake tasks in `rakelib/version.rake` (current, bump, commit, revert, release:full)
 
-### Open Issues
-- README/help output doesn't sell the `new`/`destroy` generators as the differentiator vs `bundle gem`
+### Notes
+- AutoLoad uses block form in `cli.rb` with explicit `summary:` per command (lazy loading means descriptions aren't available at help time without this)
+
+
+## ISSUES
+
+1. RESOLVED — `exe/gempilot` had unconditional `ENV["BUNDLE_GEMFILE"]` and `require "bundler/setup"`, causing `Gemfile not found` after `gem install`. Removed both lines; RubyGems handles load paths for installed gems. (Ronin avoids this with a conditional `Gemfile.lock` check, but gempilot's `exe/`+`bin/` separation makes that unnecessary.)

@@ -11,3 +11,4 @@ Gemfile.lock
 /vendor
 *.bak.spec
 gemma
+gp_test_gem
