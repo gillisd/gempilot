@@ -6,6 +6,7 @@ Gem::Specification.new do |spec|
   spec.authors = ["David Gillis"]
   spec.email = ["david@flipmine.com"]
   spec.homepage = "https://github.com/gillisd/gempilot"
+  spec.summary = "A toolkit for creating and managing your own rubygems"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.4"
 
