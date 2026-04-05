@@ -1,5 +1,5 @@
 require "rake"
-require_relative "../../data/templates/gem/rakelib/project_version"
+require_relative "../../../data/templates/gem/rakelib/project_version"
 
 RSpec.describe Project::Version do
   let(:path) { Pathname("lib/my_gem/version.rb") }
