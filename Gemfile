@@ -28,3 +28,5 @@ gem "rbs"
 
 gem "benchmark"
 gem "rdoc"
+
+gem "rubocop-rspec", "~> 3.9"
