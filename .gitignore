@@ -12,3 +12,4 @@ Gemfile.lock
 *.bak.spec
 gemma
 gp_test_gem
+references
