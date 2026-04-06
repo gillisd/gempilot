@@ -1,5 +1,5 @@
 require "rake"
-require_relative "../../data/templates/gem/rakelib/github_release"
+require_relative "../../rakelib/github_release"
 
 RSpec.describe GithubRelease do
   let(:tag) { "v1.0.0" }
