@@ -1,64 +1,58 @@
-VERSION_PATTERN = /VERSION\s*=\s*"(\d+\.\d+\.\d+)"/
-VERSION_PATH = File.expand_path("../lib/gempilot/version.rb", __dir__).freeze
+require_relative "project"
+require_relative "version_tag"
+require_relative "github_release"
 
-def show_version
-  require_relative "../lib/gempilot/version"
-  puts "Current version: #{Gempilot::VERSION}"
-end
-
-def read_version(path)
-  source = File.read(path)
-  match = source.match(VERSION_PATTERN)
-  abort "Could not find VERSION in #{path}" unless match
-  [source, match[1]]
-end
-
-def next_patch(version)
-  parts = version.split(".").map(&:to_i)
-  parts[-1] += 1
-  parts.join(".")
-end
-
-def write_version(path, content)
-  File.open(path, File::WRONLY | File::TRUNC) do |f|
-    f.flock(File::LOCK_EX)
-    f.write(content)
-  end
-end
-
-def bump_version(path)
-  source, old_ver = read_version(path)
-  new_ver = next_patch(old_ver)
-  write_version(path, source.sub(old_ver, new_ver))
-  puts "Version bumped from #{old_ver} to #{new_ver}"
-end
-
-def commit_version(path)
-  require_relative "../lib/gempilot/version"
-  sh "git add #{path}"
-  sh "git commit -m 'Bump version to #{Gempilot::VERSION}'"
-  puts "Version change committed."
-end
-
-def revert_version_bump
-  last_message = `git log -1 --pretty=%B`.strip
-  abort "Last commit does not appear to be a version bump." unless last_message.start_with?("Bump version to ")
-  sh "git revert HEAD --no-edit"
-  puts "Version bump reverted."
-end
+root_path = File.expand_path("../", __dir__)
+project = Project.new(root_path)
 
 namespace :version do
   desc "Display the current version"
-  task(:current) { show_version }
-  desc "Bump the patch version"
-  task(:bump) { bump_version(VERSION_PATH) }
-  desc "Commit the version change"
-  task(:commit) { commit_version(VERSION_PATH) }
-  desc "Revert the last version bump commit"
-  task(:revert) { revert_version_bump }
-end
+  task(:current) { puts "Current version: #{project.version_value}" }
 
-namespace :release do
-  desc "Bump version, commit, and release"
-  task full: ["version:bump", "version:commit", :release]
+  desc "Bump the patch version"
+  task :bump do
+    old_version = project.version
+    new_version = project.increment_version
+    project.write_version!(old_version, new_version)
+    project.refresh_version!
+    puts "Version bumped from #{old_version.value} to #{project.version_value}"
+  end
+
+  desc "Commit the version change"
+  task(:commit) { VersionTag.new(project.version).create }
+
+  desc "Tag the current version"
+  task(:tag) { VersionTag.new(project.version).tag }
+
+  desc "Untag the current version"
+  task(:untag) { VersionTag.new(project.version).untag }
+
+  desc "Reset the last version bump commit"
+  task :reset do
+    VersionTag.new(project.version).reset
+    project.refresh_version!
+  end
+
+  desc "Revert the last version bump commit"
+  task :revert do
+    VersionTag.new(project.version).revert
+    project.refresh_version!
+  end
+
+  desc "Bump version, commit, and tag"
+  task release: ["version:bump", "version:commit", "version:tag"]
+
+  desc "Untag and reset version"
+  task unrelease: ["version:untag", "version:reset"]
+
+  namespace :github do
+    desc "Create a GitHub release for the current version"
+    task(:release) { GithubRelease.new(project.version_tag).create }
+
+    desc "Delete the GitHub release for the current version"
+    task(:unrelease) { GithubRelease.new(project.version_tag).destroy }
+
+    desc "List GitHub releases"
+    task(:list) { GithubRelease.new(project.version_tag).list }
+  end
 end
