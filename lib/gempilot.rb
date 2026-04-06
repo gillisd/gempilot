@@ -3,7 +3,7 @@ require "zeitwerk"
 autoload :Open3, "open3"
 
 module Gempilot
-  LOADER = Zeitwerk::Loader.for_gem.freeze
+  LOADER = Zeitwerk::Loader.for_gem
   LOADER.inflector.inflect("cli" => "CLI")
   LOADER.setup
 
