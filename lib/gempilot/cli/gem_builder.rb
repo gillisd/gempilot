@@ -45,7 +45,7 @@ module Gempilot
 
       def render_version_rake
         mkdir "#{@gem_name}/rakelib"
-        erb "rakelib/version.rake.erb", "#{@gem_name}/rakelib/version.rake"
+        cp "rakelib/version.rake", "#{@gem_name}/rakelib/version.rake"
         cp "rakelib/project.rb",         "#{@gem_name}/rakelib/project.rb"
         cp "rakelib/project_version.rb", "#{@gem_name}/rakelib/project_version.rb"
         cp "rakelib/version_tag.rb",     "#{@gem_name}/rakelib/version_tag.rb"
