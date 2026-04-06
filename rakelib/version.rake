@@ -1,54 +1,61 @@
+VERSION_PATTERN = /VERSION\s*=\s*"(\d+\.\d+\.\d+)"/
+VERSION_PATH = File.expand_path("../lib/gempilot/version.rb", __dir__).freeze
+
+def show_version
+  require_relative "../lib/gempilot/version"
+  puts "Current version: #{Gempilot::VERSION}"
+end
+
+def read_version(path)
+  source = File.read(path)
+  match = source.match(VERSION_PATTERN)
+  abort "Could not find VERSION in #{path}" unless match
+  [source, match[1]]
+end
+
+def next_patch(version)
+  parts = version.split(".").map(&:to_i)
+  parts[-1] += 1
+  parts.join(".")
+end
+
+def write_version(path, content)
+  File.open(path, File::WRONLY | File::TRUNC) do |f|
+    f.flock(File::LOCK_EX)
+    f.write(content)
+  end
+end
+
+def bump_version(path)
+  source, old_ver = read_version(path)
+  new_ver = next_patch(old_ver)
+  write_version(path, source.sub(old_ver, new_ver))
+  puts "Version bumped from #{old_ver} to #{new_ver}"
+end
+
+def commit_version(path)
+  require_relative "../lib/gempilot/version"
+  sh "git add #{path}"
+  sh "git commit -m 'Bump version to #{Gempilot::VERSION}'"
+  puts "Version change committed."
+end
+
+def revert_version_bump
+  last_message = `git log -1 --pretty=%B`.strip
+  abort "Last commit does not appear to be a version bump." unless last_message.start_with?("Bump version to ")
+  sh "git revert HEAD --no-edit"
+  puts "Version bump reverted."
+end
+
 namespace :version do
-  version_path = File.expand_path("../lib/gempilot/version.rb", __dir__)
-
   desc "Display the current version"
-  task :current do
-    require_relative "../lib/gempilot/version"
-    puts "Current version: #{Gempilot::VERSION}"
-  end
-
+  task(:current) { show_version }
   desc "Bump the patch version"
-  task :bump do
-    File.open(version_path, File::RDWR, 0o644) do |f|
-      f.flock(File::LOCK_EX)
-      source = f.read
-      match = source.match(/VERSION\s*=\s*"(\d+\.\d+\.\d+)"/)
-
-      abort "Could not find VERSION in #{version_path}" unless match
-
-      old_version = match[1]
-      parts = old_version.split(".").map(&:to_i)
-      parts[-1] += 1
-      new_version = parts.join(".")
-
-      new_source = source.sub(/VERSION\s*=\s*"#{Regexp.escape(old_version)}"/, "VERSION = \"#{new_version}\"")
-
-      f.rewind
-      f.write(new_source)
-      f.truncate(f.pos)
-
-      puts "Version bumped from #{old_version} to #{new_version}"
-    end
-  end
-
+  task(:bump) { bump_version(VERSION_PATH) }
   desc "Commit the version change"
-  task :commit do
-    require_relative "../lib/gempilot/version"
-    sh "git add #{version_path}"
-    sh "git commit -m 'Bump version to #{Gempilot::VERSION}'"
-    puts "Version change committed."
-  end
-
+  task(:commit) { commit_version(VERSION_PATH) }
   desc "Revert the last version bump commit"
-  task :revert do
-    last_message = `git log -1 --pretty=%B`.strip
-    if last_message.start_with?("Bump version to ")
-      sh "git revert HEAD --no-edit"
-      puts "Version bump reverted."
-    else
-      abort "Last commit does not appear to be a version bump."
-    end
-  end
+  task(:revert) { revert_version_bump }
 end
 
 namespace :release do
