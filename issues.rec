@@ -71,7 +71,7 @@ Description: At some point the repo should be moved to public viz, and the gem s
 Status: open
 
 Id: 8C356024-3122-11F1-89F3-FE6CB9572C2F
-Updated: Sun, 05 Apr 2026 15:06:27 -0400
+Updated: Mon, 06 Apr 2026 00:00:00 -0400
 Title: Replace 4.0.1 with 3.4.8
 Description: Need to move ruby version down to 3.4.8
-Status: open
+Status: closed
