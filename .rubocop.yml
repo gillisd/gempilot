@@ -110,6 +110,7 @@ Metrics/BlockLength:
   Exclude:
     - "test/**/*"
     - "gempilot.gemspec"
+    - "rakelib/**/*.rake"
 
 Metrics/ClassLength:
   Exclude:
