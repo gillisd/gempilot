@@ -11,7 +11,7 @@ RSpec::Core::RakeTask.new(:spec)
 namespace :spec do
   desc "Prints the specification suite in documentation format and exits"
   task :print do
-    exec("--format", "documentation", "--dry-run")
+    exec("rspec", "--format", "documentation", "--dry-run")
   end
 end
 

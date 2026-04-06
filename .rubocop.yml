@@ -93,6 +93,10 @@ Performance/MapMethodChain:
 # Additional tightening — not set by stock or rubocop-claude
 # ===========================================================================
 
+# Zeitwerk loaders are mutable by design — only flag literal mutable values.
+Style/MutableConstant:
+  EnforcedStyle: literals
+
 # Short blocks push toward small chained steps instead of fat lambdas.
 Metrics/BlockLength:
   Max: 8
