@@ -15,10 +15,6 @@ RSpec.describe Project do
     File.write("lib/my_gem/version.rb", "module MyGem\n  VERSION = \"1.2.3\".freeze\nend\n")
   end
 
-  after do
-    stub_const("MyGem", Module.new) if defined?(MyGem)
-  end
-
   subject(:project) { described_class.new(Dir.pwd) }
 
   describe "#name" do

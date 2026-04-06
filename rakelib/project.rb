@@ -3,15 +3,14 @@ require "warning"
 require "command_kit/inflector"
 require_relative "project_version"
 
-VERSION_REDEFINITION_WARNING = /previous definition of VERSION was here/
-VERSION_REINITIALIZATION_WARNING = /already initialized constant [^\s]+::VERSION/
-
 # Introspects a gem project directory to discover its name, module,
 # and version. Used by rake tasks to drive version lifecycle operations.
 class Project
   class ProjectIntrospectionError < StandardError; end
 
-  include Rake::FileUtilsExt
+  REDEFINITION_WARNING = /previous definition of VERSION was here/
+  REINITIALIZATION_WARNING = /already initialized constant [^\s]+::VERSION/
+  private_constant :REDEFINITION_WARNING, :REINITIALIZATION_WARNING
 
   attr_reader :root
 
@@ -46,7 +45,7 @@ class Project
   end
 
   def increment_version
-    @version = version.next_version
+    version.next_version
   end
 
   def version_tag = version.tag
@@ -89,8 +88,8 @@ class Project
   end
 
   def fetch_version
-    Warning.ignore(VERSION_REDEFINITION_WARNING)
-    Warning.ignore(VERSION_REINITIALIZATION_WARNING)
+    Warning.ignore(REDEFINITION_WARNING)
+    Warning.ignore(REINITIALIZATION_WARNING)
     path = lib_project
            .join("version.rb")
            .tap { verify_existence! it }
