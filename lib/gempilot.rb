@@ -2,6 +2,7 @@ require "zeitwerk"
 
 autoload :Open3, "open3"
 
+# CLI toolkit for creating and managing Ruby gems.
 module Gempilot
   LOADER = Zeitwerk::Loader.for_gem
   LOADER.inflector.inflect("cli" => "CLI")
