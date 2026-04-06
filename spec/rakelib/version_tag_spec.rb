@@ -1,7 +1,7 @@
 require "rake"
 require "tmpdir"
-require_relative "../../data/templates/gem/rakelib/project_version"
-require_relative "../../data/templates/gem/rakelib/version_tag"
+require_relative "../../rakelib/project_version"
+require_relative "../../rakelib/version_tag"
 
 DIRTY_STAGING_PATTERN = /staging area must be clean/
 
