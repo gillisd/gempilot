@@ -1,6 +1,6 @@
 require_relative "../command"
 require_relative "../gem_context"
-require "command_kit/inflector"
+require_relative "../../../core_ext/string/refinements/inflectable"
 require "fileutils"
 
 module Gempilot
@@ -8,6 +8,8 @@ module Gempilot
     module Commands
       ## Removes a class, module, or command from an existing gem.
       class Destroy < Command
+        using String::Inflectable
+
         include GemContext
 
         usage "[options] TYPE CONSTANT"
@@ -92,7 +94,7 @@ module Gempilot
         end
 
         def destroy_command(name)
-          file_name = CommandKit::Inflector.underscore(name)
+          file_name = name.underscore
           file_path = File.join("lib", @require_path, "cli", "commands", "#{file_name}.rb")
           remove_file(file_path)
 

@@ -1,6 +1,6 @@
 require "pathname"
 require "warning"
-require "command_kit/inflector"
+require_relative "../lib/core_ext/string/refinements/inflectable"
 require_relative "project_version"
 
 # Introspects a gem project directory to discover its name, module,
@@ -11,6 +11,8 @@ class Project
   REDEFINITION_WARNING = /previous definition of VERSION was here/
   REINITIALIZATION_WARNING = /already initialized constant [^\s]+::VERSION/
   private_constant :REDEFINITION_WARNING, :REINITIALIZATION_WARNING
+
+  using String::Inflectable
 
   attr_reader :root
 
@@ -33,7 +35,7 @@ class Project
   end
 
   def klass
-    Object.const_get(CommandKit::Inflector.camelize(name))
+    Object.const_get(name.camelize)
   end
 
   def version

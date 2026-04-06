@@ -25,6 +25,12 @@ AllCops:
   Exclude:
     - bin/*
     - vendor/**/*
+    - lib/core_ext/**/*
+    - rakelib/project.rb
+    - rakelib/project_version.rb
+    - rakelib/version_tag.rb
+    - rakelib/github_release.rb
+    - rakelib/strict_shell.rb
 <% if @hyphenated -%>
     - lib/<%= @gem_name %>.rb
 <% end -%>

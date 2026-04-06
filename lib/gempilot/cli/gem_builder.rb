@@ -27,11 +27,7 @@ module Gempilot
       end
 
       def create_test_directory
-        if @test_framework == :rspec
-          mkdir "#{@gem_name}/spec"
-        else
-          mkdir "#{@gem_name}/test"
-        end
+        mkdir @test_framework == :rspec ? "#{@gem_name}/spec" : "#{@gem_name}/test"
       end
 
       def render_core_templates
@@ -44,19 +40,31 @@ module Gempilot
         erb "lib/gem_name/version.rb.erb", "#{@gem_name}/lib/#{@require_path}/version.rb"
         erb "lib/gem_name_extension.rb.erb", "#{@gem_name}/lib/#{@require_path}.rb" if @hyphenated
         render_version_rake
+        render_core_ext
       end
 
       def render_version_rake
         mkdir "#{@gem_name}/rakelib"
-        erb "rakelib/version.rake.erb", "#{@gem_name}/rakelib/version.rake"
+        cp "rakelib/version.rake", "#{@gem_name}/rakelib/version.rake"
+        cp "rakelib/project.rb",         "#{@gem_name}/rakelib/project.rb"
+        cp "rakelib/project_version.rb", "#{@gem_name}/rakelib/project_version.rb"
+        cp "rakelib/version_tag.rb",     "#{@gem_name}/rakelib/version_tag.rb"
+        cp "rakelib/github_release.rb",  "#{@gem_name}/rakelib/github_release.rb"
+        cp "rakelib/strict_shell.rb",    "#{@gem_name}/rakelib/strict_shell.rb"
+      end
+
+      def render_core_ext
+        mkdir "#{@gem_name}/lib/core_ext"
+        mkdir "#{@gem_name}/lib/core_ext/string"
+        mkdir "#{@gem_name}/lib/core_ext/string/refinements"
+        cp "lib/core_ext/string/inflection_methods.rb",
+           "#{@gem_name}/lib/core_ext/string/inflection_methods.rb"
+        cp "lib/core_ext/string/refinements/inflectable.rb",
+           "#{@gem_name}/lib/core_ext/string/refinements/inflectable.rb"
       end
 
       def render_test_templates
-        if @test_framework == :rspec
-          render_rspec_templates
-        else
-          render_minitest_templates
-        end
+        @test_framework == :rspec ? render_rspec_templates : render_minitest_templates
       end
 
       def render_rspec_templates
