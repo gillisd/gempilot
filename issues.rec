@@ -41,16 +41,16 @@ Description: Needs to go in template gemfile
 Status: open
 
 Id: 3178AC5C-09A9-44A9-ACE1-11BED0BA7276
-Updated: Sat, 28 Mar 2026 12:46:06 -0400
+Updated: Mon, 06 Apr 2026 00:00:00 -0400
 Title: Add a version:* rake task that supports just bumping and committing
 Description: Right now the only "combo" rake task for bumping version is the one that releases in full. Should make a composite one for more generalized purposes
-Status: open
+Status: closed
 
 Id: E6EB289D-BE84-4872-8012-D936707989B1
-Updated: Sat, 28 Mar 2026 12:46:54 -0400
+Updated: Mon, 06 Apr 2026 00:00:00 -0400
 Title: Rake task version:commit should add version tag to commit
 Description: The commit should be tagged with git tag upon committing, as this is a key part of releasing
-Status: open
+Status: closed
 
 Id: 7825507C-ABD2-4618-A591-BCDB54152C6B
 Updated: Sat, 28 Mar 2026 12:48:05 -0400
