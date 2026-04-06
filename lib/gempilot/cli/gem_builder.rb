@@ -27,11 +27,7 @@ module Gempilot
       end
 
       def create_test_directory
-        if @test_framework == :rspec
-          mkdir "#{@gem_name}/spec"
-        else
-          mkdir "#{@gem_name}/test"
-        end
+        mkdir @test_framework == :rspec ? "#{@gem_name}/spec" : "#{@gem_name}/test"
       end
 
       def render_core_templates
@@ -68,11 +64,7 @@ module Gempilot
       end
 
       def render_test_templates
-        if @test_framework == :rspec
-          render_rspec_templates
-        else
-          render_minitest_templates
-        end
+        @test_framework == :rspec ? render_rspec_templates : render_minitest_templates
       end
 
       def render_rspec_templates

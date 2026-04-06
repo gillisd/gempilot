@@ -380,11 +380,11 @@ module Gempilot
         assert_includes console, 'require "gempilot/encryption"'
       end
 
-      def test_hyphenated_gem_version_rake_uses_slash_path
+      def test_hyphenated_gem_version_rake_uses_project_domain_object
         run_create_command("gempilot-encryption")
         rake = File.read("gempilot-encryption/rakelib/version.rake")
 
-        assert_includes rake, "lib/gempilot/encryption/version"
+        assert_includes rake, "project.version_value"
       end
 
       def test_hyphenated_gem_gemspec_has_correct_module
@@ -528,11 +528,11 @@ module Gempilot
         assert_includes content, "task :bump"
       end
 
-      def test_version_rake_has_correct_module_name
+      def test_version_rake_uses_project_domain_object
         run_create_command("test_gem")
         content = File.read("test_gem/rakelib/version.rake")
 
-        assert_includes content, "TestGem::VERSION"
+        assert_includes content, "project.version_value"
       end
 
       def test_version_rake_has_no_monkey_patches
@@ -542,11 +542,12 @@ module Gempilot
         refute_includes content, "class String"
       end
 
-      def test_version_rake_uses_file_locking
+      def test_version_rake_wires_project_and_version_tag
         run_create_command("test_gem")
         content = File.read("test_gem/rakelib/version.rake")
 
-        assert_includes content, "flock"
+        assert_includes content, "Project.new"
+        assert_includes content, "VersionTag.new"
       end
 
       # Git config defaults
