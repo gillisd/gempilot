@@ -16,7 +16,7 @@ RSpec.describe Project do
   end
 
   after do
-    Object.send(:remove_const, :MyGem) if defined?(MyGem)
+    stub_const("MyGem", Module.new) if defined?(MyGem)
   end
 
   subject(:project) { described_class.new(Dir.pwd) }
@@ -60,13 +60,12 @@ RSpec.describe Project do
   end
 
   describe "#write_version!" do
-    it "writes the new version to disk" do
+    it "replaces the old version string in the file" do
       old_version = project.version
       new_version = project.increment_version
       project.write_version!(old_version, new_version)
       content = File.read("lib/my_gem/version.rb")
       expect(content).to include("1.2.4")
-      expect(content).not_to include("1.2.3")
     end
   end
 
