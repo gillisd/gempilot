@@ -1,9 +1,11 @@
-require "command_kit/inflector"
+require_relative "../../core_ext/string/refinements/inflectable"
 
 module Gempilot
   class CLI
     ## Shared context for commands that operate inside an existing gem.
     module GemContext
+      using String::Inflectable
+
       private
 
       def detect_gem_context
@@ -16,7 +18,7 @@ module Gempilot
 
         @gem_name = File.basename(gemspec, ".gemspec")
         @require_path = @gem_name.tr("-", "/")
-        @gem_module = CommandKit::Inflector.camelize(@require_path)
+        @gem_module = @require_path.camelize
         @test_framework = File.directory?("spec") ? :rspec : :minitest
       end
 
@@ -24,7 +26,7 @@ module Gempilot
         parts = constant.split("::")
         namespaces = parts[0...-1]
         name = parts.last
-        segments = parts.map { |p| CommandKit::Inflector.underscore(p) }
+        segments = parts.map(&:underscore)
         [namespaces, name, segments]
       end
 

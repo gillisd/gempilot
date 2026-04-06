@@ -1,7 +1,7 @@
 require_relative "../command"
 require_relative "../generator"
 require_relative "../gem_builder"
-require "command_kit/inflector"
+require_relative "../../../core_ext/string/refinements/inflectable"
 
 module Gempilot
   class CLI
@@ -9,6 +9,8 @@ module Gempilot
       ## Scaffolds a new gem with Zeitwerk autoloading, test framework, RuboCop config,
       ## CI workflow, and version management rake tasks.
       class Create < Command
+        using String::Inflectable
+
         include Generator
         include GemBuilder
 
@@ -99,7 +101,7 @@ module Gempilot
 
         def derive_naming
           @require_path = @gem_name.tr("-", "/")
-          @module_name = CommandKit::Inflector.camelize(@require_path)
+          @module_name = @require_path.camelize
           @module_parts = @module_name.split("::")
           @base_module = @module_parts.first
           @hyphenated = @gem_name.include?("-")

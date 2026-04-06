@@ -1,13 +1,15 @@
 require_relative "../command"
 require_relative "../generator"
 require_relative "../gem_context"
-require "command_kit/inflector"
+require_relative "../../../core_ext/string/refinements/inflectable"
 
 module Gempilot
   class CLI
     module Commands
       ## Generates a new class, module, or command inside an existing gem.
       class New < Command
+        using String::Inflectable
+
         include Generator
         include GemContext
 
@@ -117,8 +119,8 @@ module Gempilot
         end
 
         def add_command(name)
-          file_name = CommandKit::Inflector.underscore(name)
-          command_name = CommandKit::Inflector.camelize(name)
+          file_name = name.underscore
+          command_name = name.camelize
           file_path = File.join("lib", @require_path, "cli", "commands", "#{file_name}.rb")
 
           print_adding_banner("command", command_name)
