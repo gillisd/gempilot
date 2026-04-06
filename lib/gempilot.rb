@@ -6,6 +6,7 @@ autoload :Open3, "open3"
 module Gempilot
   LOADER = Zeitwerk::Loader.for_gem
   LOADER.inflector.inflect("cli" => "CLI")
+  LOADER.ignore("#{__dir__}/core_ext")
   LOADER.setup
 
   ROOT = File.expand_path(File.join(__dir__, "..")).freeze
