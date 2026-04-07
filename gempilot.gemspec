@@ -19,7 +19,7 @@ Gem::Specification.new do |spec|
         f.start_with?("bin/", "test/", "spec/", "features/", ".git", "Gemfile")
     end
   }
-  files = Dir.glob("{lib,exe,rakelib}/**/*").push("README.md", "LICENSE.txt", "Rakefile") if files.empty?
+  files = Dir.glob("{lib,exe}/**/*").push("README.md", "LICENSE.txt", "Rakefile") if files.empty?
   spec.files = files
   spec.bindir = "exe"
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
@@ -27,6 +27,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "command_kit"
   spec.add_dependency "rake"
+  spec.add_dependency "warning"
   spec.add_dependency "zeitwerk"
   spec.metadata["rubygems_mfa_required"] = "true"
 end
