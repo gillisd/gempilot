@@ -1,14 +1,12 @@
 require "rake"
 require "tmpdir"
-require_relative "../../rakelib/project_version"
-require_relative "../../rakelib/version_tag"
+require "gempilot/project/version"
+require "gempilot/version_tag"
 
-DIRTY_STAGING_PATTERN = /staging area must be clean/
-
-RSpec.describe VersionTag do
+RSpec.describe Gempilot::VersionTag do
   let(:version_path) { Pathname("lib/my_gem/version.rb") }
   let(:version_value) { "1.0.0" }
-  let(:version) { Project::Version.new(path: version_path, value: version_value) }
+  let(:version) { Gempilot::Project::Version.new(path: version_path, value: version_value) }
 
   subject(:version_tag) { described_class.new(version) }
 
@@ -54,7 +52,7 @@ RSpec.describe VersionTag do
       end
 
       it "raises an error" do
-        expect { version_tag.create }.to raise_error(RuntimeError, DIRTY_STAGING_PATTERN)
+        expect { version_tag.create }.to raise_error(RuntimeError, /staging area must be clean/)
       end
     end
   end

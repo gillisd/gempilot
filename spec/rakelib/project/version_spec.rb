@@ -1,7 +1,7 @@
 require "rake"
-require_relative "../../../rakelib/project_version"
+require "gempilot/project/version"
 
-RSpec.describe Project::Version do
+RSpec.describe Gempilot::Project::Version do
   let(:path) { Pathname("lib/my_gem/version.rb") }
 
   describe "#tag" do
@@ -23,13 +23,29 @@ RSpec.describe Project::Version do
     context "with a dev suffix" do
       let(:value) { "0.0.4.dev3" }
 
-      it { is_expected.to eq(described_class.new(path: path, value: "0.0.4.dev4")) }
+      it { is_expected.to eq(described_class.new(path: path, value: "0.0.5")) }
     end
 
     context "with a multi-digit patch" do
       let(:value) { "1.0.99" }
 
       it { is_expected.to eq(described_class.new(path: path, value: "1.0.100")) }
+    end
+  end
+
+  describe "#bump" do
+    subject { described_class.new(path: path, value: "1.2.3") }
+
+    it "bumps patch by default" do
+      expect(subject.bump.value).to eq("1.2.4")
+    end
+
+    it "bumps minor" do
+      expect(subject.bump(:minor).value).to eq("1.3.0")
+    end
+
+    it "bumps major" do
+      expect(subject.bump(:major).value).to eq("2.0.0")
     end
   end
 end

@@ -1,8 +1,8 @@
 require "rake"
 require "tmpdir"
-require_relative "../../rakelib/project"
+require "gempilot/project"
 
-RSpec.describe Project do
+RSpec.describe Gempilot::Project do
   around do |example|
     Dir.mktmpdir("project_spec") do |tmpdir|
       Dir.chdir(tmpdir) { example.run }
@@ -31,11 +31,11 @@ RSpec.describe Project do
   end
 
   describe "#version" do
-    it "returns a Project::Version with the correct value" do
+    it "returns a Gempilot::Project::Version with the correct value" do
       expect(project.version.value).to eq("1.2.3")
     end
 
-    it "returns a Project::Version with the correct path" do
+    it "returns a Gempilot::Project::Version with the correct path" do
       expect(project.version.path.to_s).to end_with("lib/my_gem/version.rb")
     end
   end
@@ -73,7 +73,7 @@ RSpec.describe Project do
     end
 
     it "raises ProjectIntrospectionError" do
-      expect { project.name }.to raise_error(Project::ProjectIntrospectionError)
+      expect { project.name }.to raise_error(Gempilot::Project::ProjectIntrospectionError)
     end
   end
 end
