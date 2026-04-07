@@ -1,1 +1,0 @@
-../../../../rakelib/version_tag.rb
