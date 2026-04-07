@@ -16,8 +16,6 @@ gem "rake", require: false
 
 gem "minitest-reporters"
 
-gem "warning"
-
 gem "repl_type_completor"
 
 gem "observer"
