@@ -24,7 +24,7 @@ module Gempilot
 
         def run(segment = "patch")
           detect_gem_context
-          validate_segment(segment)
+          segment = validate_segment(segment)
           run_rake_bump(segment)
         end
 
