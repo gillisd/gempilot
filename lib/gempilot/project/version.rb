@@ -11,6 +11,7 @@ module Gempilot
                     when :major then "#{major + 1}.0.0"
                     when :minor then "#{major}.#{minor + 1}.0"
                     when :patch then "#{major}.#{minor}.#{patch + 1}"
+                    else raise ArgumentError, "Unknown segment #{segment.inspect}. Use :major, :minor, or :patch"
                     end
         with(value: new_value)
       end
