@@ -3,6 +3,8 @@ require "tmpdir"
 require "gempilot/project/version"
 require "gempilot/version_tag"
 
+DIRTY_STAGING_ERROR = /staging area must be clean/
+
 RSpec.describe Gempilot::VersionTag do
   let(:version_path) { Pathname("lib/my_gem/version.rb") }
   let(:version_value) { "1.0.0" }
@@ -52,7 +54,7 @@ RSpec.describe Gempilot::VersionTag do
       end
 
       it "raises an error" do
-        expect { version_tag.create }.to raise_error(RuntimeError, /staging area must be clean/)
+        expect { version_tag.create }.to raise_error(RuntimeError, DIRTY_STAGING_ERROR)
       end
     end
   end
