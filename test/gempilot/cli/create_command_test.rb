@@ -7,6 +7,8 @@ require "stringio"
 module Gempilot
   class CLI
     class CreateCommandTest < Minitest::Test
+      GEMPILOT_ROOT = File.expand_path("../../..", __dir__).freeze
+
       def setup
         @tmpdir = Dir.mktmpdir("create_command_test")
         @original_dir = Dir.pwd
@@ -623,13 +625,11 @@ module Gempilot
 
       private
 
-      GEMPILOT_ROOT = File.expand_path("../../..", __dir__).freeze
-
       def patch_gemfile_gempilot_path(gemfile_path)
         content = File.read(gemfile_path)
         patched = content.sub(
           /^gem "gempilot".*$/,
-          %(gem "gempilot", path: #{GEMPILOT_ROOT.inspect}, require: false)
+          %(gem "gempilot", path: #{GEMPILOT_ROOT.inspect}, require: false),
         )
         File.write(gemfile_path, patched)
       end
