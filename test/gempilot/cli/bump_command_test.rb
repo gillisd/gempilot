@@ -24,72 +24,33 @@ module Gempilot
         FileUtils.rm_rf(@tmpdir)
       end
 
-      # --- Default (patch) bumping ---
+      # --- Delegates to rake ---
 
-      def test_bump_defaults_to_patch
-        run_bump_command
-        content = File.read("lib/my_gem/version.rb")
+      def test_bump_invokes_rake_version_bump_patch
+        calls = recorded_system_calls { |cmd| cmd.main([]) }
 
-        assert_includes content, 'VERSION = "1.2.4"'
+        assert_includes calls, ["bundle", "exec", "rake", "version:bump[patch]"]
       end
 
-      def test_bump_patch_explicit
-        run_bump_command("patch")
-        content = File.read("lib/my_gem/version.rb")
+      def test_bump_patch_explicit_invokes_rake
+        calls = recorded_system_calls { |cmd| cmd.main(["patch"]) }
 
-        assert_includes content, 'VERSION = "1.2.4"'
+        assert_includes calls, ["bundle", "exec", "rake", "version:bump[patch]"]
       end
 
-      # --- Minor bumping ---
+      def test_bump_minor_invokes_rake
+        calls = recorded_system_calls { |cmd| cmd.main(["minor"]) }
 
-      def test_bump_minor
-        run_bump_command("minor")
-        content = File.read("lib/my_gem/version.rb")
-
-        assert_includes content, 'VERSION = "1.3.0"'
+        assert_includes calls, ["bundle", "exec", "rake", "version:bump[minor]"]
       end
 
-      # --- Major bumping ---
+      def test_bump_major_invokes_rake
+        calls = recorded_system_calls { |cmd| cmd.main(["major"]) }
 
-      def test_bump_major
-        run_bump_command("major")
-        content = File.read("lib/my_gem/version.rb")
-
-        assert_includes content, 'VERSION = "2.0.0"'
+        assert_includes calls, ["bundle", "exec", "rake", "version:bump[major]"]
       end
 
-      # --- Preserves file structure ---
-
-      def test_bump_preserves_module_wrapper
-        run_bump_command("patch")
-        content = File.read("lib/my_gem/version.rb")
-
-        assert_includes content, "module MyGem"
-        assert_includes content, "end"
-      end
-
-      def test_bump_preserves_freeze
-        run_bump_command("patch")
-        content = File.read("lib/my_gem/version.rb")
-
-        assert_includes content, ".freeze"
-      end
-
-      # --- Version without .freeze ---
-
-      def test_bump_works_without_freeze
-        File.write("lib/my_gem/version.rb", <<~RUBY)
-          module MyGem
-            VERSION = "0.1.0"
-          end
-        RUBY
-        run_bump_command("patch")
-        content = File.read("lib/my_gem/version.rb")
-
-        assert_includes content, 'VERSION = "0.1.1"'
-      end
-
-      # --- Error handling ---
+      # --- Error handling (detected before rake delegation) ---
 
       def test_bump_fails_without_gemspec
         FileUtils.rm("my_gem.gemspec")
@@ -100,54 +61,30 @@ module Gempilot
         assert_equal 1, exit_code
       end
 
-      def test_bump_fails_without_version_file
-        FileUtils.rm("lib/my_gem/version.rb")
-        stdout = StringIO.new
-        command = Commands::Bump.new(stdout: stdout)
-        exit_code = command.main([])
-
-        assert_equal 1, exit_code
-      end
-
       def test_bump_fails_with_invalid_segment
-        stdout = StringIO.new
-        command = Commands::Bump.new(stdout: stdout)
-        exit_code = command.main(["hotfix"])
+        exit_code = nil
+        calls = recorded_system_calls { |cmd| exit_code = cmd.main(["hotfix"]) }
 
         assert_equal 1, exit_code
-      end
-
-      def test_bump_fails_with_no_version_constant
-        File.write("lib/my_gem/version.rb", <<~RUBY)
-          module MyGem
-            # no version here
-          end
-        RUBY
-        stdout = StringIO.new
-        command = Commands::Bump.new(stdout: stdout)
-        exit_code = command.main([])
-
-        assert_equal 1, exit_code
-      end
-
-      # --- Output ---
-
-      def test_bump_displays_old_and_new_version
-        stdout = StringIO.new
-        command = Commands::Bump.new(stdout: stdout)
-        command.main(["patch"])
-        output = stdout.string
-
-        assert_includes output, "1.2.3"
-        assert_includes output, "1.2.4"
+        assert_empty calls, "rake should not be called for an invalid segment"
       end
 
       private
 
+      def recorded_system_calls
+        calls = []
+        command = Commands::Bump.new(stdout: StringIO.new)
+        command.define_singleton_method(:system) do |*args|
+          calls << args
+          true
+        end
+        yield command
+        calls
+      end
+
       def run_bump_command(*args)
         stdout = StringIO.new
-        command = Commands::Bump.new(stdout: stdout)
-        command.main(args)
+        Commands::Bump.new(stdout: stdout).main(args)
       end
     end
   end

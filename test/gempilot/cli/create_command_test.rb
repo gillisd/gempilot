@@ -50,6 +50,7 @@ module Gempilot
         assert_includes main_rb, "LOADER = Zeitwerk::Loader.for_gem"
         assert_includes main_rb, "LOADER.setup"
         assert_includes main_rb, "module TestGem"
+        refute_includes main_rb, "LOADER.ignore"
       end
 
       def test_creates_version_file
@@ -156,12 +157,22 @@ module Gempilot
         assert_includes spec_file, "TestGem::VERSION"
       end
 
+      def test_gemfile_has_gempilot
+        run_create_command("test_gem")
+
+        gemfile = File.read("test_gem/Gemfile")
+
+        assert_includes gemfile, 'gem "gempilot"'
+        refute_includes gemfile, 'gem "warning"'
+      end
+
       def test_rspec_gemfile_has_rspec_gem
         run_create_command("test_gem", "--test", "rspec")
 
         gemfile = File.read("test_gem/Gemfile")
 
         assert_includes gemfile, 'gem "rspec"'
+        assert_includes gemfile, 'gem "gempilot"'
         refute_includes gemfile, 'gem "minitest"'
       end
 
@@ -380,13 +391,6 @@ module Gempilot
         assert_includes console, 'require "gempilot/encryption"'
       end
 
-      def test_hyphenated_gem_version_rake_uses_project_domain_object
-        run_create_command("gempilot-encryption")
-        rake = File.read("gempilot-encryption/rakelib/version.rake")
-
-        assert_includes rake, "project.version_value"
-      end
-
       def test_hyphenated_gem_gemspec_has_correct_module
         run_create_command("gempilot-encryption")
         gemspec = File.read("gempilot-encryption/gempilot-encryption.gemspec")
@@ -460,6 +464,15 @@ module Gempilot
         assert_includes rakefile, "eager_load"
       end
 
+      def test_rakefile_has_version_tasks
+        run_create_command("test_gem")
+
+        rakefile = File.read("test_gem/Rakefile")
+
+        assert_includes rakefile, 'require "gempilot/version_tasks"'
+        assert_includes rakefile, "Gempilot::VersionTasks.new"
+      end
+
       # Gemspec tests
 
       def test_gemspec_uses_git_ls_files
@@ -507,47 +520,18 @@ module Gempilot
         refute_includes ci, "bundle exec rake test"
       end
 
-      # Version rake task tests
+      # Version tasks tests (now provided by gempilot as a dependency)
 
-      def test_creates_rakelib_directory
+      def test_does_not_create_rakelib_directory
         run_create_command("test_gem")
 
-        assert_predicate Pathname("test_gem/rakelib"), :directory?
+        refute_predicate Pathname("test_gem/rakelib"), :directory?
       end
 
-      def test_creates_version_rake_task
+      def test_does_not_create_version_rake_file
         run_create_command("test_gem")
 
-        assert_path_exists "test_gem/rakelib/version.rake"
-      end
-
-      def test_version_rake_has_bump_task
-        run_create_command("test_gem")
-        content = File.read("test_gem/rakelib/version.rake")
-
-        assert_includes content, "task :bump"
-      end
-
-      def test_version_rake_uses_project_domain_object
-        run_create_command("test_gem")
-        content = File.read("test_gem/rakelib/version.rake")
-
-        assert_includes content, "project.version_value"
-      end
-
-      def test_version_rake_has_no_monkey_patches
-        run_create_command("test_gem")
-        content = File.read("test_gem/rakelib/version.rake")
-
-        refute_includes content, "class String"
-      end
-
-      def test_version_rake_wires_project_and_version_tag
-        run_create_command("test_gem")
-        content = File.read("test_gem/rakelib/version.rake")
-
-        assert_includes content, "Project.new"
-        assert_includes content, "VersionTag.new"
+        refute_path_exists "test_gem/rakelib/version.rake"
       end
 
       # Git config defaults
@@ -599,6 +583,8 @@ module Gempilot
         command = Commands::Create.new(stdout: stdout)
         command.main(args)
 
+        patch_gemfile_gempilot_path("test_gem/Gemfile")
+
         Dir.chdir("test_gem") do
           Bundler.with_unbundled_env do
             output = `bundle exec rake 2>&1`
@@ -624,6 +610,8 @@ module Gempilot
         command = Commands::Create.new(stdout: stdout)
         command.main(args)
 
+        patch_gemfile_gempilot_path("gempilot-encryption/Gemfile")
+
         Dir.chdir("gempilot-encryption") do
           Bundler.with_unbundled_env do
             output = `bundle exec rake 2>&1`
@@ -634,6 +622,17 @@ module Gempilot
       end
 
       private
+
+      GEMPILOT_ROOT = File.expand_path("../../..", __dir__).freeze
+
+      def patch_gemfile_gempilot_path(gemfile_path)
+        content = File.read(gemfile_path)
+        patched = content.sub(
+          /^gem "gempilot".*$/,
+          %(gem "gempilot", path: #{GEMPILOT_ROOT.inspect}, require: false)
+        )
+        File.write(gemfile_path, patched)
+      end
 
       def run_create_command(gem_name, *extra_args)
         stdout = StringIO.new
