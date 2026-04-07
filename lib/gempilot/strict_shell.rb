@@ -1,6 +1,7 @@
 require "rake"
 
 module Gempilot
+  ## Wraps Rake's sh to raise on non-zero exit status.
   module StrictShell
     include Rake::FileUtilsExt
 

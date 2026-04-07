@@ -2,6 +2,7 @@ require "open3"
 require_relative "strict_shell"
 
 module Gempilot
+  ## Manages git operations for version releases.
   class VersionTag
     include StrictShell
 
