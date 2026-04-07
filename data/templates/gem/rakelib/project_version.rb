@@ -1,1 +1,0 @@
-../../../../rakelib/project_version.rb

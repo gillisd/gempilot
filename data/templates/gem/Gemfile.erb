@@ -2,6 +2,7 @@ source "https://rubygems.org"
 
 gemspec
 
+gem "gempilot", require: false
 <% if @test_framework == :minitest -%>
 gem "minitest"
 gem "minitest-reporters"
@@ -20,4 +21,3 @@ gem "rubocop-rake"
 <% if @test_framework == :rspec -%>
 gem "rubocop-rspec"
 <% end -%>
-gem "warning"
