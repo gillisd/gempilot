@@ -38,8 +38,8 @@ module Gempilot
     end
 
     def define_version_composite_tasks
-      desc "Bump version, commit, and tag"
-      task "version:release" => ["version:bump", "version:commit", "version:tag"]
+      desc "Bump version, commit, and tag (rake version:release[minor])"
+      task "version:release", [:segment] => ["version:bump", "version:commit", "version:tag"]
 
       desc "Untag and reset version"
       task "version:unrelease" => ["version:untag", "version:reset"]
