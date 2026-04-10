@@ -1,1 +1,0 @@
-../../../../rakelib/github_release.rb

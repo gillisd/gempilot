@@ -1,7 +1,7 @@
 require "rake"
-require_relative "../../rakelib/github_release"
+require "gempilot/github_release"
 
-RSpec.describe GithubRelease do
+RSpec.describe Gempilot::GithubRelease do
   let(:tag) { "v1.0.0" }
   let(:release) { described_class.new(tag) }
 

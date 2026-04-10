@@ -17,6 +17,9 @@ end
 
 RuboCop::RakeTask.new
 
+require "gempilot/version_tasks"
+Gempilot::VersionTasks.new
+
 namespace :zeitwerk do
   desc "Verify all files follow Zeitwerk naming conventions"
   task :validate do

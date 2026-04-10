@@ -1,1 +1,0 @@
-../../../../rakelib/strict_shell.rb

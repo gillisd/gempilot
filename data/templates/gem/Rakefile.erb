@@ -5,6 +5,7 @@ require "minitest/test_task"
 require "rspec/core/rake_task"
 <% end -%>
 require "rubocop/rake_task"
+require "gempilot/version_tasks"
 
 <% if @test_framework == :minitest -%>
 Minitest::TestTask.create
@@ -12,6 +13,7 @@ Minitest::TestTask.create
 RSpec::Core::RakeTask.new(:spec)
 <% end -%>
 RuboCop::RakeTask.new
+Gempilot::VersionTasks.new
 
 namespace :zeitwerk do
   desc "Verify all files follow Zeitwerk naming conventions"
