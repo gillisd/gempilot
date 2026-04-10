@@ -10,17 +10,18 @@ module Gempilot
         include GemContext
 
         usage "[options] [SEGMENT]"
-        description "Bump the gem version (patch by default, or minor/major)"
+        description "Bump the gem version (patch by default, or minor/major/dev)"
 
         examples [
           "",
           "patch",
           "minor",
           "major",
+          "dev",
         ]
 
         argument :segment, required: false,
-                           desc: "Version segment to bump: patch (default), minor, or major"
+                           desc: "Version segment to bump: patch (default), minor, major, or dev"
 
         def run(segment = "patch")
           detect_gem_context
@@ -32,9 +33,9 @@ module Gempilot
 
         def validate_segment(segment)
           segment = segment.downcase
-          return segment if %w[patch minor major].include?(segment)
+          return segment if %w[patch minor major dev].include?(segment)
 
-          puts colors.red("Unknown segment '#{segment}'. Use patch, minor, or major.")
+          puts colors.red("Unknown segment '#{segment}'. Use patch, minor, major, or dev.")
           exit 1
         end
 
