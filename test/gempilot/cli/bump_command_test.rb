@@ -50,6 +50,12 @@ module Gempilot
         assert_includes calls, ["bundle", "exec", "rake", "version:bump[major]"]
       end
 
+      def test_bump_dev_invokes_rake
+        calls = recorded_system_calls { |cmd| cmd.main(["dev"]) }
+
+        assert_includes calls, ["bundle", "exec", "rake", "version:bump[dev]"]
+      end
+
       # --- Error handling (detected before rake delegation) ---
 
       def test_bump_fails_without_gemspec
