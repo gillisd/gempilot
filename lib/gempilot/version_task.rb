@@ -6,7 +6,7 @@ require_relative "github_release"
 
 module Gempilot
   ## Rake tasks for version lifecycle management.
-  class VersionTasks < Rake::TaskLib
+  class VersionTask < Rake::TaskLib
     attr_reader :project
 
     def initialize(root: Dir.pwd)
