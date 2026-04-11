@@ -28,7 +28,16 @@ namespace :zeitwerk do
 end
 
 require "rubocop/rake_task"
-RuboCop::RakeTask.new
+RuboCop::RakeTask.new do |t|
+  t.patterns = [
+    'lib/*.rb',
+    'lib/**/*.rb',
+    'spec/*.rb',
+    'spec/**/*.rb',
+    'test/*.rb',
+    'test/**/*.rb',
+  ]
+end
 
 Gempilot::VersionTask.new
 

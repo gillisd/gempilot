@@ -1,4 +1,4 @@
-require 'spec_helper'
+require "spec_helper"
 
 RSpec.describe Gempilot::Project::Version do
   let(:path) { Pathname("lib/my_gem/version.rb") }

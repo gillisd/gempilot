@@ -1,4 +1,3 @@
-
 class String
   ## Refinement that adds inflection methods (underscore, camelize, dasherize)
   ## to String and String singleton class via String::InflectionMethods.

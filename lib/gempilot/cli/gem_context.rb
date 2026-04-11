@@ -1,4 +1,3 @@
-
 module Gempilot
   class CLI
     ## Shared context for commands that operate inside an existing gem.

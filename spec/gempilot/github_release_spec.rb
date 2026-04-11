@@ -1,8 +1,9 @@
-require 'spec_helper'
+require "spec_helper"
 
 RSpec.describe Gempilot::GithubRelease do
   let(:tag) { "v1.0.0" }
-  subject(:release) { described_class.new(tag) }
+
+  let(:release) { described_class.new(tag) }
 
   before do
     allow(release).to receive(:sh)

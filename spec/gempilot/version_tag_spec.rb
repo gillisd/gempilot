@@ -1,4 +1,4 @@
-require 'spec_helper'
+require "spec_helper"
 
 DIRTY_STAGING_ERROR = /staging area must be clean/
 

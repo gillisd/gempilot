@@ -1,4 +1,3 @@
-
 module Gempilot
   class CLI
     module Commands
