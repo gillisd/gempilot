@@ -1,4 +1,3 @@
-require_relative "../../core_ext/string/refinements/inflectable"
 
 module Gempilot
   class CLI

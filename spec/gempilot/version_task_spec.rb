@@ -1,12 +1,10 @@
-require "rake"
-require "tmpdir"
-require "gempilot/version_tasks"
+require 'spec_helper'
 
-RSpec.describe Gempilot::VersionTasks do
+RSpec.describe Gempilot::VersionTask do
   around do |example|
     old_app = Rake.application
     Rake.application = Rake::Application.new
-    Dir.mktmpdir("version_tasks_spec") do |tmpdir|
+    Dir.mktmpdir("version_task_spec") do |tmpdir|
       Dir.chdir(tmpdir) { example.run }
     end
   ensure

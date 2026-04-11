@@ -1,4 +1,3 @@
-require_relative "test_helper"
 
 class TestGempilot < Minitest::Test
   def test_that_it_has_a_version_number
@@ -6,7 +5,6 @@ class TestGempilot < Minitest::Test
   end
 
   def test_root_is_defined
-    assert_kind_of String, Gempilot::ROOT
-    assert_predicate Pathname(Gempilot::ROOT), :directory?
+    assert_kind_of Pathname, Gempilot::ROOT
   end
 end

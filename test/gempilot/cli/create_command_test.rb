@@ -1,6 +1,5 @@
 require "English"
 require "test_helper"
-require "gempilot/cli"
 require "tmpdir"
 require "stringio"
 
@@ -466,13 +465,13 @@ module Gempilot
         assert_includes rakefile, "eager_load"
       end
 
-      def test_rakefile_has_version_tasks
+      def test_rakefile_has_version_task
         run_create_command("test_gem")
 
         rakefile = File.read("test_gem/Rakefile")
 
-        assert_includes rakefile, 'require "gempilot/version_tasks"'
-        assert_includes rakefile, "Gempilot::VersionTasks.new"
+        assert_includes rakefile, 'require "gempilot/version_task"'
+        assert_includes rakefile, "Gempilot::VersionTask.new"
       end
 
       # Gemspec tests
@@ -551,7 +550,6 @@ module Gempilot
         script = <<~RUBY
           require "bundler/setup"
           require "stringio"
-          require "gempilot/cli"
           cmd = Gempilot::CLI::Commands::Create.new(stdout: StringIO.new)
           puts cmd.options[:author].inspect
           puts cmd.options[:email].inspect

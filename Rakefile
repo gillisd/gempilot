@@ -1,12 +1,13 @@
 require "bundler/gem_tasks"
-require "rspec/core/rake_task"
-require "rubocop/rake_task"
 Bundler::GemHelper.install_tasks name: "gempilot"
 
 require "minitest/test_task"
 Minitest::TestTask.create
 
+require "rspec/core/rake_task"
 RSpec::Core::RakeTask.new(:spec)
+
+require_relative 'lib/gempilot'
 
 namespace :spec do
   desc "Prints the specification suite in documentation format and exits"
@@ -14,11 +15,6 @@ namespace :spec do
     exec("rspec", "--format", "documentation", "--dry-run")
   end
 end
-
-RuboCop::RakeTask.new
-
-require "gempilot/version_tasks"
-Gempilot::VersionTasks.new
 
 namespace :zeitwerk do
   desc "Verify all files follow Zeitwerk naming conventions"
@@ -30,5 +26,10 @@ namespace :zeitwerk do
     RUBY
   end
 end
+
+require "rubocop/rake_task"
+RuboCop::RakeTask.new
+
+Gempilot::VersionTask.new
 
 task default: [:test, :spec, :rubocop]

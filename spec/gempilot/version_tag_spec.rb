@@ -1,7 +1,4 @@
-require "rake"
-require "tmpdir"
-require "gempilot/project/version"
-require "gempilot/version_tag"
+require 'spec_helper'
 
 DIRTY_STAGING_ERROR = /staging area must be clean/
 

@@ -1,5 +1,4 @@
-require "rake"
-require "gempilot/project/version"
+require 'spec_helper'
 
 RSpec.describe Gempilot::Project::Version do
   let(:path) { Pathname("lib/my_gem/version.rb") }

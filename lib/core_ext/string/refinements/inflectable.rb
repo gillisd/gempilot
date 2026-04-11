@@ -1,4 +1,3 @@
-require_relative "../inflection_methods"
 
 class String
   ## Refinement that adds inflection methods (underscore, camelize, dasherize)

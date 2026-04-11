@@ -1,6 +1,3 @@
-require_relative "../command"
-require_relative "../gem_context"
-require_relative "../../../core_ext/string/refinements/inflectable"
 require "fileutils"
 
 module Gempilot

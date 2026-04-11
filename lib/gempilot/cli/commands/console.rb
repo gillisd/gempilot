@@ -1,5 +1,3 @@
-require_relative "../command"
-require_relative "../gem_context"
 require "bundler"
 
 module Gempilot

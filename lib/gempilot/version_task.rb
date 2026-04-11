@@ -1,8 +1,5 @@
-require "rake"
 require "rake/tasklib"
-require_relative "project"
-require_relative "version_tag"
-require_relative "github_release"
+require_relative '../gempilot'
 
 module Gempilot
   ## Rake tasks for version lifecycle management.
