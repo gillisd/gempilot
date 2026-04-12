@@ -545,10 +545,13 @@ module Gempilot
           "GIT_CONFIG_NOSYSTEM" => "1",
           "GIT_CONFIG_GLOBAL" => "/nonexistent",
           "BUNDLE_GEMFILE" => File.join(gem_root, "Gemfile"),
+          "GEM_HOME" => Gem.default_dir,
+          "GEM_PATH" => Gem.path.join(File::PATH_SEPARATOR),
         }
 
         script = <<~RUBY
           require "bundler/setup"
+          require "gempilot"
           require "stringio"
           cmd = Gempilot::CLI::Commands::Create.new(stdout: StringIO.new)
           puts cmd.options[:author].inspect
