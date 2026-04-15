@@ -1,5 +1,3 @@
-require_relative "../../core_ext/string/refinements/inflectable"
-
 module Gempilot
   class CLI
     ## Shared context for commands that operate inside an existing gem.

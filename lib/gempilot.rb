@@ -4,13 +4,13 @@ autoload :Open3, "open3"
 
 # CLI toolkit for creating and managing Ruby gems.
 module Gempilot
-  LOADER = Zeitwerk::Loader.for_gem
-  LOADER.inflector.inflect("cli" => "CLI")
-  LOADER.ignore("#{__dir__}/core_ext")
-  LOADER.ignore("#{__dir__}/gempilot/version_tasks.rb")
-  LOADER.setup
-
-  ROOT = File.expand_path(File.join(__dir__, "..")).freeze
+  ROOT = Pathname(__dir__).parent.expand_path.freeze
+  LOADER = Zeitwerk::Loader.for_gem.tap do |l|
+    l.inflector.inflect("cli" => "CLI")
+    l.push_dir ROOT.join("lib/core_ext")
+    l.collapse ROOT.join("lib/core_ext/*/refinements")
+    l.setup
+  end
 
   class Error < StandardError; end
   class CommandError < Error; end

@@ -1,7 +1,5 @@
 require "pathname"
 require "warning"
-require_relative "project/version"
-require_relative "../core_ext/string/refinements/inflectable"
 
 module Gempilot
   ## Introspects a gem project to discover its name, module, and version.

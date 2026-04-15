@@ -1,6 +1,4 @@
 require "test_helper"
-require "gempilot/cli/command"
-require "gempilot/cli/generator"
 require "tmpdir"
 require "stringio"
 

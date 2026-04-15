@@ -1,8 +1,3 @@
-require_relative "../command"
-require_relative "../generator"
-require_relative "../gem_context"
-require_relative "../../../core_ext/string/refinements/inflectable"
-
 module Gempilot
   class CLI
     module Commands

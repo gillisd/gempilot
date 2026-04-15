@@ -1,5 +1,3 @@
-require_relative "strict_shell"
-
 module Gempilot
   ## Manages GitHub releases for a version tag.
   class GithubRelease

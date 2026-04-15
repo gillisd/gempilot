@@ -1,6 +1,4 @@
-require "rake"
-require "tmpdir"
-require "gempilot/project"
+require "spec_helper"
 
 RSpec.describe Gempilot::Project do
   around do |example|
