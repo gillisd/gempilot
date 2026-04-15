@@ -75,3 +75,18 @@ Updated: Mon, 06 Apr 2026 00:00:00 -0400
 Title: Replace 4.0.1 with 3.4.8
 Description: Need to move ruby version down to 3.4.8
 Status: closed
+
+Id: 776F52C8-390E-11F1-8D46-FE6CB9572C2F
+Updated: Wed, 15 Apr 2026 17:02:52 -0400
+Title: `gempilot new` => `3) command` => `Codeball::Command::Filter` fails
+Description: Generating commands with gempilot new is failing with the following error:
++  gempilot new command 'Codeball::Command::Filter'
++ 
++ Oops! Looks like you have found a bug. Please report it!
++ https://github.com/dgillis/gempilot/issues/new
++ 
++ ```
++ gempilot new: /Users/davidgillis/.rbenv/versions/4.0.1/lib/ruby/gems/4.0.0/gems/gempilot-0.2.0/lib/core_ext/string/inflection_methods.rb:33:in 'scan_word_token': cannot convert string to underscored: "Codeball::Command::Filter" (ArgumentError)
++ 
++         raise(ArgumentError, "cannot convert string to underscored: #{scanner.string.inspect}")
+Status: open
