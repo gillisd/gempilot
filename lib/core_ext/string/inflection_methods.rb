@@ -36,6 +36,8 @@ class String
     def scan_underscore_separator(scanner)
       if (sep = scanner.scan(/[_-]+/))
         "_" * sep.length
+      elsif scanner.scan(/::/)
+        "/"
       elsif scanner.eos?
         ""
       else
@@ -58,7 +60,7 @@ class String
 
       if scanner.scan(/[_-]+/)
         nil
-      elsif scanner.scan(%r{/})
+      elsif scanner.scan(%r{/|::})
         buffer << "::"
       else
         raise(ArgumentError, "cannot convert string to CamelCase: #{scanner.string.inspect}")
