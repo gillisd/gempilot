@@ -1,5 +1,4 @@
 require "bundler/gem_tasks"
-Bundler::GemHelper.install_tasks name: "gempilot"
 
 require "minitest/test_task"
 Minitest::TestTask.create
@@ -7,7 +6,7 @@ Minitest::TestTask.create
 require "rspec/core/rake_task"
 RSpec::Core::RakeTask.new(:spec)
 
-require_relative 'lib/gempilot'
+require_relative "lib/gempilot"
 
 namespace :spec do
   desc "Prints the specification suite in documentation format and exits"
@@ -30,12 +29,12 @@ end
 require "rubocop/rake_task"
 RuboCop::RakeTask.new do |t|
   t.patterns = [
-    'lib/*.rb',
-    'lib/**/*.rb',
-    'spec/*.rb',
-    'spec/**/*.rb',
-    'test/*.rb',
-    'test/**/*.rb',
+    "lib/*.rb",
+    "lib/**/*.rb",
+    "spec/*.rb",
+    "spec/**/*.rb",
+    "test/*.rb",
+    "test/**/*.rb",
   ]
 end
 
