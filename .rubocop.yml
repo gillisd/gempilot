@@ -75,9 +75,10 @@ Claude/NoOverlyDefensiveCode:
 Style/SafeNavigation:
   MaxChainLength: 2
 
+# This was enabled, but it was abused by AI agents to write "primitive-obsessed" code
 # Allow `return a, b` for tuple-style returns.
 Style/RedundantReturn:
-  AllowMultipleReturnValues: true
+  AllowMultipleReturnValues: false
 
 # ===========================================================================
 # Overrides from rubocop-performance — disable chain-hostile cops
@@ -93,9 +94,10 @@ Performance/MapMethodChain:
 # Additional tightening — not set by stock or rubocop-claude
 # ===========================================================================
 
-# Zeitwerk loaders are mutable by design — only flag literal mutable values.
+# Freezing constants breaks objects that need post-assignment setup (e.g.
+# Zeitwerk loaders). Not worth the churn.
 Style/MutableConstant:
-  EnforcedStyle: literals
+  Enabled: false
 
 # Short blocks push toward small chained steps instead of fat lambdas.
 Metrics/BlockLength:
