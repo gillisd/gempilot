@@ -90,3 +90,54 @@ Description: Generating commands with gempilot new is failing with the following
 + 
 +         raise(ArgumentError, "cannot convert string to underscored: #{scanner.string.inspect}")
 Status: open
+
+Id: 4EB6E51C-4322-11F1-B1B2-FE6CB9572C2F
+Updated: Tue, 28 Apr 2026 12:50:05 -0400
+Title: Existing git repo on gempilot create needs new commit message
+Description: Currently it commits "Initial commit". Inappropriate for a git repo that already has a history
+Status: open
+
+Id: 0411D4DA-4323-11F1-847C-FE6CB9572C2F
+Updated: Tue, 28 Apr 2026 12:55:09 -0400
+Title: rubocop config should not exclude rakelib
+Description: it is supplied by gempilot. Should not be eliminating author files
+Status: open
+
+Id: C72CD130-4324-11F1-ACAE-FE6CB9572C2F
+Updated: Tue, 28 Apr 2026 13:07:46 -0400
+Title: Make zeitwerk setup a block
+Description: e.g.
++  Zeitwerk::Loader.for_gem.tap do |l|
++     l.setup
++   end
++ 
++ 
+Status: open
+
+Id: 5618BB20-4325-11F1-BF5A-FE6CB9572C2F
+Updated: Tue, 28 Apr 2026 13:11:46 -0400
+Title: Move zeitwerk check task into gempilot
+Description: Can't iterate on it when its not managed by gempilot. A new feature needs to be added
+Status: open
+
+Id: 6BE168E4-4325-11F1-BE0F-FE6CB9572C2F
+Updated: Tue, 28 Apr 2026 13:12:22 -0400
+Title: Add zeitwerk:all task
+Description: Add rake task that runs LOADER.all_expected_cpaths and prints in a nice table, similar to rails routes
+Status: open
+
+Id: 56DB9634-4327-11F1-8D0F-FE6CB9572C2F
+Updated: Tue, 28 Apr 2026 13:26:06 -0400
+Title: 'gempilot new' doesn't even work
+Description: "
++ Fully-qualified constant name (e.g., Television::Services::Authentication).
++ Constant: Television::CLI::Screen
++ 
++ Oops! Looks like you have found a bug. Please report it!
++ https://github.com/dgillis/gempilot/issues/new
++ 
++ ```
++ gempilot new: /Users/davidgillis/.rbenv/versions/4.0.1/lib/ruby/gems/4.0.0/gems/gempilot-0.2.0/lib/core_ext/string/inflection_methods.rb:33:in 'scan_word_token': cannot convert string to underscored: "Television::CLI::Screen" (ArgumentError)
++ ```
++ "
+Status: open
