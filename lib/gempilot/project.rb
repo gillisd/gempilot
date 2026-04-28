@@ -28,6 +28,12 @@ module Gempilot
       @lib_project ||= fetch_lib_project
     end
 
+    def entrypoint
+      path = lib_project.sub_ext(".rb")
+      raise "Expected to find entrypoint at #{path.inspect} but it does not exist" unless path.file?
+      path
+    end
+
     def name
       lib_project.basename.to_s
     end
