@@ -36,7 +36,7 @@ class String
     def scan_underscore_separator(scanner)
       if (sep = scanner.scan(/[_-]+/))
         "_" * sep.length
-      elsif scanner.scan(/::/)
+      elsif scanner.scan("::")
         "/"
       elsif scanner.eos?
         ""
