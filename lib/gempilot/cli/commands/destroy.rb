@@ -91,6 +91,7 @@ module Gempilot
         end
 
         def destroy_command(name)
+          name = name.split("::").last if name.include?("::")
           file_name = name.underscore
           file_path = File.join("lib", @require_path, "cli", "commands", "#{file_name}.rb")
           remove_file(file_path)

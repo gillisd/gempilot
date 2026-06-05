@@ -114,6 +114,7 @@ module Gempilot
         end
 
         def add_command(name)
+          name = name.split("::").last if name.include?("::")
           file_name = name.underscore
           command_name = name.camelize
           file_path = File.join("lib", @require_path, "cli", "commands", "#{file_name}.rb")

@@ -23,6 +23,10 @@ RSpec.describe String::Inflectable do
     it "preserves numeric segments with underscore prefix" do
       expect("v_2".camelize).to eq("V_2")
     end
+
+    it "preserves existing namespace separators" do
+      expect("Codeball::Command::Filter".camelize).to eq("Codeball::Command::Filter")
+    end
   end
 
   describe "#underscore" do
@@ -44,6 +48,10 @@ RSpec.describe String::Inflectable do
 
     it "converts hyphens to underscores" do
       expect("my-gem".underscore).to eq("my_gem")
+    end
+
+    it "converts namespace separators to slashes" do
+      expect("Codeball::Command::Filter".underscore).to eq("codeball/command/filter")
     end
   end
 
