@@ -6,6 +6,14 @@ RSpec.describe Gempilot::CLI::Commands::Create do
 
   let(:stdout) { StringIO.new }
 
+  # All required options so +create+ proceeds past name validation without
+  # prompting. It may scaffold a gem dir, but that is fine -- these examples
+  # only assert on the name-validation step.
+  let(:valid_opts) do
+    ["--author", "Test", "--email", "t@t.com", "--summary", "test",
+     "--test", "minitest", "--no-exe", "--no-git"]
+  end
+
   describe "gem name validation" do
     context "when name contains spaces" do
       it "exits with an error" do
@@ -33,18 +41,7 @@ RSpec.describe Gempilot::CLI::Commands::Create do
 
     context "when name is valid lowercase with hyphens" do
       it "does not fail validation" do
-        # Use --no-git and provide all required options to avoid prompts.
-        # The command will proceed past validation (may fail later without
-        # a real filesystem, but that's fine — we're testing validation).
-        result = command.main([
-          "--author", "Test",
-          "--email", "t@t.com",
-          "--summary", "test",
-          "--test", "minitest",
-          "--no-exe",
-          "--no-git",
-          "my-gem",
-        ])
+        command.main(valid_opts + ["my-gem"])
 
         expect(stdout.string).not_to include("Invalid gem name")
       end
@@ -52,15 +49,7 @@ RSpec.describe Gempilot::CLI::Commands::Create do
 
     context "when name is valid lowercase with underscores" do
       it "does not fail validation" do
-        result = command.main([
-          "--author", "Test",
-          "--email", "t@t.com",
-          "--summary", "test",
-          "--test", "minitest",
-          "--no-exe",
-          "--no-git",
-          "my_gem",
-        ])
+        command.main(valid_opts + ["my_gem"])
 
         expect(stdout.string).not_to include("Invalid gem name")
       end
