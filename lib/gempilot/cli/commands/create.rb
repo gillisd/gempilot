@@ -87,11 +87,23 @@ module Gempilot
           initialize_git_repo
         end
 
+        GEM_NAME_PATTERN = /\A[a-z][a-z0-9]*([_-][a-z0-9]+)*\z/
+        private_constant :GEM_NAME_PATTERN
+
         def collect_gem_name(gem_name)
           @gem_name = gem_name || begin
             puts colors.bright_black("The gem name determines the directory, require path, and gemspec name.")
             ask(colors.green("Gem name"), required: true)
           end
+          validate_gem_name
+        end
+
+        def validate_gem_name
+          return if @gem_name.match?(GEM_NAME_PATTERN)
+
+          puts colors.red("Invalid gem name '#{@gem_name}'.")
+          puts colors.red("Use lowercase letters, digits, hyphens, or underscores (e.g., my_gem or my-gem).")
+          exit 1
         end
 
         def derive_naming
