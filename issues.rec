@@ -17,10 +17,10 @@ Description: Why am I seeing 2 messages about gempilot being built to pkg/gempil
 Status: closed
 
 Id: 011FB117-BC52-453F-A8E8-6955FE3EBCE8
-Updated: Mon, 02 Mar 2026 10:31:39 -0500
+Updated: Sat, 06 Jun 2026 00:00:00 -0400
 Title: rubocop-rake is not active
 Description: It should be active for this project
-Status: open
+Status: closed
 
 Id: F0833E66-A35C-4054-884B-F90C81F08838
 Updated: Mon, 02 Mar 2026 10:37:33 -0500
@@ -59,10 +59,10 @@ Description: open
 Status: closed
 
 Id: 5E4D51AB-F9BF-4C72-8165-F1B900799FA7
-Updated: Sat, 28 Mar 2026 12:55:14 -0400
+Updated: Sat, 06 Jun 2026 00:00:00 -0400
 Title: Hundreds of rubocop failures exist
 Description: These need to be addressed
-Status: open
+Status: closed
 
 Id: 74D0FD90-0421-4452-8591-2798EE6FD23E
 Updated: Sat, 28 Mar 2026 12:59:40 -0400
