@@ -75,5 +75,21 @@ RSpec.describe Gempilot::CLI::Commands::Destroy do
         expect(File).not_to exist("lib/my_gem/cli/commands/deploy.rb")
       end
     end
+
+    context "when the gem name is hyphenated (multi-segment module)" do
+      before do
+        rm_f("my_gem.gemspec")
+        rm_rf("lib/my_gem")
+        File.write("my-gem.gemspec", 'Gem::Specification.new { |s| s.name = "my-gem" }')
+        mkdir_p("lib/my")
+        File.write("lib/my/widget.rb", "# class")
+      end
+
+      it "does not double the root segment when resolving partially-qualified input" do
+        destroy("1\nMy::Widget\n")
+
+        expect(File).not_to exist("lib/my/widget.rb")
+      end
+    end
   end
 end

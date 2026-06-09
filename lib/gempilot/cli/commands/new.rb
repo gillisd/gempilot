@@ -44,9 +44,11 @@ module Gempilot
           name = ask(colors.green(type), required: true)
           return name if type == "command"
 
-          # Commands aside, every constant must live under the gem's root
-          # namespace, so default to it instead of making the user retype it.
-          name.start_with?("#{@gem_module}::") ? name : "#{@gem_module}::#{name}"
+          # Class/module constants belong under the gem's module, so prepend it
+          # to save the user retyping it, unless the input is already rooted
+          # there (matched on the root segment, as validate_gem_root! does).
+          root = @gem_module.split("::").first
+          name.start_with?("#{root}::") ? name : "#{@gem_module}::#{name}"
         end
 
         def dispatch_add(type, path)

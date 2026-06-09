@@ -68,5 +68,27 @@ RSpec.describe Gempilot::CLI::Commands::New do
         expect(File.read("lib/my_gem/cli/commands/deploy.rb")).to include("class Deploy < Command")
       end
     end
+
+    context "when the gem name is hyphenated (multi-segment module)" do
+      before do
+        rm_f("my_gem.gemspec")
+        rm_rf("lib/my_gem")
+        File.write("my-gem.gemspec", 'Gem::Specification.new { |s| s.name = "my-gem" }')
+        mkdir_p("lib/my/gem")
+      end
+
+      it "namespaces a bare name under the full module" do
+        generate("1\nWidget\n")
+
+        expect(File).to exist("lib/my/gem/widget.rb")
+      end
+
+      it "does not double the root segment for partially-qualified input", :aggregate_failures do
+        generate("1\nMy::Widget\n")
+
+        expect(File).not_to exist("lib/my/gem/my/widget.rb")
+        expect(File).to exist("lib/my/widget.rb")
+      end
+    end
   end
 end
