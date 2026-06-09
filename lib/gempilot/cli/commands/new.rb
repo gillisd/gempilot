@@ -29,7 +29,7 @@ module Gempilot
         def run(type = nil, path = nil)
           type ||= prompt_for_type
           detect_gem_context
-          path ||= prompt_for_path
+          path ||= prompt_for_path(type)
           dispatch_add(type, path)
         end
 
@@ -40,10 +40,13 @@ module Gempilot
           ask_multiple_choice(colors.green("Type"), %w[class module command])
         end
 
-        def prompt_for_path
-          puts
-          puts colors.bright_black("Fully-qualified constant name (e.g., #{@gem_module}::Services::Authentication).")
-          ask(colors.green("Constant"), required: true)
+        def prompt_for_path(type)
+          name = ask(colors.green(type), required: true)
+          return name if type == "command"
+
+          # Commands aside, every constant must live under the gem's root
+          # namespace, so default to it instead of making the user retype it.
+          name.start_with?("#{@gem_module}::") ? name : "#{@gem_module}::#{name}"
         end
 
         def dispatch_add(type, path)
