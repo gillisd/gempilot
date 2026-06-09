@@ -27,7 +27,7 @@ module Gempilot
         def run(type = nil, path = nil)
           type ||= prompt_for_type
           detect_gem_context
-          path ||= prompt_for_path
+          path ||= prompt_for_path(type)
           dispatch_destroy(type, path)
         end
 
@@ -38,10 +38,15 @@ module Gempilot
           ask_multiple_choice(colors.green("Type"), %w[class module command])
         end
 
-        def prompt_for_path
-          puts
-          puts colors.bright_black("Fully-qualified constant name (e.g., #{@gem_module}::Services::Authentication).")
-          ask(colors.green("Constant"), required: true)
+        def prompt_for_path(type)
+          name = ask(colors.green(type), required: true)
+          return name if type == "command"
+
+          # Class/module constants belong under the gem's module, so prepend it
+          # to save the user retyping it, unless the input is already rooted
+          # there (matched on the root segment, as validate_gem_root! does).
+          root = @gem_module.split("::").first
+          name.start_with?("#{root}::") ? name : "#{@gem_module}::#{name}"
         end
 
         def dispatch_destroy(type, path)
@@ -68,10 +73,13 @@ module Gempilot
         end
 
         def test_path_for(segments)
+          # @require_path already covers the gem module's segments, so drop them
+          # all (not just one) to stay correct for hyphenated, multi-segment gems.
+          rest = segments.drop(@require_path.split("/").length)
           if @test_framework == :rspec
-            "#{File.join("spec", @require_path, *segments[1..])}_spec.rb"
+            "#{File.join("spec", @require_path, *rest)}_spec.rb"
           else
-            "#{File.join("test", @require_path, *segments[1..])}_test.rb"
+            "#{File.join("test", @require_path, *rest)}_test.rb"
           end
         end
 
