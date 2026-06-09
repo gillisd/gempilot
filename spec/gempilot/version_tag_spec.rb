@@ -112,8 +112,8 @@ RSpec.describe Gempilot::VersionTag do
       system("git add README.md && git commit -m 'Not a version bump' --quiet")
     end
 
-    it "aborts with an error" do
-      expect { version_tag.tag }.to raise_error(SystemExit)
+    it "raises an error" do
+      expect { version_tag.tag }.to raise_error(RuntimeError, /does not appear to be a version bump/)
     end
   end
 end

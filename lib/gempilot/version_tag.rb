@@ -47,7 +47,7 @@ module Gempilot
       raise "Failed to read last commit message" unless status.success?
 
       message.strip!
-      abort "Last commit does not appear to be a version bump." unless message.start_with?("Bump version to ")
+      raise "Last commit does not appear to be a version bump." unless message.start_with?("Bump version to ")
     end
   end
 end
