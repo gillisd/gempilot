@@ -23,22 +23,6 @@ module Gempilot
       def gem_constant(input)
         GemConstant.new(input: input, gem_module: @gem_module, require_path: @require_path)
       end
-
-      def parse_constant(constant)
-        parts = constant.split("::")
-        namespaces = parts[0...-1]
-        name = parts.last
-        segments = parts.map(&:underscore)
-        [namespaces, name, segments]
-      end
-
-      def validate_gem_root!(root)
-        expected = @gem_module.split("::").first
-        return if root == expected
-
-        puts colors.red("Expected constant to start with #{expected}, got #{root}")
-        exit 1
-      end
     end
   end
 end
