@@ -89,6 +89,13 @@ RSpec.describe Gempilot::CLI::Commands::New do
         expect(File).not_to exist("lib/my/gem/my/widget.rb")
         expect(File).to exist("lib/my/widget.rb")
       end
+
+      it "writes the generated test file at the non-duplicated path", :aggregate_failures do
+        generate("1\nWidget\n")
+
+        expect(File).to exist("test/my/gem/widget_test.rb")
+        expect(File).not_to exist("test/my/gem/gem/widget_test.rb")
+      end
     end
   end
 end

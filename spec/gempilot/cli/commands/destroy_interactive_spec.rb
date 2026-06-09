@@ -90,6 +90,15 @@ RSpec.describe Gempilot::CLI::Commands::Destroy do
 
         expect(File).not_to exist("lib/my/widget.rb")
       end
+
+      it "removes the generated test file at the non-duplicated path" do
+        mkdir_p("test/my/gem")
+        File.write("test/my/gem/gadget_test.rb", "# test")
+
+        destroy("1\nGadget\n")
+
+        expect(File).not_to exist("test/my/gem/gadget_test.rb")
+      end
     end
   end
 end

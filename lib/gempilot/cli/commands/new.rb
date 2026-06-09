@@ -185,10 +185,13 @@ module Gempilot
         end
 
         def class_test_path(segments)
+          # @require_path already covers the gem module's segments, so drop them
+          # all (not just one) to stay correct for hyphenated, multi-segment gems.
+          rest = segments.drop(@require_path.split("/").length)
           if @test_framework == :rspec
-            "#{File.join("spec", @require_path, *segments[1..])}_spec.rb"
+            "#{File.join("spec", @require_path, *rest)}_spec.rb"
           else
-            "#{File.join("test", @require_path, *segments[1..])}_test.rb"
+            "#{File.join("test", @require_path, *rest)}_test.rb"
           end
         end
 
