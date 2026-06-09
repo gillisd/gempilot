@@ -5,6 +5,10 @@ module Gempilot
   class VersionTag
     include StrictShell
 
+    ## Commit-message prefix written for a version bump; the guard below
+    ## matches on it, so the two must stay in sync.
+    BUMP_MESSAGE_PREFIX = "Bump version to ".freeze
+
     attr_reader :version
 
     def initialize(version)
@@ -16,7 +20,7 @@ module Gempilot
       raise "Cannot proceed, staging area must be clean" unless status.success?
 
       sh "git", "add", version.path.to_s
-      sh "git", "commit", "-m", "Bump version to #{version.value}"
+      sh "git", "commit", "-m", "#{BUMP_MESSAGE_PREFIX}#{version.value}"
     end
 
     def tag
@@ -47,7 +51,7 @@ module Gempilot
       raise "Failed to read last commit message" unless status.success?
 
       message.strip!
-      raise "Last commit does not appear to be a version bump." unless message.start_with?("Bump version to ")
+      raise "Last commit does not appear to be a version bump." unless message.start_with?(BUMP_MESSAGE_PREFIX)
     end
   end
 end
