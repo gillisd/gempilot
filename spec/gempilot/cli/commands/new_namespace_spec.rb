@@ -36,4 +36,14 @@ RSpec.describe Gempilot::CLI::Commands::New do
       end
     end
   end
+
+  describe "non-interactive rooting" do
+    before { mkdir_p("lib/my_gem") }
+
+    it "roots a bare class name under the gem module" do
+      command.main(["class", "Services::Auth"])
+
+      expect(File).to exist("lib/my_gem/services/auth.rb")
+    end
+  end
 end

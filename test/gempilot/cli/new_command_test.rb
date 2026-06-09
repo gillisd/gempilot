@@ -201,13 +201,12 @@ module Gempilot
         assert_equal 1, exit_code
       end
 
-      def test_new_fails_with_wrong_gem_module
-        stdout = StringIO.new
-        command = Commands::New.new(stdout: stdout)
+      def test_new_roots_foreign_namespace_under_gem_module
+        # Bare or foreign-root constants are auto-prefixed with the gem module
+        # rather than rejected; WrongGem::Foo becomes MyGem::WrongGem::Foo.
+        run_new_command("class", "WrongGem::Foo")
 
-        exit_code = command.main(["class", "WrongGem::Foo"])
-
-        assert_equal 1, exit_code
+        assert_path_exists "lib/my_gem/wrong_gem/foo.rb"
       end
 
       private
