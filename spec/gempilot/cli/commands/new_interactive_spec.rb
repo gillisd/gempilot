@@ -69,6 +69,16 @@ RSpec.describe Gempilot::CLI::Commands::New do
       end
     end
 
+    context "when a spec/ directory exists but there is no rspec config" do
+      before { mkdir_p("spec") }
+
+      it "still scaffolds a minitest test file" do
+        generate("1\nServices::Auth\n")
+
+        expect(File).to exist("test/my_gem/services/auth_test.rb")
+      end
+    end
+
     context "when the gem name is hyphenated (multi-segment module)" do
       before do
         rm_f("my_gem.gemspec")
