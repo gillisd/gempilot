@@ -96,6 +96,7 @@ module Gempilot
       def test_new_class_creates_rspec_file_when_spec_dir_exists
         FileUtils.rm_rf("test")
         FileUtils.mkdir_p("spec")
+        File.write("spec/spec_helper.rb", "")
         run_new_command("class", "MyGem::Authentication")
 
         assert_path_exists "spec/my_gem/authentication_spec.rb"
@@ -170,6 +171,7 @@ module Gempilot
       def test_new_command_creates_rspec_file_when_spec_dir_exists
         FileUtils.rm_rf("test")
         FileUtils.mkdir_p("spec")
+        File.write("spec/spec_helper.rb", "")
         FileUtils.mkdir_p("lib/my_gem/cli/commands")
         run_new_command("command", "deploy")
 
