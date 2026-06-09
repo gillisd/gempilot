@@ -162,13 +162,15 @@ module Gempilot
         assert_equal 1, exit_code
       end
 
-      def test_destroy_fails_with_wrong_gem_module
+      def test_destroy_roots_foreign_namespace_under_gem_module
+        # Bare or foreign-root constants are auto-prefixed with the gem module
+        # rather than rejected; WrongGem::Foo becomes MyGem::WrongGem::Foo.
         stdout = StringIO.new
         command = Commands::Destroy.new(stdout: stdout)
 
         exit_code = command.main(["class", "WrongGem::Foo"])
 
-        assert_equal 1, exit_code
+        assert_equal 0, exit_code
       end
 
       private
