@@ -17,23 +17,19 @@ module Gempilot
         @gem_name = File.basename(gemspec, ".gemspec")
         @require_path = @gem_name.tr("-", "/")
         @gem_module = @require_path.camelize
-        @test_framework = File.directory?("spec") ? :rspec : :minitest
+        @test_framework = detect_test_framework
       end
 
-      def parse_constant(constant)
-        parts = constant.split("::")
-        namespaces = parts[0...-1]
-        name = parts.last
-        segments = parts.map(&:underscore)
-        [namespaces, name, segments]
+      # Detect rspec by its canonical config files rather than the mere
+      # presence of a spec/ directory, which a minitest project may also have.
+      def detect_test_framework
+        return :rspec if File.exist?(".rspec") || File.exist?(File.join("spec", "spec_helper.rb"))
+
+        :minitest
       end
 
-      def validate_gem_root!(root)
-        expected = @gem_module.split("::").first
-        return if root == expected
-
-        puts colors.red("Expected constant to start with #{expected}, got #{root}")
-        exit 1
+      def gem_constant(input)
+        GemConstant.new(input: input, gem_module: @gem_module, require_path: @require_path)
       end
     end
   end

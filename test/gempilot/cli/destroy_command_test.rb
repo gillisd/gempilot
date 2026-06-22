@@ -76,6 +76,7 @@ module Gempilot
       def test_destroy_class_removes_rspec_spec_file
         FileUtils.rm_rf("test")
         FileUtils.mkdir_p("spec/my_gem")
+        File.write("spec/spec_helper.rb", "")
         create_class_file("lib/my_gem/authentication.rb")
         File.write("spec/my_gem/authentication_spec.rb", "# spec")
 
@@ -130,6 +131,7 @@ module Gempilot
       def test_destroy_command_removes_rspec_test_file
         FileUtils.rm_rf("test")
         FileUtils.mkdir_p("spec")
+        File.write("spec/spec_helper.rb", "")
         FileUtils.mkdir_p("lib/my_gem/cli/commands")
         File.write("lib/my_gem/cli/commands/deploy.rb", "# command")
         FileUtils.mkdir_p("spec/my_gem/cli/commands")
@@ -162,13 +164,15 @@ module Gempilot
         assert_equal 1, exit_code
       end
 
-      def test_destroy_fails_with_wrong_gem_module
+      def test_destroy_roots_foreign_namespace_under_gem_module
+        # Bare or foreign-root constants are auto-prefixed with the gem module
+        # rather than rejected; WrongGem::Foo becomes MyGem::WrongGem::Foo.
         stdout = StringIO.new
         command = Commands::Destroy.new(stdout: stdout)
 
         exit_code = command.main(["class", "WrongGem::Foo"])
 
-        assert_equal 1, exit_code
+        assert_equal 0, exit_code
       end
 
       private

@@ -1,6 +1,7 @@
 require "spec_helper"
 
 DIRTY_STAGING_ERROR = /staging area must be clean/
+NOT_A_BUMP_ERROR = /does not appear to be a version bump/
 
 RSpec.describe Gempilot::VersionTag do
   let(:version_path) { Pathname("lib/my_gem/version.rb") }
@@ -112,8 +113,8 @@ RSpec.describe Gempilot::VersionTag do
       system("git add README.md && git commit -m 'Not a version bump' --quiet")
     end
 
-    it "aborts with an error" do
-      expect { version_tag.tag }.to raise_error(SystemExit)
+    it "raises an error" do
+      expect { version_tag.tag }.to raise_error(RuntimeError, NOT_A_BUMP_ERROR)
     end
   end
 end

@@ -20,6 +20,7 @@ A CLI tool for creating and managing Ruby gems, built on CommandKit.
 - Uses CommandKit::Inflector for name inflection
 - Generator module (`lib/gempilot/cli/generator.rb`) provides template rendering via ERB
 - GemContext module (`lib/gempilot/cli/gem_context.rb`) shared by new, destroy, release, console
+- `GemConstant` value object (`lib/gempilot/gem_constant.rb`) owns constant→namespace/path resolution for `new`/`destroy`; constants are rooted at the gem module by construction
 - CommandKit::Commands::AutoLoad maps filenames in `commands/` to command names
 
 ### Testing
@@ -34,7 +35,7 @@ A CLI tool for creating and managing Ruby gems, built on CommandKit.
 - RuboCop with framework-specific plugins
 - GitHub Actions CI workflow (`.github/workflows/ci.yml`)
 - `git ls-files`-based gemspec with glob fallback for non-git repos
-- Version management rake tasks in `rakelib/version.rake` (current, bump, commit, revert, release:full)
+- Version lifecycle rake tasks installed via `Gempilot::VersionTask.new` (a `Rake::TaskLib`): `version:current/bump/commit/tag/untag/reset/revert`, composite `version:release`/`version:unrelease`, and `version:github:release/unrelease/list`
 
 ### Notes
 - AutoLoad uses block form in `cli.rb` with explicit `summary:` per command (lazy loading means descriptions aren't available at help time without this)
@@ -42,4 +43,4 @@ A CLI tool for creating and managing Ruby gems, built on CommandKit.
 
 ## ISSUES
 
-1. RESOLVED — `exe/gempilot` had unconditional `ENV["BUNDLE_GEMFILE"]` and `require "bundler/setup"`, causing `Gemfile not found` after `gem install`. Removed both lines; RubyGems handles load paths for installed gems. (Ronin avoids this with a conditional `Gemfile.lock` check, but gempilot's `exe/`+`bin/` separation makes that unnecessary.)
+1. RESOLVED — `exe/gempilot` previously had an unconditional `ENV["BUNDLE_GEMFILE"]` + `require "bundler/setup"`, breaking `gem install` usage. It now guards both behind `if File.exist?(gemfile)` (the Ronin pattern), so installed gems skip Bundler while in-repo runs still use it.

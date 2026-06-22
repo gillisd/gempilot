@@ -41,20 +41,13 @@ module Gempilot
         end
 
         def prompt_for_path(type)
-          name = ask(colors.green(type), required: true)
-          return name if type == "command"
-
-          # Class/module constants belong under the gem's module, so prepend it
-          # to save the user retyping it, unless the input is already rooted
-          # there (matched on the root segment, as validate_gem_root! does).
-          root = @gem_module.split("::").first
-          name.start_with?("#{root}::") ? name : "#{@gem_module}::#{name}"
+          ask(colors.green(type), required: true)
         end
 
         def dispatch_add(type, path)
           case type
-          when "class"   then add_class(path)
-          when "module"  then add_module(path)
+          when "class"   then add_class(gem_constant(path))
+          when "module"  then add_module(gem_constant(path))
           when "command" then add_command(path)
           else
             puts colors.red("Unknown type '#{type}'. Use class, module, or command.")
@@ -91,31 +84,23 @@ module Gempilot
           puts
         end
 
-        def prepare_constant(constant)
-          namespaces, name, segments = parse_constant(constant)
-          validate_gem_root!(namespaces.first)
-          file_path = "#{File.join("lib", *segments)}.rb"
-          ensure_directory(File.dirname(file_path))
-          [namespaces, name, segments, file_path]
-        end
-
         def ensure_directory(dir)
           mkdir(dir) unless File.directory?(dir)
         end
 
         def add_class(constant)
-          namespaces, class_name, segments, file_path = prepare_constant(constant)
-          print_adding_banner("class", "#{namespaces.join("::")}::#{class_name}")
-          source = build_nested_source(namespaces, "class", class_name)
-          create_file(file_path, source)
-          add_test_file(namespaces, class_name, segments)
+          print_adding_banner("class", constant.qualified)
+          ensure_directory(File.dirname(constant.lib_path))
+          source = build_nested_source(constant.namespaces, "class", constant.name)
+          create_file(constant.lib_path, source)
+          add_test_file(constant)
         end
 
         def add_module(constant)
-          namespaces, mod_name, _segments, file_path = prepare_constant(constant)
-          print_adding_banner("module", "#{namespaces.join("::")}::#{mod_name}")
-          source = build_nested_source(namespaces, "module", mod_name)
-          create_file(file_path, source)
+          print_adding_banner("module", constant.qualified)
+          ensure_directory(File.dirname(constant.lib_path))
+          source = build_nested_source(constant.namespaces, "module", constant.name)
+          create_file(constant.lib_path, source)
         end
 
         def add_command(name)
@@ -184,17 +169,6 @@ module Gempilot
           create_file(test_path, content)
         end
 
-        def class_test_path(segments)
-          # @require_path already covers the gem module's segments, so drop them
-          # all (not just one) to stay correct for hyphenated, multi-segment gems.
-          rest = segments.drop(@require_path.split("/").length)
-          if @test_framework == :rspec
-            "#{File.join("spec", @require_path, *rest)}_spec.rb"
-          else
-            "#{File.join("test", @require_path, *rest)}_test.rb"
-          end
-        end
-
         def rspec_class_content(namespaces, class_name)
           <<~RUBY
             require "spec_helper"
@@ -219,13 +193,13 @@ module Gempilot
           RUBY
         end
 
-        def add_test_file(namespaces, class_name, segments)
-          test_path = class_test_path(segments)
+        def add_test_file(constant)
+          test_path = constant.test_path(@test_framework)
           ensure_directory(File.dirname(test_path))
           content = if @test_framework == :rspec
-                      rspec_class_content(namespaces, class_name)
+                      rspec_class_content(constant.namespaces, constant.name)
                     else
-                      minitest_class_content(namespaces, class_name)
+                      minitest_class_content(constant.namespaces, constant.name)
                     end
           create_file(test_path, content)
         end

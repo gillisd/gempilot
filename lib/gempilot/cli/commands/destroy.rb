@@ -39,20 +39,13 @@ module Gempilot
         end
 
         def prompt_for_path(type)
-          name = ask(colors.green(type), required: true)
-          return name if type == "command"
-
-          # Class/module constants belong under the gem's module, so prepend it
-          # to save the user retyping it, unless the input is already rooted
-          # there (matched on the root segment, as validate_gem_root! does).
-          root = @gem_module.split("::").first
-          name.start_with?("#{root}::") ? name : "#{@gem_module}::#{name}"
+          ask(colors.green(type), required: true)
         end
 
         def dispatch_destroy(type, path)
           case type
-          when "class"   then destroy_class(path)
-          when "module"  then destroy_module(path)
+          when "class"   then destroy_class(gem_constant(path))
+          when "module"  then destroy_module(gem_constant(path))
           when "command" then destroy_command(path)
           else
             puts colors.red("Unknown type '#{type}'. Use class, module, or command.")
@@ -61,26 +54,12 @@ module Gempilot
         end
 
         def destroy_class(constant)
-          namespaces, _class_name, segments = parse_constant(constant)
-          validate_gem_root!(namespaces.first)
-
-          lib_path = "#{File.join("lib", *segments)}.rb"
-          test_path = test_path_for(segments)
+          lib_path = constant.lib_path
+          test_path = constant.test_path(@test_framework)
 
           remove_file(lib_path)
           remove_file(test_path)
           cleanup_empty_dirs(lib_path, test_path)
-        end
-
-        def test_path_for(segments)
-          # @require_path already covers the gem module's segments, so drop them
-          # all (not just one) to stay correct for hyphenated, multi-segment gems.
-          rest = segments.drop(@require_path.split("/").length)
-          if @test_framework == :rspec
-            "#{File.join("spec", @require_path, *rest)}_spec.rb"
-          else
-            "#{File.join("test", @require_path, *rest)}_test.rb"
-          end
         end
 
         def cleanup_empty_dirs(lib_path, test_path)
@@ -90,10 +69,8 @@ module Gempilot
         end
 
         def destroy_module(constant)
-          namespaces, _mod_name, segments = parse_constant(constant)
-          validate_gem_root!(namespaces.first)
+          lib_path = constant.lib_path
 
-          lib_path = "#{File.join("lib", *segments)}.rb"
           remove_file(lib_path)
           remove_empty_parents(File.dirname(lib_path), File.join("lib", @require_path))
         end
