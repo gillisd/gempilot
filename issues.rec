@@ -141,3 +141,18 @@ Description: "
 + ```
 + "
 Status: closed
+
+Id: 1C46F71C-70E9-11F1-B65B-FE6CB9572C2E
+Updated: Thu, 25 Jun 2026 18:56:32 -0400
+Title: Incorrectly creates test file
+Description: When doing `gempilot new Reversal::Server`, in a project called "reversal-store", I get:
++ 
++  gempilot new class Reversal::Server
++ 
++ Adding class Reversal::Server...
++ 
++         create  lib/reversal/server.rb
++         create  test/reversal/store_test.rb
++ 
++ The test file is incorrectly named. Should be server_test.rb
+Status: open
