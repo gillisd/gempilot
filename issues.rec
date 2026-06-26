@@ -26,7 +26,7 @@ Id: F0833E66-A35C-4054-884B-F90C81F08838
 Updated: Mon, 02 Mar 2026 10:37:33 -0500
 Title: Error handling should be graceful
 Description: I did "gempilot create", and entered "A foo" as the title, and it crashed horrifically. This particular example should have validation at the minimum. Need to also use command kit's error bubbling/handling mechanism to swallow errors and print message to user. Can always use verbose or debug mode to see full trace.
-Status: open
+Status: closed
 
 Id: 741FFD05-9BD7-44EB-BB99-E7D705F12681
 Updated: Mon, 02 Mar 2026 11:25:24 -0500
@@ -68,7 +68,7 @@ Id: 74D0FD90-0421-4452-8591-2798EE6FD23E
 Updated: Sat, 28 Mar 2026 12:59:40 -0400
 Title: Publish gem
 Description: At some point the repo should be moved to public viz, and the gem should be published.
-Status: open
+Status: closed
 
 Id: 8C356024-3122-11F1-89F3-FE6CB9572C2F
 Updated: Mon, 06 Apr 2026 00:00:00 -0400
