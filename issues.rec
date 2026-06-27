@@ -156,3 +156,9 @@ Description: When doing `gempilot new Reversal::Server`, in a project called "re
 + 
 + The test file is incorrectly named. Should be server_test.rb
 Status: open
+
+Id: F5486B48-71DB-11F1-980F-FE6CB9572C2E
+Updated: Fri, 26 Jun 2026 23:54:55 -0400
+Title: Rubymine <=> Minitest usage causes "no reporters allowed error"
+Description: Has to do with how the ENV var RM_INFO is being interpreted
+Status: open
