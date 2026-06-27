@@ -29,11 +29,11 @@ module Gempilot
     end
 
     def name
-      lib_project.basename.to_s
+      project_segments.join("-")
     end
 
     def klass
-      Object.const_get(name.camelize)
+      Object.const_get(project_segments.map(&:camelize).join("::"))
     end
 
     def version
@@ -67,6 +67,13 @@ module Gempilot
 
     private
 
+    # Path segments of the project dir relative to +lib+: +["my_gem"]+ for a
+    # regular gem, +["my_gem", "extension"]+ for an extension. The gem name
+    # joins them with +-+; the module camelizes and joins them with +::+.
+    def project_segments
+      lib_project.relative_path_from(lib).each_filename.to_a
+    end
+
     def with_version_file
       version.path.open(File::RDWR, 0o644) do |f|
         f.flock File::LOCK_EX
@@ -76,8 +83,7 @@ module Gempilot
     end
 
     def fetch_lib_project
-      files = lib.glob("*.rb")
-      dirs = files.map { it.sub_ext("") }.select(&:directory?)
+      dirs = project_dir_candidates
       case dirs.count
       in 0 then raise ProjectIntrospectionError, "Could not identify project dir"
       in (2..)
@@ -85,6 +91,29 @@ module Gempilot
         raise ProjectIntrospectionError, msg
       in 1 then dirs.first
       end
+    end
+
+    # A gem's entry point is a +.rb+ file beside a same-named directory (which
+    # holds +version.rb+ and the rest of the namespace). Regular gems sit at
+    # +lib/<name>.rb+; extension gems such as +foo-support+ nest one or more
+    # levels deeper at +lib/foo/support.rb+. Search progressively deeper levels
+    # and stop at the shallowest one that yields a match, so internal
+    # subdirectories never masquerade as the project root.
+    def project_dir_candidates
+      (1..lib_depth).each do |depth|
+        dirs = entry_dirs_at(depth)
+        return dirs unless dirs.empty?
+      end
+      []
+    end
+
+    def lib_depth
+      lib.glob("**/*.rb").map { it.relative_path_from(lib).each_filename.count }.max || 0
+    end
+
+    def entry_dirs_at(depth)
+      glob = "#{(["*"] * depth).join("/")}.rb"
+      lib.glob(glob).map { it.sub_ext("") }.select(&:directory?)
     end
 
     def fetch_version
