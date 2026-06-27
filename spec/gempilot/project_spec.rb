@@ -1,6 +1,8 @@
 require "spec_helper"
 
 RSpec.describe Gempilot::Project do
+  include FileUtils
+
   around do |example|
     Dir.mktmpdir("project_spec") do |tmpdir|
       Dir.chdir(tmpdir) { example.run }
@@ -8,7 +10,7 @@ RSpec.describe Gempilot::Project do
   end
 
   before do
-    FileUtils.mkdir_p("lib/my_gem")
+    mkdir_p("lib/my_gem")
     File.write("lib/my_gem.rb", "module MyGem; end\n")
     File.write("lib/my_gem/version.rb", "module MyGem\n  VERSION = \"1.2.3\".freeze\nend\n")
   end
@@ -65,13 +67,17 @@ RSpec.describe Gempilot::Project do
 
   context "when lib directory has no gem subdirectory" do
     before do
-      FileUtils.rm_rf("lib/my_gem")
-      FileUtils.rm("lib/my_gem.rb")
+      rm_rf("lib/my_gem")
+      rm("lib/my_gem.rb")
       File.write("lib/standalone.rb", "# no matching dir\n")
     end
 
     it "raises ProjectIntrospectionError" do
       expect { project.name }.to raise_error(Gempilot::Project::ProjectIntrospectionError)
     end
+  end
+
+  describe "a gem extension" do
+
   end
 end
