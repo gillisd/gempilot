@@ -25,6 +25,9 @@ AllCops:
     - data/templates/**/*
     - references/**/*
 
+#Style/MethodCallWithArgsParenthesis:
+#  Enforced_style: omit_parentheses
+
 # ===========================================================================
 # Overrides from stock — personal style preferences
 # ===========================================================================

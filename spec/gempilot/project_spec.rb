@@ -13,8 +13,6 @@ RSpec.describe Gempilot::Project do
     end
   end
 
-  # Behaviour shared by every kind of gem layout. The host group supplies the
-  # +expected_name+, +expected_klass+, and +version_file+ for its layout.
   shared_examples "a gem project" do
     describe "#name" do
       it "derives the gem name from the lib layout" do
@@ -23,8 +21,10 @@ RSpec.describe Gempilot::Project do
     end
 
     describe "#klass" do
-      it "returns the gem's root module constant" do
-        project.version # loads the namespace defined in version.rb
+      def load_gem_namespace = project.version
+
+      it "returns the gem's root module" do
+        load_gem_namespace
         expect(project.klass).to eq(expected_klass)
       end
     end

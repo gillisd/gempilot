@@ -1,19 +1,13 @@
 require "spec_helper"
-require "tmpdir"
 require "stringio"
 
 RSpec.describe Gempilot::CLI::Commands::Destroy do
   include FileUtils
 
-  around do |example|
-    Dir.mktmpdir("destroy_interactive_spec") do |tmpdir|
-      Dir.chdir(tmpdir) do
-        mkdir_p("lib/my_gem")
-        mkdir_p("test")
-        File.write("my_gem.gemspec", 'Gem::Specification.new { |s| s.name = "my_gem" }')
-        example.run
-      end
-    end
+  before do
+    mkdir_p("lib/my_gem")
+    mkdir_p("test")
+    File.write("my_gem.gemspec", 'Gem::Specification.new { |s| s.name = "my_gem" }')
   end
 
   # Runs `destroy` with no arguments (interactive mode), feeding +keystrokes+
