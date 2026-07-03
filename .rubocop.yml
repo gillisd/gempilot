@@ -15,10 +15,11 @@ plugins:
   - rubocop-performance
   - rubocop-rake
   - rubocop-rspec
+  - rubocop-design
 
 AllCops:
   NewCops: enable
-  TargetRubyVersion: 3.4
+  TargetRubyVersion: 4.0
   Exclude:
     - bin/*
     - vendor/**/*
@@ -279,3 +280,17 @@ RSpec/NamedSubject:
 # have_file_content matcher accepts a filename string in expect()
 RSpec/ExpectActual:
   Enabled: false
+
+Design/PositionalArguments:
+  Enabled: false
+
+Design/KeywordArguments:
+  Enabled: false
+
+Design/TotalArguments:
+  Enabled: false
+
+Design/AgentNounClassName:
+  Exclude:
+    - 'lib/gempilot/generator.rb'
+    - 'test/gempilot/cli/generator_test.rb'
