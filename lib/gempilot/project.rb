@@ -1,8 +1,9 @@
-require "pathname"
 require "warning"
 
 module Gempilot
   ## Introspects a gem project to discover its name, module, and version.
+  ## Works for both regular gems (+lib/my_gem.rb+) and extension gems whose
+  ## entry point nests deeper (+lib/my_gem/extension.rb+ for +my_gem-extension+).
   class Project
     class ProjectIntrospectionError < StandardError; end
 
@@ -29,11 +30,11 @@ module Gempilot
     end
 
     def name
-      lib_project.basename.to_s
+      project_segments.join("-")
     end
 
     def klass
-      Object.const_get(name.camelize)
+      Object.const_get(project_segments.map(&:camelize).join("::"))
     end
 
     def version
@@ -67,6 +68,10 @@ module Gempilot
 
     private
 
+    def project_segments
+      lib_project.relative_path_from(lib).each_filename.to_a
+    end
+
     def with_version_file
       version.path.open(File::RDWR, 0o644) do |f|
         f.flock File::LOCK_EX
@@ -76,8 +81,7 @@ module Gempilot
     end
 
     def fetch_lib_project
-      files = lib.glob("*.rb")
-      dirs = files.map { it.sub_ext("") }.select(&:directory?)
+      dirs = shallowest_entry_dirs
       case dirs.count
       in 0 then raise ProjectIntrospectionError, "Could not identify project dir"
       in (2..)
@@ -85,6 +89,22 @@ module Gempilot
         raise ProjectIntrospectionError, msg
       in 1 then dirs.first
       end
+    end
+
+    def shallowest_entry_dirs
+      entry_dirs.group_by { depth_below_lib(it) }
+                .min_by(&:first)
+                &.last || []
+    end
+
+    def entry_dirs
+      lib.glob("**/*.rb")
+         .map { it.sub_ext("") }
+         .select(&:directory?)
+    end
+
+    def depth_below_lib(path)
+      path.relative_path_from(lib).each_filename.count
     end
 
     def fetch_version

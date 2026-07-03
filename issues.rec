@@ -162,3 +162,9 @@ Updated: Fri, 26 Jun 2026 23:54:55 -0400
 Title: Rubymine <=> Minitest usage causes "no reporters allowed error"
 Description: Has to do with how the ENV var RM_INFO is being interpreted
 Status: open
+
+Id: 8D847572-7273-11F1-B508-FE6CB9572C2E
+Updated: Sat, 27 Jun 2026 18:00:04 -0400
+Title: Gem extensions are broken
+Description: when using gempilot on a gem extension, like 'foo-support', using idiomatic ruby patterns for dir structure, gempilot Project class throws an error
+Status: open

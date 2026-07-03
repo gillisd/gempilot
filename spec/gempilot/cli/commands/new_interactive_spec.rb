@@ -1,23 +1,15 @@
 require "spec_helper"
-require "tmpdir"
 require "stringio"
 
 RSpec.describe Gempilot::CLI::Commands::New do
   include FileUtils
 
-  around do |example|
-    Dir.mktmpdir("new_interactive_spec") do |tmpdir|
-      Dir.chdir(tmpdir) do
-        mkdir_p("lib/my_gem")
-        mkdir_p("test")
-        File.write("my_gem.gemspec", 'Gem::Specification.new { |s| s.name = "my_gem" }')
-        example.run
-      end
-    end
+  before do
+    mkdir_p("lib/my_gem")
+    mkdir_p("test")
+    File.write("my_gem.gemspec", 'Gem::Specification.new { |s| s.name = "my_gem" }')
   end
 
-  # Runs `new` with no arguments (interactive mode), feeding +keystrokes+ to
-  # stdin, and returns everything written to stdout.
   def generate(keystrokes)
     out = StringIO.new
     described_class.new(stdin: StringIO.new(keystrokes), stdout: out).main([])

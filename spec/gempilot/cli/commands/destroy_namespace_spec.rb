@@ -1,5 +1,4 @@
 require "spec_helper"
-require "tmpdir"
 require "stringio"
 
 RSpec.describe Gempilot::CLI::Commands::Destroy do
@@ -7,15 +6,10 @@ RSpec.describe Gempilot::CLI::Commands::Destroy do
 
   subject(:command) { described_class.new(stdout: StringIO.new) }
 
-  around do |example|
-    Dir.mktmpdir("destroy_command_spec") do |tmpdir|
-      Dir.chdir(tmpdir) do
-        mkdir_p("lib/my_gem")
-        mkdir_p("test")
-        File.write("my_gem.gemspec", 'Gem::Specification.new { |s| s.name = "my_gem" }')
-        example.run
-      end
-    end
+  before do
+    mkdir_p("lib/my_gem")
+    mkdir_p("test")
+    File.write("my_gem.gemspec", 'Gem::Specification.new { |s| s.name = "my_gem" }')
   end
 
   describe "command destruction with namespaced input" do

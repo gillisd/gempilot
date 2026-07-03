@@ -6,9 +6,6 @@ RSpec.describe Gempilot::CLI::Commands::Create do
 
   let(:stdout) { StringIO.new }
 
-  # All required options so +create+ proceeds past name validation without
-  # prompting. It may scaffold a gem dir, but that is fine -- these examples
-  # only assert on the name-validation step.
   let(:valid_opts) do
     ["--author", "Test", "--email", "t@t.com", "--summary", "test",
      "--test", "minitest", "--no-exe", "--no-git"]

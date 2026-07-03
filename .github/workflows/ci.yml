@@ -14,14 +14,16 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ruby-version: ['3.4.8']
+        ruby-version: ['4.0']
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Set up Ruby
       uses: ruby/setup-ruby@v1
       with:
         ruby-version: ${{ matrix.ruby-version }}
-        bundler-cache: true
+        bundler-cache: false
+    - name: Install dependencies
+      run: bundle install
     - name: Run specs
       run: bundle exec rake spec
     - name: Run RuboCop

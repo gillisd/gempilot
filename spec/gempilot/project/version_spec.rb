@@ -15,20 +15,23 @@ RSpec.describe Gempilot::Project::Version do
 
     context "with a simple semver" do
       let(:value) { "1.2.3" }
+      let(:expected) { described_class.new(path: path, value: "1.2.4") }
 
-      it { is_expected.to eq(described_class.new(path: path, value: "1.2.4")) }
+      it { is_expected.to eq(expected) }
     end
 
     context "with a dev suffix" do
       let(:value) { "0.0.4.dev3" }
+      let(:expected) { described_class.new(path: path, value: "0.0.5") }
 
-      it { is_expected.to eq(described_class.new(path: path, value: "0.0.5")) }
+      it { is_expected.to eq(expected) }
     end
 
     context "with a multi-digit patch" do
       let(:value) { "1.0.99" }
+      let(:expected) { described_class.new(path: path, value: "1.0.100") }
 
-      it { is_expected.to eq(described_class.new(path: path, value: "1.0.100")) }
+      it { is_expected.to eq(expected) }
     end
   end
 

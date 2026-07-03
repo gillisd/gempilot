@@ -20,3 +20,9 @@ gem "rubocop-performance"
 gem "rubocop-rake"
 gem "rubocop-rspec", "~> 3.9"
 gem "zeitwerk"
+
+plugin "bundler-source-vault"
+
+source "vendor/vendored.gemv", type: :vault do
+  gem "rubocop-design", "~> 0.5.0"
+end
