@@ -1,8 +1,9 @@
-require "pathname"
 require "warning"
 
 module Gempilot
   ## Introspects a gem project to discover its name, module, and version.
+  ## Works for both regular gems (+lib/my_gem.rb+) and extension gems whose
+  ## entry point nests deeper (+lib/my_gem/extension.rb+ for +my_gem-extension+).
   class Project
     class ProjectIntrospectionError < StandardError; end
 
@@ -67,9 +68,6 @@ module Gempilot
 
     private
 
-    # Path segments of the project dir relative to +lib+: +["my_gem"]+ for a
-    # regular gem, +["my_gem", "extension"]+ for an extension. The gem name
-    # joins them with +-+; the module camelizes and joins them with +::+.
     def project_segments
       lib_project.relative_path_from(lib).each_filename.to_a
     end
@@ -83,7 +81,7 @@ module Gempilot
     end
 
     def fetch_lib_project
-      dirs = project_dir_candidates
+      dirs = shallowest_entry_dirs
       case dirs.count
       in 0 then raise ProjectIntrospectionError, "Could not identify project dir"
       in (2..)
@@ -93,27 +91,20 @@ module Gempilot
       end
     end
 
-    # A gem's entry point is a +.rb+ file beside a same-named directory (which
-    # holds +version.rb+ and the rest of the namespace). Regular gems sit at
-    # +lib/<name>.rb+; extension gems such as +foo-support+ nest one or more
-    # levels deeper at +lib/foo/support.rb+. Search progressively deeper levels
-    # and stop at the shallowest one that yields a match, so internal
-    # subdirectories never masquerade as the project root.
-    def project_dir_candidates
-      (1..lib_depth).each do |depth|
-        dirs = entry_dirs_at(depth)
-        return dirs unless dirs.empty?
-      end
-      []
+    def shallowest_entry_dirs
+      entry_dirs.group_by { depth_below_lib(it) }
+                .min_by(&:first)
+                &.last || []
     end
 
-    def lib_depth
-      lib.glob("**/*.rb").map { it.relative_path_from(lib).each_filename.count }.max || 0
+    def entry_dirs
+      lib.glob("**/*.rb")
+         .map { it.sub_ext("") }
+         .select(&:directory?)
     end
 
-    def entry_dirs_at(depth)
-      glob = "#{(["*"] * depth).join("/")}.rb"
-      lib.glob(glob).map { it.sub_ext("") }.select(&:directory?)
+    def depth_below_lib(path)
+      path.relative_path_from(lib).each_filename.count
     end
 
     def fetch_version

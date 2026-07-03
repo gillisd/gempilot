@@ -77,10 +77,9 @@ module Gempilot
         end
 
         def print_adding_banner(kind, label)
+          styled_label = colors.bold(colors.cyan(label))
           puts
-          puts colors.bright_white("Adding #{kind} ") +
-               colors.bold(colors.cyan(label)) +
-               colors.bright_white("...")
+          puts colors.bright_white("Adding #{kind} ") + styled_label + colors.bright_white("...")
           puts
         end
 

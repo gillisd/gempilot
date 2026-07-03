@@ -10,8 +10,6 @@ RSpec.describe Gempilot::CLI::Commands::New do
     File.write("my_gem.gemspec", 'Gem::Specification.new { |s| s.name = "my_gem" }')
   end
 
-  # Runs `new` with no arguments (interactive mode), feeding +keystrokes+ to
-  # stdin, and returns everything written to stdout.
   def generate(keystrokes)
     out = StringIO.new
     described_class.new(stdin: StringIO.new(keystrokes), stdout: out).main([])

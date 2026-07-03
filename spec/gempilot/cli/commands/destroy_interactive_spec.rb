@@ -10,8 +10,6 @@ RSpec.describe Gempilot::CLI::Commands::Destroy do
     File.write("my_gem.gemspec", 'Gem::Specification.new { |s| s.name = "my_gem" }')
   end
 
-  # Runs `destroy` with no arguments (interactive mode), feeding +keystrokes+
-  # to stdin, and returns everything written to stdout.
   def destroy(keystrokes)
     out = StringIO.new
     described_class.new(stdin: StringIO.new(keystrokes), stdout: out).main([])

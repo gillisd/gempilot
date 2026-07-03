@@ -156,7 +156,8 @@ module Gempilot
 
           puts
           puts colors.bright_black("An executable in exe/ lets users run your gem from the command line.")
-          options[:exe] = ask_yes_or_no(colors.green("Create an executable"), default: false)
+          prompt = colors.green("Create an executable")
+          options[:exe] = ask_yes_or_no(prompt, default: false)
         end
 
         def collect_git_options
@@ -169,7 +170,8 @@ module Gempilot
 
           puts
           puts colors.bright_black("Initialize a git repository with an initial commit.")
-          options[:git] = ask_yes_or_no(colors.green("Initialize git repo"), default: true)
+          prompt = colors.green("Initialize git repo")
+          options[:git] = ask_yes_or_no(prompt, default: true)
         end
 
         def collect_branch
@@ -181,8 +183,9 @@ module Gempilot
         end
 
         def print_header
+          styled_name = colors.bold(colors.cyan(@gem_name))
           puts
-          puts colors.bright_white("Creating gem '") + colors.bold(colors.cyan(@gem_name)) + colors.bright_white("'...")
+          puts colors.bright_white("Creating gem '") + styled_name + colors.bright_white("'...")
           puts
         end
 

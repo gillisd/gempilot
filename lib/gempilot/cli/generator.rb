@@ -37,8 +37,9 @@ module Gempilot
       end
 
       def print_action(command, dest, source: nil)
+        styled_command = colors.bold(colors.green(command))
         line = +""
-        line << "\t" << colors.bold(colors.green(command))
+        line << "\t" << styled_command
         line << "\t" << colors.green(source) if source
         line << "\t" << colors.green(dest) if dest
 

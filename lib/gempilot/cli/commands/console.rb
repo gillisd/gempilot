@@ -27,9 +27,8 @@ module Gempilot
         end
 
         def print_console_banner
-          puts colors.bright_white("Starting console for ") +
-               colors.bold(colors.cyan(@gem_name)) +
-               colors.bright_white("...")
+          styled_name = colors.bold(colors.cyan(@gem_name))
+          puts colors.bright_white("Starting console for ") + styled_name + colors.bright_white("...")
           puts
         end
       end

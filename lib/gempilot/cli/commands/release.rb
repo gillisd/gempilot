@@ -18,9 +18,8 @@ module Gempilot
         private
 
         def print_release_banner
-          puts colors.bright_white("Releasing ") +
-               colors.bold(colors.cyan(@gem_name)) +
-               colors.bright_white("...")
+          styled_name = colors.bold(colors.cyan(@gem_name))
+          puts colors.bright_white("Releasing ") + styled_name + colors.bright_white("...")
           puts
         end
 
