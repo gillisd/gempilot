@@ -86,7 +86,8 @@ gempilot bump major
 
 ### `gempilot release`
 
-Delegates to `rake release` to build and push the gem.
+Delegates to `rake release`, which publishes the current version to all remotes
+(RubyGems + GitHub).
 
 ### `gempilot console`
 
@@ -120,9 +121,12 @@ Generated gems include rake tasks for the full version lifecycle:
 | `rake version:revert` | Revert the last version bump commit |
 | `rake version:release` | Bump, commit, and tag (combined) |
 | `rake version:unrelease` | Untag and reset (combined) |
-| `rake version:github:release` | Push and create a GitHub release |
-| `rake version:github:unrelease` | Delete the GitHub release |
-| `rake version:github:list` | List GitHub releases |
+| `rake release` | Publish the current version to all remotes (RubyGems + GitHub) |
+| `rake release:rubygems` | Build and push the gem to RubyGems |
+| `rake release:github` | Push commit + tag, then create the GitHub release |
+| `rake release:list:github` | List GitHub releases |
+| `rake unrelease` | Delete the release from all remotes that support it |
+| `rake unrelease:github` | Delete the GitHub release and remote tag |
 
 ## Development
 
