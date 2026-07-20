@@ -10,8 +10,6 @@ module Gempilot
     end
 
     def create
-      sh "git", "push"
-      sh "git", "push", "--tags"
       sh "gh", "release", "create",
          "--generate-notes", "--fail-on-no-commits",
          tag

@@ -10,12 +10,15 @@ RSpec.describe Gempilot::GithubRelease do
   end
 
   describe "#create" do
-    it "pushes commits, pushes tags, then creates a release", :aggregate_failures do
+    it "creates a release with generated notes" do
       release.create
-      expect(release).to have_received(:sh).with("git", "push").ordered
-      expect(release).to have_received(:sh).with("git", "push", "--tags").ordered
-      create_args = ["gh", "release", "create", "--generate-notes", "--fail-on-no-commits", tag]
-      expect(release).to have_received(:sh).with(*create_args).ordered
+      args = ["gh", "release", "create", "--generate-notes", "--fail-on-no-commits", tag]
+      expect(release).to have_received(:sh).with(*args)
+    end
+
+    it "does not push git refs itself" do
+      release.create
+      expect(release).not_to have_received(:sh).with("git", any_args)
     end
   end
 
