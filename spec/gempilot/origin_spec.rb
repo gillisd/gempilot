@@ -24,6 +24,27 @@ RSpec.describe Gempilot::Origin do
     end
   end
 
+  describe "#push to a configured remote" do
+    before do
+      allow(origin).to receive(:sh)
+      system("git", "remote", "add", "upstream", ".")
+      system("git", "config", "branch.main.remote", "upstream")
+    end
+
+    it "pushes to the branch's configured remote", :aggregate_failures do
+      origin.push
+      expect(origin).to have_received(:sh).with("git", "push", "upstream", "refs/heads/main")
+      expect(origin).to have_received(:sh).with("git", "push", "upstream", "refs/tags/v1.2.3")
+    end
+  end
+
+  describe "#push from a detached HEAD" do
+    it "raises before attempting any push" do
+      system("git", "checkout", "--detach", "--quiet")
+      expect { described_class.new("v1.2.3").push }.to raise_error(/detached HEAD/i)
+    end
+  end
+
   describe "#push against a real remote" do
     before do
       system("git", "clone", "--quiet", "--bare", ".", "origin.git")

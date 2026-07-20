@@ -23,7 +23,14 @@ module Gempilot
     private
 
     def branch
-      @branch ||= capture("git", "rev-parse", "--abbrev-ref", "HEAD")
+      @branch ||= resolve_branch
+    end
+
+    def resolve_branch
+      name = capture("git", "rev-parse", "--abbrev-ref", "HEAD")
+      raise "Cannot push from a detached HEAD; check out a branch first" if name == "HEAD"
+
+      name
     end
 
     def remote
@@ -37,7 +44,7 @@ module Gempilot
 
     def capture(*args)
       out, status = Open3.capture2(*args)
-      raise "Command #{args.join(" ").inspect} failed" unless status.success?
+      raise "Command #{args.join(" ").inspect} failed (exit #{status.exitstatus})" unless status.success?
 
       out.strip
     end
