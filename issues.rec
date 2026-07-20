@@ -168,3 +168,20 @@ Updated: Fri, 03 Jul 2026 22:38:22 +0000
 Title: Gem extensions are broken
 Description: when using gempilot on a gem extension, like 'foo-support', using idiomatic ruby patterns for dir structure, gempilot Project class throws an error
 Status: closed
+
+Id: B45C988A-83C3-11F1-A32B-FE6CB9572C2F
+Updated: Sun, 19 Jul 2026 18:46:39 -0400
+Title: Gempilot internal concerns leak to gemusers
+Description: Gempilot fresh install leaks  the following in .rubocop.yml:
++ 
++ AllCops:
++   1   NewCops: enable
++   2   TargetRubyVersion: 4.0
++   3   Exclude:
++   4     - bin/*
++   5     - vendor/**/*
++   6     - lib/core_ext/**/*
++   7     - rakelib/project.rb
++   8     - rakelib/project_version.rb
++   9
+Status: open
