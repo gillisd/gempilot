@@ -101,7 +101,7 @@ Id: 0411D4DA-4323-11F1-847C-FE6CB9572C2F
 Updated: Tue, 28 Apr 2026 12:55:09 -0400
 Title: rubocop config should not exclude rakelib
 Description: it is supplied by gempilot. Should not be eliminating author files
-Status: open
+Status: closed
 
 Id: C72CD130-4324-11F1-ACAE-FE6CB9572C2F
 Updated: Tue, 28 Apr 2026 13:07:46 -0400
@@ -184,7 +184,7 @@ Description: Gempilot fresh install leaks  the following in .rubocop.yml:
 +   7     - rakelib/project.rb
 +   8     - rakelib/project_version.rb
 +   9
-Status: open
+Status: closed
 
 Id: 2C8EF3C8-83E9-11F1-9256-FE6CB9572C2F
 Updated: Sun, 19 Jul 2026 23:14:52 -0400
