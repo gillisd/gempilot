@@ -9,8 +9,7 @@ require "zeitwerk"
 <% end -%>
 <%= "  " * i %>module <%= part %>
 <% end -%>
-<%= "  " * @module_parts.size %>LOADER = Zeitwerk::Loader.for_gem_extension(<%= @base_module %>)
-<%= "  " * @module_parts.size %>LOADER.setup
+<%= "  " * @module_parts.size %>LOADER = Zeitwerk::Loader.for_gem_extension(<%= @base_module %>).tap(&:setup)
 
 <%= "  " * @module_parts.size %>##
 <%= "  " * @module_parts.size %># Base error class for <%= @gem_name %>.

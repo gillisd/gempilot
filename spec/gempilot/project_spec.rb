@@ -20,6 +20,18 @@ RSpec.describe Gempilot::Project do
       end
     end
 
+    describe "#require_path" do
+      it "joins the lib segments with slashes" do
+        expect(project.require_path).to eq(expected_require_path)
+      end
+    end
+
+    describe "#module_name" do
+      it "camelizes the lib segments into a constant path" do
+        expect(project.module_name).to eq(expected_module_name)
+      end
+    end
+
     describe "#klass" do
       def load_gem_namespace = project.version
 
@@ -67,6 +79,8 @@ RSpec.describe Gempilot::Project do
   describe "a regular gem" do
     let(:expected_name) { "my_gem" }
     let(:expected_klass) { MyGem }
+    let(:expected_require_path) { "my_gem" }
+    let(:expected_module_name) { "MyGem" }
     let(:version_file) { "lib/my_gem/version.rb" }
 
     around do |example|
@@ -112,6 +126,8 @@ RSpec.describe Gempilot::Project do
   describe "a gem extension" do
     let(:expected_name) { "my_gem-extension" }
     let(:expected_klass) { MyGem::Extension }
+    let(:expected_require_path) { "my_gem/extension" }
+    let(:expected_module_name) { "MyGem::Extension" }
     let(:version_file) { "lib/my_gem/extension/version.rb" }
 
     around do |example|

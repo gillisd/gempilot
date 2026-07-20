@@ -48,8 +48,7 @@ module Gempilot
         main_rb = File.read("test_gem/lib/test_gem.rb")
 
         assert_includes main_rb, 'require "zeitwerk"'
-        assert_includes main_rb, "LOADER = Zeitwerk::Loader.for_gem"
-        assert_includes main_rb, "LOADER.setup"
+        assert_includes main_rb, "LOADER = Zeitwerk::Loader.for_gem.tap(&:setup)"
         assert_includes main_rb, "module TestGem"
         refute_includes main_rb, "LOADER.ignore"
       end
@@ -378,11 +377,11 @@ module Gempilot
         assert_includes helper, 'require "gempilot/encryption"'
       end
 
-      def test_hyphenated_gem_rakefile_uses_slash_require
+      def test_hyphenated_gem_rakefile_wires_zeitwerk_task
         run_create_command("gempilot-encryption")
         rakefile = File.read("gempilot-encryption/Rakefile")
 
-        assert_includes rakefile, "require 'gempilot/encryption'"
+        assert_includes rakefile, "Gempilot::ZeitwerkTask.new"
       end
 
       def test_hyphenated_gem_console_uses_slash_require
@@ -456,13 +455,14 @@ module Gempilot
         assert_includes content, "TestGem::LOADER.eager_load(force: true)"
       end
 
-      def test_rakefile_includes_zeitwerk_validate_task
+      def test_rakefile_wires_gempilot_zeitwerk_task
         run_create_command("test_gem")
 
         rakefile = File.read("test_gem/Rakefile")
 
-        assert_includes rakefile, "namespace :zeitwerk"
-        assert_includes rakefile, "eager_load"
+        assert_includes rakefile, 'require "gempilot/zeitwerk_task"'
+        assert_includes rakefile, "Gempilot::ZeitwerkTask.new"
+        refute_includes rakefile, "namespace :zeitwerk"
       end
 
       def test_rakefile_has_version_task
