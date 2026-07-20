@@ -185,3 +185,30 @@ Description: Gempilot fresh install leaks  the following in .rubocop.yml:
 +   8     - rakelib/project_version.rb
 +   9
 Status: open
+
+Id: 2C8EF3C8-83E9-11F1-9256-FE6CB9572C2F
+Updated: Sun, 19 Jul 2026 23:14:52 -0400
+Title: gh release tasks need adjusting in task heirarchy
+Description: the github release related tasks are invoked as follows:
++ ```
++ rake version:github:release
++ rake version:github:list
++ rake version:github:unrelease
++ 
++ ```
++ they should instead be under the main idiomatic release namespace:
++ 
++ ```
++ rake release[remote] # release to the remote, e.g. rubygems/github
++ rake release:github # alternative to rake release[github]
++ rake unrelease[remote] # currently only supported for github, not rubygems
++ rake unrelease:github # alternative to rake unrelease[github]
++ rake release:list:github # list GitHub releases
++ rake release:
++ ```
++ where remote is "github"
++ 
++ Note that this is a breaking change, and it is approved. Do not provide backwards compatibility for the old tasks. Move forward
++ 
++ Also, there is an issue that prevents github releasing from working at all via the old tasks. I get an error every time saying that "tags have already been pushed" or something along those lines. Ensure that is fixed as well
+Status: open
