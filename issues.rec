@@ -212,3 +212,38 @@ Description: the github release related tasks are invoked as follows:
 + 
 + Also, there is an issue that prevents github releasing from working at all via the old tasks. I get an error every time saying that "tags have already been pushed" or something along those lines. Ensure that is fixed as well
 Status: closed
+
+Id: 79AE436E-845E-11F1-9D3D-FE798892EAA2
+Updated: Mon, 20 Jul 2026 17:14:32 +0000
+Title: Own shared config in gempilot and consume it, with an eject hatch
+Description: Most of what gempilot gives a generated gem is copied in as template
++ files. The clearest case is .rubocop.yml, rendered from the ~200-line
++ data/templates/gem/dotfiles/rubocop.yml.erb into each gem with no link
++ back to gempilot. Once written it belongs to the user's repo and drifts,
++ so improving a shared rule means hand-recopying into every gem.
++ 
++ We already avoid this for rake tasks: the generated Rakefile does
++ `require "gempilot/version_task"; Gempilot::VersionTask.new`, and gems
++ already depend on gempilot (`gem "gempilot", require: false`). The task
++ logic lives in gempilot and rolls forward on a version bump. Extend that
++ model to the copied config, starting with RuboCop.
++ 
++ Decide the RuboCop mechanism. gempilot ships no cops of its own; its value
++ is a curated config (which external plugins to load plus cop-setting
++ overrides). So weigh `inherit_gem` (ship a .rubocop.yml inside gempilot and
++ reference it) against a plugin. Plugins conventionally bundle cops
++ (rubocop-rake, rubocop-rspec); since we ship only config, `inherit_gem` is
++ the honest fit. Either way, be explicit about what it enables.
++ 
++ Add an eject hatch (the maintainer's "explode"): gems stay zero-config and
++ live-linked by default; an eject command copies the inherited config in and
++ cuts the link.
++ 
++ CLAUDE.md needs a different approach: there is no CLAUDE.md generation
++ today, and markdown has no inherit_gem/plugin analog, so it would need a
++ regen command or a stub pointing at gempilot-shipped content, not parity.
++ 
++ Tension: auto-propagating config on a bump can add cop offenses and break
++ CI with no code change (generated gems set NewCops: enable and run rubocop
++ in the default task). Mitigate via pinning, opt-in, or a changelog gate.
+Status: open
