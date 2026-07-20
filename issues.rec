@@ -95,7 +95,7 @@ Id: 4EB6E51C-4322-11F1-B1B2-FE6CB9572C2F
 Updated: Tue, 28 Apr 2026 12:50:05 -0400
 Title: Existing git repo on gempilot create needs new commit message
 Description: Currently it commits "Initial commit". Inappropriate for a git repo that already has a history
-Status: open
+Status: closed
 
 Id: 0411D4DA-4323-11F1-847C-FE6CB9572C2F
 Updated: Tue, 28 Apr 2026 12:55:09 -0400

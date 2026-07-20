@@ -97,8 +97,20 @@ module Gempilot
         cd @gem_name do
           sh "git", "init", "-q", "-b", @branch
           sh "git", "add", "."
-          sh "git", "commit", "-q", "-m", "Initial commit."
+          sh "git", "commit", "-q", "-m", commit_message
         end
+      end
+
+      # "Initial commit." is wrong when scaffolding into a directory that is
+      # already a repository with history (e.g. a cloned remote), so name the
+      # commit after the gem in that case.
+      def commit_message
+        existing_history? ? "Add #{@gem_name} gem scaffolding." : "Initial commit."
+      end
+
+      def existing_history?
+        system("git", "rev-parse", "--verify", "--quiet", "HEAD",
+               out: File::NULL, err: File::NULL)
       end
     end
   end
