@@ -55,4 +55,62 @@ RSpec.describe Gempilot::VersionTask do
       expect(`git tag`.strip).to eq("v1.0.0.dev4")
     end
   end
+
+  describe "release task hierarchy" do
+    it "defines the release and unrelease tasks", :aggregate_failures do
+      %w[release release:rubygems release:github release:list:github unrelease unrelease:github].each do |name|
+        expect(Rake::Task).to be_task_defined(name)
+      end
+    end
+
+    it "removes the old version:github tasks", :aggregate_failures do
+      %w[version:github:release version:github:unrelease version:github:list].each do |name|
+        expect(Rake::Task).not_to be_task_defined(name)
+      end
+    end
+
+    it "composes release from the per-remote tasks" do
+      expect(Rake::Task["release"].prerequisites).to eq(%w[release:rubygems release:github])
+    end
+
+    it "builds release:rubygems from bundler's own tasks" do
+      chain = %w[build release:guard_clean release:source_control_push release:rubygem_push]
+      expect(Rake::Task["release:rubygems"].prerequisites).to eq(chain)
+    end
+
+    it "composes unrelease from the github task" do
+      expect(Rake::Task["unrelease"].prerequisites).to eq(%w[unrelease:github])
+    end
+  end
+
+  describe "release task behavior" do
+    let(:origin) { instance_double(Gempilot::Origin, push: nil) }
+    let(:github) { instance_double(Gempilot::GithubRelease, create: nil, destroy: nil, list: nil) }
+
+    before do
+      allow(Gempilot::Origin).to receive(:new).and_return(origin)
+      allow(Gempilot::GithubRelease).to receive(:new).and_return(github)
+    end
+
+    it "release:source_control_push pushes via Origin" do
+      Rake::Task["release:source_control_push"].invoke
+      expect(origin).to have_received(:push)
+    end
+
+    it "release:github pushes, then creates the release", :aggregate_failures do
+      Rake::Task["release:github"].invoke
+      expect(origin).to have_received(:push)
+      expect(github).to have_received(:create)
+    end
+
+    it "release:list:github lists releases" do
+      Rake::Task["release:list:github"].invoke
+      expect(github).to have_received(:list)
+    end
+
+    it "unrelease:github destroys the release" do
+      Rake::Task["unrelease:github"].invoke
+      expect(github).to have_received(:destroy)
+    end
+  end
 end

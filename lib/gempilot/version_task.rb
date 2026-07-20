@@ -4,6 +4,8 @@ require_relative "../gempilot"
 module Gempilot
   ## Rake tasks for version lifecycle management.
   class VersionTask < Rake::TaskLib
+    include ReleaseTasks
+
     attr_reader :project
 
     def initialize(root: Dir.pwd)
@@ -17,7 +19,7 @@ module Gempilot
     def define_tasks
       define_version_tasks
       define_version_composite_tasks
-      define_github_tasks
+      define_release_tasks(@project)
     end
 
     def define_version_tasks
@@ -87,21 +89,6 @@ module Gempilot
       task :revert do
         VersionTag.new(project.version).revert
         project.refresh_version!
-      end
-    end
-
-    def define_github_tasks
-      project = @project
-
-      namespace "version:github" do
-        desc "Create a GitHub release for the current version"
-        task(:release) { GithubRelease.new(project.version_tag).create }
-
-        desc "Delete the GitHub release for the current version"
-        task(:unrelease) { GithubRelease.new(project.version_tag).destroy }
-
-        desc "List GitHub releases"
-        task(:list) { GithubRelease.new(project.version_tag).list }
       end
     end
   end
