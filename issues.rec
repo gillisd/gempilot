@@ -211,4 +211,4 @@ Description: the github release related tasks are invoked as follows:
 + Note that this is a breaking change, and it is approved. Do not provide backwards compatibility for the old tasks. Move forward
 + 
 + Also, there is an issue that prevents github releasing from working at all via the old tasks. I get an error every time saying that "tags have already been pushed" or something along those lines. Ensure that is fixed as well
-Status: open
+Status: closed

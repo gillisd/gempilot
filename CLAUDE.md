@@ -35,4 +35,5 @@ A CLI tool for creating and managing Ruby gems, built on CommandKit.
 - RuboCop with framework-specific plugins
 - GitHub Actions CI workflow (`.github/workflows/ci.yml`)
 - `git ls-files`-based gemspec with glob fallback for non-git repos
-- Version lifecycle rake tasks installed via `Gempilot::VersionTask.new` (a `Rake::TaskLib`): `version:current/bump/commit/tag/untag/reset/revert`, composite `version:release`/`version:unrelease`, and `version:github:release/unrelease/list`
+- Version lifecycle rake tasks installed via `Gempilot::VersionTask.new` (a `Rake::TaskLib`): `version:current/bump/commit/tag/untag/reset/revert` and composite `version:release`/`version:unrelease`
+- Publishing rake tasks (mixed into `VersionTask` via `Gempilot::ReleaseTasks`): `release` (all remotes), `release:rubygems`, `release:github`, `release:list:github`, `unrelease`, `unrelease:github`. These override and reuse bundler's `bundler/gem_tasks` release chain; `release:source_control_push` is replaced with `Gempilot::Origin` to push commit+tag idempotently
