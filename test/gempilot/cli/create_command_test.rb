@@ -122,6 +122,15 @@ module Gempilot
         assert_includes content, "rubocop-minitest"
       end
 
+      def test_rubocop_yml_does_not_leak_gempilot_internals
+        run_create_command("test_gem")
+
+        content = File.read("test_gem/.rubocop.yml")
+
+        refute_includes content, "core_ext", "should not exclude gempilot's lib/core_ext (not generated)"
+        refute_includes content, "rakelib", "should not exclude rakelib (not generated; author files must be linted)"
+      end
+
       # RSpec support tests
 
       def test_rspec_creates_spec_directory
