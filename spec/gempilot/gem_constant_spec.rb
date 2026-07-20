@@ -52,5 +52,22 @@ RSpec.describe Gempilot::GemConstant do
       c = constant("Widget", gem_module: "My::Gem", require_path: "my/gem")
       expect(c.test_path(:minitest)).to eq("test/my/gem/widget_test.rb")
     end
+
+    context "when the constant escapes the gem module namespace" do
+      it "names the minitest file after the constant" do
+        c = constant("Reversal::Server", gem_module: "Reversal::Store", require_path: "reversal/store")
+        expect(c.test_path(:minitest)).to eq("test/reversal/server_test.rb")
+      end
+
+      it "names the rspec file after the constant" do
+        c = constant("Reversal::Server", gem_module: "Reversal::Store", require_path: "reversal/store")
+        expect(c.test_path(:rspec)).to eq("spec/reversal/server_spec.rb")
+      end
+
+      it "keeps the test path in step with the source path" do
+        c = constant("Reversal::Server", gem_module: "Reversal::Store", require_path: "reversal/store")
+        expect(c.test_path(:minitest)).to eq(c.lib_path.sub("lib/", "test/").sub(".rb", "_test.rb"))
+      end
+    end
   end
 end

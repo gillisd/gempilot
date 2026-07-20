@@ -6,8 +6,7 @@ require "zeitwerk"
 ##
 # Top-level namespace for the <%= @gem_name %> gem.
 module <%= @module_name %>
-  LOADER = Zeitwerk::Loader.for_gem
-  LOADER.setup
+  LOADER = Zeitwerk::Loader.for_gem.tap(&:setup)
 
   ##
   # Base error class for <%= @gem_name %>.

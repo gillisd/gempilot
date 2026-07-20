@@ -30,18 +30,14 @@ module Gempilot
 
     ## Path to the constant's source file, e.g. +lib/my_gem/services/auth.rb+.
     def lib_path
-      "#{File.join("lib", *path_segments)}.rb"
+      path_for("lib", ".rb")
     end
 
     ## Path to the constant's test file for +framework+ (+:rspec+ or
-    ## +:minitest+); correct for multi-segment (hyphenated) gem modules.
+    ## +:minitest+). Mirrors +lib_path+ so the test always tracks the source,
+    ## including for multi-segment (hyphenated) gem modules.
     def test_path(framework)
-      rest = path_segments.drop(require_path.split("/").length)
-      if framework == :rspec
-        "#{File.join("spec", require_path, *rest)}_spec.rb"
-      else
-        "#{File.join("test", require_path, *rest)}_test.rb"
-      end
+      framework == :rspec ? path_for("spec", "_spec.rb") : path_for("test", "_test.rb")
     end
 
     private
@@ -56,6 +52,10 @@ module Gempilot
 
     def path_segments
       parts.map(&:underscore)
+    end
+
+    def path_for(root, suffix)
+      "#{File.join(root, *path_segments)}#{suffix}"
     end
   end
 end

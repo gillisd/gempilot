@@ -33,8 +33,16 @@ module Gempilot
       project_segments.join("-")
     end
 
+    def require_path
+      project_segments.join("/")
+    end
+
+    def module_name
+      project_segments.map(&:camelize).join("::")
+    end
+
     def klass
-      Object.const_get(project_segments.map(&:camelize).join("::"))
+      Object.const_get(module_name)
     end
 
     def version

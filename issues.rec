@@ -95,7 +95,7 @@ Id: 4EB6E51C-4322-11F1-B1B2-FE6CB9572C2F
 Updated: Tue, 28 Apr 2026 12:50:05 -0400
 Title: Existing git repo on gempilot create needs new commit message
 Description: Currently it commits "Initial commit". Inappropriate for a git repo that already has a history
-Status: open
+Status: closed
 
 Id: 0411D4DA-4323-11F1-847C-FE6CB9572C2F
 Updated: Tue, 28 Apr 2026 12:55:09 -0400
@@ -110,21 +110,21 @@ Description: e.g.
 +  Zeitwerk::Loader.for_gem.tap do |l|
 +     l.setup
 +   end
-+ 
-+ 
-Status: open
++
++
+Status: closed
 
 Id: 5618BB20-4325-11F1-BF5A-FE6CB9572C2F
 Updated: Tue, 28 Apr 2026 13:11:46 -0400
 Title: Move zeitwerk check task into gempilot
 Description: Can't iterate on it when its not managed by gempilot. A new feature needs to be added
-Status: open
+Status: closed
 
 Id: 6BE168E4-4325-11F1-BE0F-FE6CB9572C2F
 Updated: Tue, 28 Apr 2026 13:12:22 -0400
 Title: Add zeitwerk:all task
 Description: Add rake task that runs LOADER.all_expected_cpaths and prints in a nice table, similar to rails routes
-Status: open
+Status: closed
 
 Id: 56DB9634-4327-11F1-8D0F-FE6CB9572C2F
 Updated: Fri, 05 Jun 2026 00:00:00 -0400
@@ -155,13 +155,13 @@ Description: When doing `gempilot new Reversal::Server`, in a project called "re
 +         create  test/reversal/store_test.rb
 + 
 + The test file is incorrectly named. Should be server_test.rb
-Status: open
+Status: closed
 
 Id: F5486B48-71DB-11F1-980F-FE6CB9572C2E
 Updated: Fri, 26 Jun 2026 23:54:55 -0400
 Title: Rubymine <=> Minitest usage causes "no reporters allowed error"
 Description: Has to do with how the ENV var RM_INFO is being interpreted
-Status: open
+Status: closed
 
 Id: 8D847572-7273-11F1-B508-FE6CB9572C2E
 Updated: Fri, 03 Jul 2026 22:38:22 +0000
