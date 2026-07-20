@@ -15,7 +15,6 @@ plugins:
   - rubocop-performance
   - rubocop-rake
   - rubocop-rspec
-  - rubocop-design
 
 AllCops:
   NewCops: enable
