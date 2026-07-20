@@ -25,12 +25,6 @@ AllCops:
   Exclude:
     - bin/*
     - vendor/**/*
-    - lib/core_ext/**/*
-    - rakelib/project.rb
-    - rakelib/project_version.rb
-    - rakelib/version_tag.rb
-    - rakelib/github_release.rb
-    - rakelib/strict_shell.rb
 <% if @hyphenated -%>
     - lib/<%= @gem_name %>.rb
 <% end -%>
@@ -124,16 +118,11 @@ Metrics/BlockLength:
 <% end -%>
   Exclude:
     - "<%= @gem_name %>.gemspec"
-    - "rakelib/**/*"
 
-# Gemspec and rake files use patterns that trigger Claude cops legitimately.
+# Gemspec uses patterns that trigger Claude cops legitimately.
 Claude/NoFancyUnicode:
   Exclude:
     - "<%= @gem_name %>.gemspec"
-
-Claude/MysteryRegex:
-  Exclude:
-    - "rakelib/**/*"
 
 # Zeitwerk loaders are mutable by design — only flag literal mutable values.
 Style/MutableConstant:
