@@ -130,12 +130,20 @@ backs `release:source_control_push` and is the bug fix.
   becomes purely: `gh release create --generate-notes --fail-on-no-commits <tag>`.
 - `#destroy` and `#list` are unchanged.
 
+### `Gempilot::ReleaseTasks` (new — `lib/gempilot/release_tasks.rb`)
+
+The release / unrelease task definitions above, extracted into a focused module that is
+`include`d into `VersionTask`. This is a separate concern from the local version
+lifecycle, and extracting it keeps `VersionTask` under RuboCop's `Metrics/ClassLength`
+(the combined class would otherwise exceed the 100-line limit). All methods are private
+and parameterized by `project` (no reliance on the host's ivars beyond the single
+`define_release_tasks(project)` entry point).
+
 ### `Gempilot::VersionTask` (modified — `lib/gempilot/version_task.rb`)
 
-- Remove `define_github_tasks` and its call in `define_tasks`.
-- Add the release / unrelease definitions above (a `define_release_tasks` +
-  `define_unrelease_tasks`, or equivalent private methods keeping RuboCop metrics
-  satisfied — small focused methods).
+- `include ReleaseTasks`.
+- Remove `define_github_tasks`; replace its call in `define_tasks` with
+  `define_release_tasks(@project)`.
 - `version:*` local lifecycle tasks and `version:release` / `version:unrelease`
   composites are untouched.
 
