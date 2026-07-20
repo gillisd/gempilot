@@ -161,7 +161,7 @@ Id: F5486B48-71DB-11F1-980F-FE6CB9572C2E
 Updated: Fri, 26 Jun 2026 23:54:55 -0400
 Title: Rubymine <=> Minitest usage causes "no reporters allowed error"
 Description: Has to do with how the ENV var RM_INFO is being interpreted
-Status: open
+Status: closed
 
 Id: 8D847572-7273-11F1-B508-FE6CB9572C2E
 Updated: Fri, 03 Jul 2026 22:38:22 +0000
