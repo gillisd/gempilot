@@ -110,8 +110,8 @@ Description: e.g.
 +  Zeitwerk::Loader.for_gem.tap do |l|
 +     l.setup
 +   end
-+
-+
++ 
++ 
 Status: closed
 
 Id: 5618BB20-4325-11F1-BF5A-FE6CB9572C2F
@@ -212,3 +212,9 @@ Description: the github release related tasks are invoked as follows:
 + 
 + Also, there is an issue that prevents github releasing from working at all via the old tasks. I get an error every time saying that "tags have already been pushed" or something along those lines. Ensure that is fixed as well
 Status: closed
+
+Id: 986E0100-88F4-11F1-B718-FE6CB9572C2D
+Updated: Sun, 26 Jul 2026 09:19:13 -0400
+Title: Make rbs and the other gems GP installs mri only
+Description: This tool is also used with jruby, and it fails irb install due to rbs
+Status: open
