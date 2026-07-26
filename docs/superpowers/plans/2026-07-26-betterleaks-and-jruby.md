@@ -10,14 +10,17 @@
 
 **Spec:** `docs/superpowers/specs/2026-07-26-betterleaks-and-jruby-design.md`
 
+> **Note:** the Task 2/3/4 lib snippets below were written to their real paths and verified `rubocop`-clean + `rake zeitwerk:validate`-clean against this repo before this plan was finalized, then reverted. Reproduce them exactly.
+
 ---
 
 ## Conventions for every task
 
-- **Strings:** double quotes. **No** `# frozen_string_literal` comment. Trailing commas in multiline literals/args.
+- **Strings:** double quotes. **No** `# frozen_string_literal` comment. Trailing commas in multiline literals/args. **No non-ASCII** in code/comments (`Claude/NoFancyUnicode` — no em dashes).
 - **Docs:** every public class/module gets a `##` rdoc block immediately above it (no blank line between).
-- **Metrics:** methods ≤10 lines, classes/modules ≤100, ABC ≤17, non-test blocks ≤8 lines. `test/**` is exempt from these; `spec/**` is exempt only from `Metrics/BlockLength`.
-- **Run one minitest file:** `bundle exec ruby -Itest -Ilib <path>`
+- **Metrics:** methods ≤10 lines, ABC ≤17, non-test blocks ≤8 lines. `test/**` is exempt from `Metrics/{Method,Class,Abc}Length`; `spec/**` is exempt only from `Metrics/BlockLength`.
+- **`super` vs `super()`:** call bare `super` when a method takes no args (`Style/SuperArguments`); use `super()` only to pass *no* args from a method that *does* take args (as `version_task.rb` does for its `root:` param).
+- **Run one minitest file:** `bundle exec ruby -Itest -Ilib <path>` (filter with `-n "/regex/"`)
 - **Run one spec file:** `bundle exec rspec <path>`
 - **Full suite:** `bundle exec rake test && bundle exec rake spec && bundle exec rake rubocop`
 - `data/templates/**` is excluded from rubocop, so hook/YAML/ERB template files there need not be rubocop-clean.
@@ -66,7 +69,7 @@ end
 - [ ] **Step 2: Verify the bundle still resolves on MRI**
 
 Run: `bundle install`
-Expected: completes without error; `git diff Gemfile.lock` shows no change to the resolved gems (they are still installed on the current MRI platform).
+Expected: completes without error. `git diff Gemfile.lock` should show no change to the resolved dependency set on this (MRI) platform; a churned `BUNDLED WITH` or platform line is harmless — do not treat a trivial lock diff as a failure. (`:mri` also excludes TruffleRuby, which is intended and matches the spec.)
 
 - [ ] **Step 3: Verify rubocop is clean**
 
@@ -189,7 +192,7 @@ Expected: FAIL — `uninitialized constant Gempilot::BetterleaksTask`.
 
 - [ ] **Step 5: Implement the rake task-lib**
 
-`lib/gempilot/betterleaks_task.rb`:
+`lib/gempilot/betterleaks_task.rb` (note bare `super`, and `ENV.fetch` — both required by rubocop):
 
 ```ruby
 require "rake/tasklib"
@@ -207,7 +210,7 @@ module Gempilot
   ## and Ruby engines where the scanner is unavailable.
   class BetterleaksTask < Rake::TaskLib
     def initialize
-      super()
+      super
       define_scan_task
     end
 
@@ -225,7 +228,7 @@ module Gempilot
     end
 
     def betterleaks_available?
-      ENV["PATH"].to_s.split(File::PATH_SEPARATOR).any? do |dir|
+      ENV.fetch("PATH", "").split(File::PATH_SEPARATOR).any? do |dir|
         File.executable?(File.join(dir, "betterleaks"))
       end
     end
@@ -241,7 +244,7 @@ end
 - [ ] **Step 6: Run the spec to verify it passes**
 
 Run: `bundle exec rspec spec/gempilot/betterleaks_task_spec.rb`
-Expected: PASS (2 examples).
+Expected: PASS (2 examples). (Invoking the task prints the "not found" notice to stderr — expected noise, not a failure.)
 
 - [ ] **Step 7: Verify rubocop and Zeitwerk**
 
@@ -261,7 +264,7 @@ git commit -m "Add betterleaks hook/CI templates and Gempilot::BetterleaksTask"
 
 ## Task 3: BetterleaksInstaller mixin + `gempilot setup betterleaks` command
 
-The installer centralizes the file operations; the `Setup` command retrofits an existing gem and is the integration test for the installer.
+The installer centralizes the file operations; the `Setup` command retrofits an existing gem and is the primary test of the installer (it exercises every installer method under root `.`; Task 4 exercises the copy path under root `@gem_name`).
 
 **Files:**
 - Create: `lib/gempilot/cli/betterleaks_installer.rb`
@@ -328,13 +331,18 @@ module Gempilot
 
       def test_setup_betterleaks_is_idempotent
         run_setup_command("betterleaks")
-        exit_code = run_setup_command("betterleaks")
+
+        stdout = StringIO.new
+        command = Commands::Setup.new(stdout: stdout)
+        command.define_singleton_method(:sh) { |*_args| nil }
+        exit_code = command.main(["betterleaks"])
 
         rakefile = File.read("Rakefile")
 
         assert_equal 0, exit_code
         assert_equal 1, rakefile.scan("Gempilot::BetterleaksTask.new").size
         assert_equal 1, File.read("bin/setup").scan("core.hooksPath").size
+        assert_includes stdout.string, "skip"
       end
 
       def test_setup_fails_without_gemspec
@@ -455,8 +463,13 @@ module Gempilot
         body = File.exist?(path) ? File.read(path) : ""
         return print_skip(path) if body.include?(snippet.strip)
 
-        File.write(path, "#{body.chomp}\n\n#{snippet.chomp}\n")
+        write_appended(path, body, snippet)
         print_action "update", path
+      end
+
+      def write_appended(path, body, snippet)
+        prefix = body.empty? ? "" : "#{body.chomp}\n\n"
+        File.write(path, "#{prefix}#{snippet.chomp}\n")
       end
 
       def print_skip(path)
@@ -469,7 +482,7 @@ end
 
 - [ ] **Step 4: Implement the Setup command**
 
-`lib/gempilot/cli/commands/setup.rb`:
+`lib/gempilot/cli/commands/setup.rb` (keep the doc comment ASCII — no em dash):
 
 ```ruby
 module Gempilot
@@ -479,7 +492,7 @@ module Gempilot
       ##
       ## Currently supports betterleaks secret scanning:
       ## <tt>gempilot setup betterleaks</tt> installs the pre-commit hook, CI
-      ## workflow, and rake task wiring. Idempotent — safe to re-run.
+      ## workflow, and rake task wiring. Idempotent, safe to re-run.
       class Setup < Command
         include Generator
         include GemContext
@@ -569,7 +582,9 @@ git commit -m "Add 'gempilot setup betterleaks' retrofit command and installer"
 
 ## Task 4: Wire betterleaks into `gempilot create`
 
-Adds the default-on `--[no-]betterleaks` option, renders the artifacts for new gems, and updates every non-interactive create invocation in both suites so the new prompt never blocks on stdin. The option addition and the call-site updates must land together.
+Adds the default-on `--[no-]betterleaks` option, renders the artifacts for new gems, and updates every non-interactive create invocation in both suites so the new prompt never blocks on stdin.
+
+**IMPORTANT ordering:** Step 1 updates the shared `run_create_command` helper too, because `test_no_betterleaks_flag_omits_integration` matches the `-n "/betterleaks/"` filter and must not hit the prompt in Step 6. All *other* call sites are updated in Step 7 (they only run in the full suite at Step 8).
 
 **Files:**
 - Modify: `lib/gempilot/cli/commands/create.rb`
@@ -578,9 +593,9 @@ Adds the default-on `--[no-]betterleaks` option, renders the artifacts for new g
 - Modify: `data/templates/gem/bin/setup.erb`
 - Test: `test/gempilot/cli/create_command_test.rb` (+ 6 spec files, listed in Step 7)
 
-- [ ] **Step 1: Write the failing betterleaks create tests**
+- [ ] **Step 1: Write the failing betterleaks create tests + update the shared helper**
 
-Append these tests inside `class CreateCommandTest` in `test/gempilot/cli/create_command_test.rb` (before the `private` keyword), and add the `run_create_with_betterleaks` helper in the private section:
+In `test/gempilot/cli/create_command_test.rb`, (a) add these tests inside `class CreateCommandTest` before the `private` keyword:
 
 ```ruby
       # betterleaks integration
@@ -611,16 +626,33 @@ Append these tests inside `class CreateCommandTest` in `test/gempilot/cli/create
         assert_includes File.read("test_gem/bin/setup"), "git config core.hooksPath .githooks"
       end
 
+      def test_betterleaks_sets_hooks_path_on_git_init
+        sh_calls = []
+        stdout = StringIO.new
+        args = [
+          "--author", "Test Author", "--email", "test@example.com",
+          "--summary", "A test gem", "--ruby-version", "3.4.8",
+          "--test", "minitest", "--no-exe", "--git", "--branch", "master",
+          "--betterleaks", "test_gem"
+        ]
+        command = Commands::Create.new(stdout: stdout)
+        command.define_singleton_method(:sh) { |cmd, *arguments| sh_calls << [cmd, *arguments] }
+        command.main(args)
+
+        assert_includes sh_calls, ["git", "config", "core.hooksPath", ".githooks"]
+      end
+
       def test_no_betterleaks_flag_omits_integration
         run_create_command("test_gem")
 
         refute_path_exists "test_gem/.githooks/pre-commit"
         refute_path_exists "test_gem/.github/workflows/secrets.yml"
         refute_includes File.read("test_gem/Rakefile"), "BetterleaksTask"
+        refute_includes File.read("test_gem/bin/setup"), "core.hooksPath"
       end
 ```
 
-And in the `private` section, add:
+(b) In the `private` section, add the betterleaks helper and add `"--no-betterleaks",` to the existing `run_create_command` args array (before `*extra_args`):
 
 ```ruby
       def run_create_with_betterleaks(gem_name)
@@ -637,19 +669,36 @@ And in the `private` section, add:
           gem_name
         ]
         command = Commands::Create.new(stdout: stdout)
-        command.define_singleton_method(:sh) { |_cmd, *_arguments| }
+        command.define_singleton_method(:sh) { |_cmd, *_arguments| nil }
         command.main(args)
       end
+```
+
+The existing `run_create_command` array becomes:
+
+```ruby
+        args = [
+          "--author", "Test Author",
+          "--email", "test@example.com",
+          "--summary", "A test gem",
+          "--ruby-version", "3.4.8",
+          "--test", "minitest",
+          "--no-exe",
+          "--no-git",
+          "--no-betterleaks",
+          *extra_args,
+          gem_name
+        ]
 ```
 
 - [ ] **Step 2: Run the new tests to verify they fail**
 
 Run: `bundle exec ruby -Itest -Ilib test/gempilot/cli/create_command_test.rb -n "/betterleaks/"`
-Expected: FAIL — the `--betterleaks` option is not defined yet, so create rejects the option and the gem is never built; the `assert_path_exists`/`assert_includes` assertions fail (and `test_no_betterleaks_flag_omits_integration` passes trivially since nothing is generated).
+Expected: FAIL — `--betterleaks`/`--no-betterleaks` are not defined options yet, so create rejects them and builds nothing. The six presence tests (`test_betterleaks_*`) fail their `assert_*`; `test_no_betterleaks_flag_omits_integration` happens to pass (nothing is generated, so its `refute_*`s hold). This confirms the tests exercise the new option.
 
 - [ ] **Step 3: Add the `--[no-]betterleaks` option and collection to create.rb**
 
-In `lib/gempilot/cli/commands/create.rb`, add `include BetterleaksInstaller` under the existing `include GemBuilder`:
+In `lib/gempilot/cli/commands/create.rb`, add `include BetterleaksInstaller` under `include GemBuilder`:
 
 ```ruby
         include Generator
@@ -657,14 +706,14 @@ In `lib/gempilot/cli/commands/create.rb`, add `include BetterleaksInstaller` und
         include BetterleaksInstaller
 ```
 
-Add the option declaration after the `option :exe, ...` block:
+Add the option declaration after the `option :exe, ...` line:
 
 ```ruby
         option :betterleaks, long: "--[no-]betterleaks",
                              desc: "Set up betterleaks secret scanning"
 ```
 
-Change `collect_build_options` to collect it between exe and git:
+Add the collect call to `collect_build_options` (between exe and git):
 
 ```ruby
         def collect_build_options
@@ -675,14 +724,11 @@ Change `collect_build_options` to collect it between exe and git:
         end
 ```
 
-Add the collection method (mirrors `collect_exe_option`) in the private section:
+Add the collection method (guard form; sets `@betterleaks` in both branches) after `collect_exe_option`:
 
 ```ruby
         def collect_betterleaks_option
-          if options.key?(:betterleaks)
-            @betterleaks = options[:betterleaks]
-            return
-          end
+          return @betterleaks = options[:betterleaks] if options.key?(:betterleaks)
 
           puts
           puts colors.bright_black("betterleaks scans staged changes for secrets before each commit.")
@@ -690,27 +736,36 @@ Add the collection method (mirrors `collect_exe_option`) in the private section:
         end
 ```
 
-- [ ] **Step 4: Render the artifacts in gem_builder.rb**
+- [ ] **Step 4: Render the artifacts (edits span TWO files)**
 
-In `lib/gempilot/cli/gem_builder.rb`, add `render_betterleaks` to `scaffold_gem` (after `render_executable`) and set the hook path during git init.
-
-Change `scaffold_gem`:
+**4a. In `lib/gempilot/cli/commands/create.rb`** — `scaffold_gem` lives here. Add `render_betterleaks` after `render_executable`:
 
 ```ruby
-      def scaffold_gem
-        create_directories
-        render_core_templates
-        render_test_templates
-        render_dev_files
-        render_config_files
-        render_executable
-        render_betterleaks
-        run_bundle_install
-        initialize_git_repo
-      end
+        def scaffold_gem
+          create_directories
+          render_core_templates
+          render_test_templates
+          render_dev_files
+          render_config_files
+          render_executable
+          render_betterleaks
+          run_bundle_install
+          initialize_git_repo
+        end
 ```
 
-Add the private method (place it just after `render_executable`):
+**4b. In `lib/gempilot/cli/gem_builder.rb`** — update the module doc comment to mention the new ivar/dependency, add the `render_betterleaks` method (place it after `render_executable`), and add the hook-path activation to `initialize_git_repo`.
+
+Update the module doc comment (`gem_builder.rb:4-8`) to append betterleaks to the expected inputs:
+
+```ruby
+    ## Expects the including class to provide Generator methods (+mkdir+, +erb+,
+    ## +chmod+, +cp+, +cd+, +sh+), BetterleaksInstaller's +install_betterleaks_files+,
+    ## and the following instance variables: +@gem_name+, +@require_path+,
+    ## +@module_name+, +@hyphenated+, +@test_framework+, +@branch+, +@betterleaks+.
+```
+
+Add the method:
 
 ```ruby
       def render_betterleaks
@@ -720,7 +775,7 @@ Add the private method (place it just after `render_executable`):
       end
 ```
 
-Change `initialize_git_repo` to activate the hook path when betterleaks is enabled:
+Change `initialize_git_repo` (use the `BetterleaksInstaller::HOOKS_PATH` constant, not a literal):
 
 ```ruby
       def initialize_git_repo
@@ -728,7 +783,7 @@ Change `initialize_git_repo` to activate the hook path when betterleaks is enabl
 
         cd @gem_name do
           sh "git", "init", "-q", "-b", @branch
-          sh "git", "config", "core.hooksPath", ".githooks" if @betterleaks
+          sh "git", "config", "core.hooksPath", BetterleaksInstaller::HOOKS_PATH if @betterleaks
           sh "git", "add", "."
           sh "git", "commit", "-q", "-m", commit_message
         end
@@ -737,7 +792,7 @@ Change `initialize_git_repo` to activate the hook path when betterleaks is enabl
 
 - [ ] **Step 5: Add ERB conditionals to the templates**
 
-In `data/templates/gem/Rakefile.erb`, insert the betterleaks wiring between the ZeitwerkTask block and the default-task block. The relevant section must read:
+In `data/templates/gem/Rakefile.erb`, insert the betterleaks wiring between the ZeitwerkTask block and the default-task block. That section must read:
 
 ```erb
 require "gempilot/zeitwerk_task"
@@ -769,23 +824,20 @@ git config core.hooksPath .githooks
 <% end -%>
 ```
 
-- [ ] **Step 6: Run the new tests to verify they pass**
+- [ ] **Step 6: Run the betterleaks tests to verify they pass**
 
 Run: `bundle exec ruby -Itest -Ilib test/gempilot/cli/create_command_test.rb -n "/betterleaks/"`
-Expected: PASS (5 tests).
+Expected: PASS (7 tests — 6 presence/hooks-path + the omit test). The `run_create_command` helper already carries `--no-betterleaks` from Step 1, so the omit test does not prompt.
 
-- [ ] **Step 7: Update every other non-interactive create invocation to pass a betterleaks flag**
+- [ ] **Step 7: Update the remaining non-interactive create invocations**
 
-Adding the prompt breaks any create invocation that omits a betterleaks flag. In each location below, insert an explicit flag into the args array (existing behaviour → keep betterleaks off with `--no-betterleaks`; the two integration tests exercise the default-on path with `--betterleaks`).
-
-In `test/gempilot/cli/create_command_test.rb`:
-- `run_create_command` helper array: add `"--no-betterleaks",` before `*extra_args`.
+These run only in the full suite (Step 8), but each omits a betterleaks flag and would otherwise block on the prompt. In `test/gempilot/cli/create_command_test.rb`:
 - `test_git_branch_flag_passes_branch_to_git_init` args: add `"--no-betterleaks",` before `"test_gem"`.
 - `test_sh_runs_inside_unbundled_env` args: add `"--no-betterleaks",` before `"test_gem"`.
-- `test_generated_gem_default_rake_task_passes` args: add `"--betterleaks",` before `"test_gem"`.
+- `test_generated_gem_default_rake_task_passes` args: add `"--betterleaks",` before `"test_gem"` (exercises the default-on path end-to-end).
 - `test_hyphenated_gem_default_rake_task_passes` args: add `"--betterleaks",` before `"gempilot-encryption"`.
 
-In each of these spec files, add `"--no-betterleaks",` into the args array of the create helper/`let` (alongside `"--no-git"`):
+In each of these 6 spec files, add `"--no-betterleaks",` into the create helper/`let` args array (alongside `"--no-git"`):
 - `spec/gempilot/cli/commands/create_rakefile_spec.rb` (`def create`)
 - `spec/gempilot/cli/commands/create_git_spec.rb` (`def create_with_git`)
 - `spec/gempilot/cli/commands/create_rubocop_spec.rb` (`create_args` let)
@@ -796,9 +848,9 @@ In each of these spec files, add `"--no-betterleaks",` into the args array of th
 - [ ] **Step 8: Run both full suites to verify green**
 
 Run: `bundle exec rake test`
-Expected: PASS, 0 failures/errors.
+Expected: PASS, 0 failures/errors. (`test_generated_gem_default_rake_task_passes` and its hyphenated sibling now build a betterleaks-enabled gem and run `bundle exec rake` inside it — proving `Gempilot::BetterleaksTask.new` loads in a generated Rakefile and the default task still passes without the binary installed.)
 Run: `bundle exec rake spec`
-Expected: PASS, 0 failures. (Note: `test_generated_gem_default_rake_task_passes` and its hyphenated sibling now build a betterleaks-enabled gem and run `bundle exec rake` inside it — this proves `Gempilot::BetterleaksTask.new` loads in a generated Rakefile and the default task still passes without the binary installed.)
+Expected: PASS, 0 failures.
 
 - [ ] **Step 9: Verify rubocop is clean**
 
@@ -836,7 +888,7 @@ Create `/workspace/.github/workflows/secrets.yml` with the exact content from Ta
 
 - [ ] **Step 3: Wire gempilot's Rakefile**
 
-In `/workspace/Rakefile`, add `Gempilot::BetterleaksTask.new` immediately after the existing `Gempilot::VersionTask.new` line (the `require_relative "lib/gempilot"` already present at the top makes the constant autoloadable):
+In `/workspace/Rakefile`, add `Gempilot::BetterleaksTask.new` immediately after the existing `Gempilot::VersionTask.new` line (the `require_relative "lib/gempilot"` already present makes the constant autoloadable — no explicit require needed):
 
 ```ruby
 Gempilot::VersionTask.new
@@ -859,12 +911,12 @@ git config core.hooksPath .githooks
 git config core.hooksPath .githooks
 git commit --allow-empty -m "chore: probe pre-commit hook" && git reset --soft HEAD~1
 ```
-Expected: the empty commit succeeds. If betterleaks is not installed, the hook prints the "not found on PATH; skipping" notice and exits 0; if it is installed, it scans the (empty) staged set and passes. Either way the commit is created, confirming the hook never blocks a clean commit.
+Expected: the empty commit succeeds. If betterleaks is not installed, the hook prints the "not found on PATH; skipping" notice and exits 0; if it is installed, it scans the (empty) staged set and passes. Note: because the hook is now active for this repo, if betterleaks *is* installed and later flags a false positive in staged content, `git commit --no-verify` bypasses it.
 
-- [ ] **Step 6: Verify `rake betterleaks` exists and degrades gracefully**
+- [ ] **Step 6: Verify `rake betterleaks` exists and degrades gracefully; confirm flags**
 
 Run: `bundle exec rake betterleaks`
-Expected: either a betterleaks scan report (if installed) or the "betterleaks not found on PATH; skipping secret scan" notice — never a Ruby error.
+Expected: either a betterleaks scan report (if installed) or the "betterleaks not found on PATH; skipping secret scan" notice — never a Ruby error. If betterleaks is installed, confirm `betterleaks git --redact --verbose` and `betterleaks git --pre-commit --redact --staged --verbose` are accepted (run `betterleaks git --help` to double-check flag names).
 
 - [ ] **Step 7: Full green suite**
 
@@ -887,16 +939,32 @@ git add issues.rec
 git commit -m "Close rbs-mri and betterleaks issues"
 ```
 
+- [ ] **Step 10: Update CLAUDE.md commands list**
+
+Add a `gempilot setup` bullet to the Commands section of `/workspace/CLAUDE.md` (after the `destroy` entry):
+
+```markdown
+- `gempilot setup` — Retrofit an integration (e.g. betterleaks) into an existing gem
+```
+
+Commit:
+
+```bash
+git add CLAUDE.md
+git commit -m "Document gempilot setup command"
+```
+
 ---
 
 ## Self-review notes (spec coverage)
 
 - **Issue A (rbs mri-only):** Task 1.
 - **Artifact: pre-commit hook:** template (Task 2), rendered by create (Task 4), retrofit (Task 3), dogfood (Task 5).
-- **Artifact: core.hooksPath:** create git-init (Task 4 Step 4), bin/setup template (Task 4 Step 5), setup command (Task 3), dogfood (Task 5).
+- **Artifact: core.hooksPath:** create git-init (Task 4 Step 4b, asserted by `test_betterleaks_sets_hooks_path_on_git_init`), bin/setup template (Task 4 Step 5), setup command (Task 3), dogfood (Task 5).
 - **Artifact: rake task:** `BetterleaksTask` (Task 2); wired in create/setup/dogfood.
 - **Artifact: secrets.yml CI:** template (Task 2), create (Task 4), setup (Task 3), dogfood (Task 5).
-- **Shared installer:** Task 3.
-- **Error handling:** missing binary → graceful skip (Task 2 hook + task); not-in-gem → `GemContext` exit 1 (Task 3 `test_setup_fails_without_gemspec`); unknown feature → exit 1 (Task 3 `test_setup_fails_with_unknown_feature`); idempotency (Task 3 `test_setup_betterleaks_is_idempotent`).
+- **Shared installer:** Task 3. Unit behavior (idempotent append incl. `skip` output, copy-if-absent under a given root) is covered by the setup-command tests (root `.`) and the create tests (root `@gem_name`); no separate host-only unit test is added since a mixin needs a host.
+- **Error handling:** missing binary → graceful skip (Task 2 hook + task); not-in-gem → `GemContext` exit 1 (`test_setup_fails_without_gemspec`); unknown feature → exit 1 (`test_setup_fails_with_unknown_feature`); idempotency incl. `skip` output (`test_setup_betterleaks_is_idempotent`).
 - **Default-on opt-out:** `--[no-]betterleaks` default ON via prompt/flag (Task 4).
+- **Full-scan flag confirmation** (spec Risks): Task 5 Step 6.
 - **Non-goal honored:** no `betterleaks.toml` shipped.
