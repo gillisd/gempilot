@@ -9,7 +9,6 @@ module Gempilot
       class Setup < Command
         include Generator
         include GemContext
-        include BetterleaksInstaller
 
         template_dir File.join(Gempilot::ROOT, "data", "templates", "gem")
 
@@ -49,14 +48,8 @@ module Gempilot
 
         def setup_betterleaks
           print_setup_banner("betterleaks")
-          install_betterleaks_files
-          wire_rakefile
-          wire_setup_script
-          activate_hooks_path
-        end
-
-        def activate_hooks_path
-          sh "git", "config", "core.hooksPath", HOOKS_PATH
+          Betterleaks.new(self).install
+          sh "git", "config", "core.hooksPath", Betterleaks::HOOKS_PATH
         end
 
         def print_setup_banner(feature)

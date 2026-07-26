@@ -8,7 +8,6 @@ module Gempilot
 
         include Generator
         include GemBuilder
-        include BetterleaksInstaller
 
         template_dir File.join(Gempilot::ROOT, "data", "templates", "gem")
 
