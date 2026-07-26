@@ -12,7 +12,11 @@ module Gempilot
         FileUtils.mkdir_p("lib/my_gem")
         FileUtils.mkdir_p("bin")
         File.write("my_gem.gemspec", 'Gem::Specification.new { |s| s.name = "my_gem" }')
-        File.write("Rakefile", %(require "bundler/gem_tasks"\n))
+        File.write("Rakefile", <<~RAKEFILE)
+          require "bundler/gem_tasks"
+
+          task default: :test
+        RAKEFILE
         File.write("bin/setup", "#!/usr/bin/env bash\nbundle install\n")
       end
 
@@ -43,6 +47,9 @@ module Gempilot
 
         assert_includes rakefile, 'require "gempilot/betterleaks_task"'
         assert_includes rakefile, "Gempilot::BetterleaksTask.new"
+        assert_operator rakefile.index("Gempilot::BetterleaksTask.new"), :<,
+                        rakefile.index("task default"),
+                        "betterleaks wiring should sit above the default task"
       end
 
       def test_setup_betterleaks_wires_bin_setup

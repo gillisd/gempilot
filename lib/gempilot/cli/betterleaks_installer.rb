@@ -54,7 +54,24 @@ module Gempilot
       end
 
       def wire_rakefile(root: ".")
-        append_once(File.join(root, "Rakefile"), RAKE_LINES)
+        path = File.join(root, "Rakefile")
+        body = File.exist?(path) ? File.read(path) : ""
+        return print_skip(path) if body.include?(RAKE_LINES.strip)
+
+        File.write(path, insert_before_default(body))
+        print_action "update", path
+      end
+
+      # Slot the task-lib wiring just above +task default+ (matching a
+      # freshly-created gem) rather than at end-of-file; fall back to appending
+      # when there is no default task.
+      def insert_before_default(body)
+        return RAKE_LINES if body.empty?
+
+        marker = body.index(/^task default/)
+        return "#{body.chomp}\n\n#{RAKE_LINES}" unless marker
+
+        "#{body[0...marker]}#{RAKE_LINES}\n#{body[marker..]}"
       end
 
       def wire_setup_script(root: ".")
