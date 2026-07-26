@@ -218,3 +218,9 @@ Updated: Sun, 26 Jul 2026 09:19:13 -0400
 Title: Make rbs and the other gems GP installs mri only
 Description: This tool is also used with jruby, and it fails irb install due to rbs
 Status: open
+
+Id: 3FFE7616-88F5-11F1-8D3B-FE6CB9572C2D
+Updated: Sun, 26 Jul 2026 09:23:54 -0400
+Title: Add betterleaks to gem setup
+Description: Ensure betterleaks is integrated into the commit and build pipelines, via commit hooks, rake tasks, and/or whatever the idiomatic way is to integrate betterleaks into a rubyproject
+Status: open
