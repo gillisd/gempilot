@@ -3,9 +3,10 @@ module Gempilot
     ## File rendering and directory creation logic for scaffolding a new gem.
     ##
     ## Expects the including class to provide Generator methods (+mkdir+, +erb+,
-    ## +chmod+, +cp+, +cd+, +sh+) and the following instance variables:
+    ## +chmod+, +cp+, +cd+, +sh+), BetterleaksInstaller's
+    ## +install_betterleaks_files+, and the following instance variables:
     ## +@gem_name+, +@require_path+, +@module_name+, +@hyphenated+,
-    ## +@test_framework+, +@branch+.
+    ## +@test_framework+, +@branch+, +@betterleaks+.
     module GemBuilder
       private
 
@@ -85,6 +86,12 @@ module Gempilot
         chmod "+x", "#{@gem_name}/exe/#{@gem_name}"
       end
 
+      def render_betterleaks
+        return unless @betterleaks
+
+        install_betterleaks_files(root: @gem_name)
+      end
+
       def run_bundle_install
         cd @gem_name do
           sh "bundle", "install"
@@ -96,6 +103,7 @@ module Gempilot
 
         cd @gem_name do
           sh "git", "init", "-q", "-b", @branch
+          sh "git", "config", "core.hooksPath", BetterleaksInstaller::HOOKS_PATH if @betterleaks
           sh "git", "add", "."
           sh "git", "commit", "-q", "-m", commit_message
         end

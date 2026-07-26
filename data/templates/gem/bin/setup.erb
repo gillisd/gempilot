@@ -3,3 +3,7 @@ set -euo pipefail
 IFS=$'\n\t'
 
 bundle install
+<% if @betterleaks -%>
+
+git config core.hooksPath .githooks
+<% end -%>

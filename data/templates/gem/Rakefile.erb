@@ -20,6 +20,11 @@ Gempilot::VersionTask.new
 
 require "gempilot/zeitwerk_task"
 Gempilot::ZeitwerkTask.new
+<% if @betterleaks -%>
+
+require "gempilot/betterleaks_task"
+Gempilot::BetterleaksTask.new
+<% end -%>
 
 <% if @test_framework == :minitest -%>
 task default: [:test, :rubocop]
