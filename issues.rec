@@ -224,3 +224,25 @@ Updated: Sun, 26 Jul 2026 09:23:54 -0400
 Title: Add betterleaks to gem setup
 Description: Ensure betterleaks is integrated into the commit and build pipelines, via commit hooks, rake tasks, and/or whatever the idiomatic way is to integrate betterleaks into a rubyproject
 Status: open
+
+Id: F6C6EB04-8DA4-11F1-91EF-FA41C3164F3A
+Updated: Sat, 01 Aug 2026 12:31:47 +0000
+Title: release:rubygem_push only handles one gem per version
+Description: gempilot's release:rubygems depends on bundler's release:rubygem_push, which pushes exactly one gem: Bundler::GemHelper builds a single .gem and calls rubygem_push(built_gem_path). A project that publishes more than one gem per version cannot use it. aws-session-manager, built on gempilot 0.3.0, publishes five gems per version: one per platform carrying a compiled executable (x86_64-linux, aarch64-linux, x86_64-darwin, arm64-darwin), plus the plain ruby one.
++ 
++ Such a project has to supply its own build and release:rubygem_push, and the obvious implementation is a glob:
++ 
++   task(:rubygem_push) { PACKAGES.glob("*.gem").each { sh "gem", "push", it.to_s } }
++ 
++ That is wrong, and gempilot's own version:bump is what makes it wrong. Nothing empties pkg/ between versions, so after a bump it holds the previous version's gems as well. The push then re-pushes an already published version, rubygems rejects it, and the release stops halfway: some gems published, some not, and no obvious way to resume.
++ 
++ The fix in aws-session-manager was to stop globbing and take the list from the specifications the build packages, so that gem:build and the push share one source of truth:
++ 
++   PACKAGED = [*BUILDS.map { it.package.to_s }, GENERIC_PACKAGE].freeze
++   task build: PACKAGED
++   task(:rubygem_push) { PACKAGED.each { sh "gem", "push", it } }
++ 
++ Note this is not a glob in gempilot's own source; it is the shape every multi-gem project is pushed into by inheriting bundler's single-gem task.
++ 
++ Suggested: gempilot should own release:rubygem_push rather than inherit it, and push exactly the gems the build produced for the current version. That leaves the single-gem case behaving as it does today and stops multi-gem projects reinventing the push, and getting it wrong. Failing that, the ReleaseTasks contract wants documenting: a project that replaces build must also replace release:rubygem_push, and must not push by globbing pkg.
+Status: open
