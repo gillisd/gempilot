@@ -224,3 +224,9 @@ Updated: Sun, 26 Jul 2026 09:23:54 -0400
 Title: Add betterleaks to gem setup
 Description: Ensure betterleaks is integrated into the commit and build pipelines, via commit hooks, rake tasks, and/or whatever the idiomatic way is to integrate betterleaks into a rubyproject
 Status: closed
+
+Id: F7C6A9AA-9294-11F1-A93B-FE6CB9572C2F
+Updated: Fri, 07 Aug 2026 15:19:53 -0400
+Title: gempilot new class WebSocket::Server should respect zeitwerk inflectors if present
+Description: Currently generates web_socket.rb rather than the inflector set websocket.rb
+Status: open
