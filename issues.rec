@@ -294,3 +294,9 @@ Description: rake release:rubygems can publish only one gem per version. A proje
 + 
 + If gempilot would rather not own the task, then the ReleaseTasks rdoc should state the contract instead: a project that replaces build must also replace release:rubygem_push, and must scope the push to the version being released rather than globbing pkg.
 Status: open
+
+Id: 2360FFA4-9388-11F1-8474-FE6CB9572C2F
+Updated: Sat, 08 Aug 2026 20:20:34 -0400
+Title: rake version:bump[dev] goes backward rather than forward
+Description: rubygems treats 0.2.0.dev as an *older* version than 0.2.0. The way gempilot handles dev version needs to be rethought. Additionally, how does a user trigger a bump on the fourth integer, e.g. 0.2.0.1?
+Status: open
