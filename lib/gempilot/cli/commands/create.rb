@@ -50,6 +50,9 @@ module Gempilot
 
         option :exe, long: "--[no-]exe", desc: "Create an executable"
 
+        option :betterleaks, long: "--[no-]betterleaks",
+                             desc: "Set up betterleaks secret scanning"
+
         option :git, long: "--[no-]git", desc: "Initialize git repo"
 
         option :branch, value: { type: String },
@@ -83,6 +86,7 @@ module Gempilot
           render_dev_files
           render_config_files
           render_executable
+          render_betterleaks
           run_bundle_install
           initialize_git_repo
         end
@@ -138,6 +142,7 @@ module Gempilot
         def collect_build_options
           collect_test_framework
           collect_exe_option
+          collect_betterleaks_option
           collect_git_options
         end
 
@@ -158,6 +163,14 @@ module Gempilot
           puts colors.bright_black("An executable in exe/ lets users run your gem from the command line.")
           prompt = colors.green("Create an executable")
           options[:exe] = ask_yes_or_no(prompt, default: false)
+        end
+
+        def collect_betterleaks_option
+          return @betterleaks = options[:betterleaks] if options.key?(:betterleaks)
+
+          puts
+          puts colors.bright_black("betterleaks scans staged changes for secrets before each commit.")
+          @betterleaks = ask_yes_or_no(colors.green("Set up betterleaks"), default: true)
         end
 
         def collect_git_options
