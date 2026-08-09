@@ -41,6 +41,11 @@ RSpec.describe Gempilot::VersionTask do
       Rake::Task["version:bump"].invoke("dev")
       expect(version_in_file).to eq("1.0.0.dev4")
     end
+
+    it "bumps the tiny segment" do
+      Rake::Task["version:bump"].invoke("tiny")
+      expect(version_in_file).to eq("1.0.0.1")
+    end
   end
 
   describe "version:release" do

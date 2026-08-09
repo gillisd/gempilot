@@ -50,7 +50,7 @@ module Gempilot
     end
 
     def define_bump_task(project)
-      desc "Bump version (patch default, or rake version:bump[minor])"
+      desc "Bump version (patch default; segments: major, minor, patch, tiny, dev)"
       task :bump, [:segment] do |_t, args|
         segment = (args[:segment] || :patch).to_sym
         old_version = project.version
