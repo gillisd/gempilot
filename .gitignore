@@ -13,3 +13,4 @@ gemma
 gp_test_gem
 references
 .rspec_status
+.claude/settings.local.json
