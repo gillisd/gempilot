@@ -10,7 +10,7 @@ A CLI tool for creating and managing Ruby gems, built on CommandKit.
 - `gempilot create` — Scaffold a new gem (templates in `data/templates/gem/`)
 - `gempilot new` — Generate a class, module, or command in an existing gem (templates in `data/templates/new/`)
 - `gempilot destroy` — Remove a class, module, or command from an existing gem
-- `gempilot bump` — Bump version in `version.rb` (patch default, or minor/major)
+- `gempilot bump` — Bump version in `version.rb` (patch default, or minor/major/tiny/dev)
 - `gempilot release` — Thin proxy to `rake release`
 - `gempilot console` — Thin proxy to `bin/console`
 
@@ -21,6 +21,7 @@ A CLI tool for creating and managing Ruby gems, built on CommandKit.
 - Generator module (`lib/gempilot/cli/generator.rb`) provides template rendering via ERB
 - GemContext module (`lib/gempilot/cli/gem_context.rb`) shared by new, destroy, release, console
 - `GemConstant` value object (`lib/gempilot/gem_constant.rb`) owns constant→namespace/path resolution for `new`/`destroy`; constants are rooted at the gem module by construction
+- `SegmentedVersion` value object (`lib/gempilot/segmented_version.rb`) owns version parsing and bump arithmetic; every bump moves to the smallest version of the requested shape greater than the current version (RubyGems ordering)
 - CommandKit::Commands::AutoLoad maps filenames in `commands/` to command names
 
 ### Testing

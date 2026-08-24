@@ -32,14 +32,19 @@ RSpec.describe Gempilot::VersionTask do
   end
 
   describe "version:bump" do
-    it "bumps patch by default" do
+    it "finalizes a dev version to its target by default" do
       Rake::Task["version:bump"].invoke
-      expect(version_in_file).to eq("1.0.1")
+      expect(version_in_file).to eq("1.0.0")
     end
 
     it "forwards the segment argument" do
       Rake::Task["version:bump"].invoke("dev")
       expect(version_in_file).to eq("1.0.0.dev4")
+    end
+
+    it "bumps the tiny segment" do
+      Rake::Task["version:bump"].invoke("tiny")
+      expect(version_in_file).to eq("1.0.0.1")
     end
   end
 
