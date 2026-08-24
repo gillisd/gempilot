@@ -300,3 +300,12 @@ Updated: Sat, 08 Aug 2026 20:20:34 -0400
 Title: rake version:bump[dev] goes backward rather than forward
 Description: rubygems treats 0.2.0.dev as an *older* version than 0.2.0. The way gempilot handles dev version needs to be rethought. Additionally, how does a user trigger a bump on the fourth integer, e.g. 0.2.0.1?
 Status: open
+
+Id: 69816386-9F7F-11F1-8629-FE6CB9572C2F
+Updated: Mon, 24 Aug 2026 01:48:20 -0400
+Title: Command generation is incomplete
+Description: it adds a "command" that is useless. It should:
++ 1. at the very least, chmod +x the "exe" in exe
++ 2. install command_kit
++ 3. bootstrap a command_kit setup
+Status: open
