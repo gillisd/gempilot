@@ -42,7 +42,7 @@ Options:
 | Option | Description | Default |
 |--------|-------------|---------|
 | `--test {minitest\|rspec}` | Test framework | prompted |
-| `--[no-]exe` | Create executable in `exe/` | prompted |
+| `--[no-]exe` | Create a CommandKit CLI: `exe/<gem>`, `lib/<gem>/cli.rb`, base command, `command_kit` dependency | prompted |
 | `--[no-]git` | Initialize git repo | prompted |
 | `--branch NAME` | Git branch name | `master` |
 | `--summary TEXT` | One-line gem description | prompted |
@@ -63,7 +63,12 @@ gempilot new command deploy
 ```
 
 Creates the source file under `lib/` and a corresponding test file. For
-commands, generates a CommandKit command class in `lib/<gem>/cli/commands/`.
+commands, generates a CommandKit command class in `lib/<gem>/cli/commands/`
+and, the first time, bootstraps the CLI around it: `lib/<gem>/cli.rb` (the
+router), `lib/<gem>/cli/command.rb` (the base class), an executable
+`exe/<gem>` that starts the router, the `command_kit` dependency in the
+gemspec (followed by `bundle install`), and the Zeitwerk inflection
+`"cli" => "CLI"` in `lib/<gem>.rb`. Pieces that already exist are left alone.
 
 ### `gempilot destroy`
 
@@ -106,6 +111,8 @@ Delegates to `bin/console` for an interactive IRB session with the gem loaded.
 Every gem scaffolded by `gempilot create` includes:
 
 - **Zeitwerk autoloading** with `LOADER` constant and `rake zeitwerk:validate`
+- **CommandKit CLI** when created with `--exe`: router, base command, and an
+  executable that works from the first commit
 - **Test framework** — Minitest or RSpec, with a Zeitwerk eager-load test
 - **RuboCop** with `rubocop-claude`, `rubocop-performance`, `rubocop-rake`, and
   framework-specific plugins (`rubocop-minitest` or `rubocop-rspec`)
