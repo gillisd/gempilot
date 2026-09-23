@@ -105,7 +105,9 @@ Delegates to `bin/console` for an interactive IRB session with the gem loaded.
 
 Every gem scaffolded by `gempilot create` includes:
 
-- **Zeitwerk autoloading** with `LOADER` constant and `rake zeitwerk:validate`
+- **Zeitwerk autoloading** with `LOADER` constant, `rake zeitwerk:validate`, and
+  `rake zeitwerk:all`; the tasks find the loader through Zeitwerk itself, so
+  custom inflections (`loader.inflector.inflect("ecs" => "ECS")`) just work
 - **Test framework** — Minitest or RSpec, with a Zeitwerk eager-load test
 - **RuboCop** with `rubocop-claude`, `rubocop-performance`, `rubocop-rake`, and
   framework-specific plugins (`rubocop-minitest` or `rubocop-rspec`)

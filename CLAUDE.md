@@ -22,6 +22,8 @@ A CLI tool for creating and managing Ruby gems, built on CommandKit.
 - GemContext module (`lib/gempilot/cli/gem_context.rb`) shared by new, destroy, release, console
 - `GemConstant` value object (`lib/gempilot/gem_constant.rb`) owns constant→namespace/path resolution for `new`/`destroy`; constants are rooted at the gem module by construction
 - `SegmentedVersion` value object (`lib/gempilot/segmented_version.rb`) owns version parsing and bump arithmetic; every bump moves to the smallest version of the requested shape greater than the current version (RubyGems ordering)
+- `ProjectLoader` (`lib/gempilot/project_loader.rb`) finds the Zeitwerk loader that manages a directory through `Zeitwerk::Registry`; `ZeitwerkTask` child scripts use it, so a gem's own `inflector.inflect` rules (e.g. `ECS`) are honoured and no module name is ever guessed from a path
+- `Project` (`lib/gempilot/project.rb`) knows a gem's name, require path, autoload root, and version; the version is read by `load`ing `version.rb` under an anonymous module, so `Project` never derives or needs the gem's module name (there is deliberately no `module_name`/`klass`)
 - CommandKit::Commands::AutoLoad maps filenames in `commands/` to command names
 
 ### Testing
@@ -31,7 +33,7 @@ A CLI tool for creating and managing Ruby gems, built on CommandKit.
 ### Generated Gem Features
 - Zeitwerk autoloading with `LOADER` constant exposed for eager loading
 - Zeitwerk validation test (`test/zeitwerk_test.rb` or `spec/zeitwerk_spec.rb`)
-- `rake zeitwerk:validate` task to verify naming conventions
+- `rake zeitwerk:validate` / `rake zeitwerk:all` tasks provided by `Gempilot::ZeitwerkTask`, which locate the gem's loader through Zeitwerk (inflected namespaces such as `ECS` work)
 - Choice of minitest or rspec
 - RuboCop with framework-specific plugins
 - GitHub Actions CI workflow (`.github/workflows/ci.yml`)
