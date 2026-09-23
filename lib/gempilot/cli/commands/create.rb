@@ -8,6 +8,7 @@ module Gempilot
 
         include Generator
         include GemBuilder
+        include CliBootstrap
 
         template_dir File.join(Gempilot::ROOT, "data", "templates", "gem")
 
@@ -48,7 +49,7 @@ module Gempilot
                       },
                       desc: "Test framework"
 
-        option :exe, long: "--[no-]exe", desc: "Create an executable"
+        option :exe, long: "--[no-]exe", desc: "Create a CommandKit CLI with an executable"
 
         option :git, long: "--[no-]git", desc: "Initialize git repo"
 
@@ -109,6 +110,7 @@ module Gempilot
         def derive_naming
           @require_path = @gem_name.tr("-", "/")
           @module_name = @require_path.camelize
+          @gem_module = @module_name
           @module_parts = @module_name.split("::")
           @base_module = @module_parts.first
           @hyphenated = @gem_name.include?("-")

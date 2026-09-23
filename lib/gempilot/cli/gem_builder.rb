@@ -4,8 +4,8 @@ module Gempilot
     ##
     ## Expects the including class to provide Generator methods (+mkdir+, +erb+,
     ## +chmod+, +cp+, +cd+, +sh+) and the following instance variables:
-    ## +@gem_name+, +@require_path+, +@module_name+, +@hyphenated+,
-    ## +@test_framework+, +@branch+.
+    ## +@gem_name+, +@require_path+, +@module_name+, +@gem_module+,
+    ## +@hyphenated+, +@test_framework+, +@branch+.
     module GemBuilder
       private
 
@@ -78,11 +78,13 @@ module Gempilot
         erb "dotfiles/github/workflows/ci.yml.erb", "#{@gem_name}/.github/workflows/ci.yml"
       end
 
+      # The executable is one piece of the CommandKit CLI, so the whole
+      # scaffold (router, base command, exe, inflection, dependency) comes
+      # from CliBootstrap, run from inside the new gem.
       def render_executable
         return unless options[:exe]
 
-        erb "exe/gem_name.erb", "#{@gem_name}/exe/#{@gem_name}"
-        chmod "+x", "#{@gem_name}/exe/#{@gem_name}"
+        cd(@gem_name) { bootstrap_cli }
       end
 
       def run_bundle_install

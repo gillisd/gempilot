@@ -104,6 +104,40 @@ module Gempilot
         assert_predicate Pathname("test_gem/exe/test_gem"), :executable?
       end
 
+      def test_exe_flag_bootstraps_a_command_kit_cli
+        run_create_command("test_gem", "--exe")
+
+        assert_includes File.read("test_gem/exe/test_gem"), "TestGem::CLI.start"
+        assert_includes File.read("test_gem/lib/test_gem/cli.rb"), "class CLI"
+        assert_includes File.read("test_gem/lib/test_gem/cli/command.rb"), "class Command < CommandKit::Command"
+        assert_includes File.read("test_gem/test_gem.gemspec"), 'spec.add_dependency "command_kit"'
+        assert_includes File.read("test_gem/lib/test_gem.rb"), 'l.inflector.inflect("cli" => "CLI")'
+      end
+
+      def test_no_exe_flag_leaves_the_cli_out
+        run_create_command("test_gem")
+
+        refute_path_exists "test_gem/lib/test_gem/cli.rb"
+        refute_includes File.read("test_gem/test_gem.gemspec"), "command_kit"
+        assert_includes File.read("test_gem/lib/test_gem.rb"), "for_gem.tap(&:setup)"
+      end
+
+      def test_hyphenated_gem_exe_flag_targets_the_extension_module
+        run_create_command("gempilot-encryption", "--exe")
+        exe = File.read("gempilot-encryption/exe/gempilot-encryption")
+        entry = File.read("gempilot-encryption/lib/gempilot/encryption.rb")
+        expected_loader = [
+          "    LOADER = Zeitwerk::Loader.for_gem_extension(Gempilot).tap do |l|",
+          '      l.inflector.inflect("cli" => "CLI")',
+          "      l.setup",
+          "    end",
+        ].join("\n")
+
+        assert_includes exe, 'require "gempilot/encryption/cli"'
+        assert_includes exe, "Gempilot::Encryption::CLI.start"
+        assert_includes entry, expected_loader
+      end
+
       def test_inflects_module_name_correctly
         run_create_command("my_cool_gem")
 
@@ -624,7 +658,30 @@ module Gempilot
         end
       end
 
+      def test_generated_cli_gem_runs_end_to_end
+        stdout = StringIO.new
+        Commands::Create.new(stdout: stdout).main(cli_gem_args)
+        patch_gemfile_gempilot_path("cli_gem/Gemfile")
+
+        Dir.chdir("cli_gem") do
+          Commands::New.new(stdout: stdout).main(["command", "deploy"])
+
+          Bundler.with_unbundled_env do
+            output = `bundle exec rake 2>&1`
+
+            assert_equal 0, $CHILD_STATUS.exitstatus, "Default rake task failed in CLI gem:\n#{output}"
+            assert_equal "cli_gem 0.0.1", `bundle exec exe/cli_gem --version 2>&1`.strip
+            assert_equal "TODO: implement deploy", `bundle exec exe/cli_gem deploy 2>&1`.strip
+          end
+        end
+      end
+
       private
+
+      def cli_gem_args
+        ["--author", "Test Author", "--email", "test@example.com", "--summary", "A test gem",
+         "--ruby-version", RUBY_VERSION, "--test", "minitest", "--exe", "--no-git", "cli_gem"]
+      end
 
       def patch_gemfile_gempilot_path(gemfile_path)
         content = File.read(gemfile_path)
