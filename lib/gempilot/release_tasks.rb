@@ -1,10 +1,11 @@
 module Gempilot
-  ## Rake task definitions for publishing a release to RubyGems and GitHub.
-  ## Mixed into VersionTask. Assumes +bundler/gem_tasks+ has been required so the
-  ## +build+, +release:guard_clean+, and +release:rubygem_push+ tasks exist (the
-  ## generated Rakefile guarantees this). Fixes GitHub releasing by replacing
-  ## bundler's +already_tagged?+-guarded +release:source_control_push+ with an
-  ## idempotent push.
+  ##
+  # Rake task definitions for publishing a release to RubyGems and GitHub.
+  # Mixed into VersionTask. Assumes +bundler/gem_tasks+ has been required so the
+  # +build+, +release:guard_clean+, and +release:rubygem_push+ tasks exist (the
+  # generated Rakefile guarantees this). Fixes GitHub releasing by replacing
+  # bundler's +already_tagged?+-guarded +release:source_control_push+ with an
+  # idempotent push.
   module ReleaseTasks
     private
 

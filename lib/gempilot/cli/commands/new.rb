@@ -1,7 +1,8 @@
 module Gempilot
   class CLI
     module Commands
-      ## Generates a new class, module, or command inside an existing gem.
+      ##
+      # Generates a new class, module, or command inside an existing gem.
       class New < Command
         using String::Inflectable
 

@@ -2,7 +2,8 @@ require "rake/tasklib"
 require_relative "../gempilot"
 
 module Gempilot
-  ## Rake tasks for version lifecycle management.
+  ##
+  # Rake tasks for version lifecycle management.
   class VersionTask < Rake::TaskLib
     include ReleaseTasks
 

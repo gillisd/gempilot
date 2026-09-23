@@ -1,8 +1,9 @@
 module Gempilot
   class Project
-    ## The project's version file (+path+) and value. Bump arithmetic
-    ## delegates to SegmentedVersion, so every bump moves strictly forward
-    ## under RubyGems ordering.
+    ##
+    # The project's version file (+path+) and value. Bump arithmetic
+    # delegates to SegmentedVersion, so every bump moves strictly forward
+    # under RubyGems ordering.
     Version = Data.define(:path, :value) do
       def tag
         "v#{value}"

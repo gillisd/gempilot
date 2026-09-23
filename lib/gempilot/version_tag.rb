@@ -1,12 +1,14 @@
 require "open3"
 
 module Gempilot
-  ## Manages git operations for version releases.
+  ##
+  # Manages git operations for version releases.
   class VersionTag
     include StrictShell
 
-    ## Commit-message prefix written for a version bump; the guard below
-    ## matches on it, so the two must stay in sync.
+    ##
+    # Commit-message prefix written for a version bump; the guard below
+    # matches on it, so the two must stay in sync.
     BUMP_MESSAGE_PREFIX = "Bump version to ".freeze
 
     attr_reader :version

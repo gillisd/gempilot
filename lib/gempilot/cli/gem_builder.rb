@@ -1,11 +1,12 @@
 module Gempilot
   class CLI
-    ## File rendering and directory creation logic for scaffolding a new gem.
     ##
-    ## Expects the including class to provide Generator methods (+mkdir+, +erb+,
-    ## +chmod+, +cp+, +cd+, +sh+) and the following instance variables:
-    ## +@gem_name+, +@require_path+, +@module_name+, +@hyphenated+,
-    ## +@test_framework+, +@branch+.
+    # File rendering and directory creation logic for scaffolding a new gem.
+    #
+    # Expects the including class to provide Generator methods (+mkdir+, +erb+,
+    # +chmod+, +cp+, +cd+, +sh+) and the following instance variables:
+    # +@gem_name+, +@require_path+, +@module_name+, +@hyphenated+,
+    # +@test_framework+, +@branch+.
     module GemBuilder
       private
 

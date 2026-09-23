@@ -1,6 +1,7 @@
 module Gempilot
   class CLI
-    ## Shared context for commands that operate inside an existing gem.
+    ##
+    # Shared context for commands that operate inside an existing gem.
     module GemContext
       using String::Inflectable
 

@@ -6,7 +6,8 @@ require "erb"
 
 module Gempilot
   class CLI
-    ## File generation utilities for scaffolding gems and components.
+    ##
+    # File generation utilities for scaffolding gems and components.
     module Generator
       include CommandKit::Colors
       include CommandKit::FileUtils
@@ -15,7 +16,8 @@ module Gempilot
         command.extend ClassMethods
       end
 
-      ## Class-level helpers for Generator, including +template_dir+ resolution.
+      ##
+      # Class-level helpers for Generator, including +template_dir+ resolution.
       module ClassMethods
         def template_dir(path = nil)
           if path

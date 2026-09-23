@@ -1,8 +1,9 @@
 require "strscan"
 
 class String
-  ## Pure string inflection utilities (dasherize, underscore, camelize).
-  ## Used via String::Inflectable refinement.
+  ##
+  # Pure string inflection utilities (dasherize, underscore, camelize).
+  # Used via String::Inflectable refinement.
   module InflectionMethods
     UPPERCASE_ACRONYM_PATTERN = /[A-Z][A-Z\d]*(?=[A-Z_-]|$)/
     private_constant :UPPERCASE_ACRONYM_PATTERN

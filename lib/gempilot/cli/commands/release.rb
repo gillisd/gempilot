@@ -3,7 +3,8 @@ require "bundler"
 module Gempilot
   class CLI
     module Commands
-      ## Delegates to +rake release+ to build and push the gem.
+      ##
+      # Delegates to +rake release+ to build and push the gem.
       class Release < Command
         include GemContext
 

@@ -1,6 +1,7 @@
 module Gempilot
-  ## Manages GitHub releases for a version tag. Tags naming a prerelease
-  ## version (e.g. +v1.2.4.dev1+) are created as GitHub prereleases.
+  ##
+  # Manages GitHub releases for a version tag. Tags naming a prerelease
+  # version (e.g. +v1.2.4.dev1+) are created as GitHub prereleases.
   class GithubRelease
     include StrictShell
 

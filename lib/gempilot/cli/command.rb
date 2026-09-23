@@ -5,7 +5,8 @@ require "command_kit/bug_report"
 
 module Gempilot
   class CLI
-    ## Base command class for all gempilot subcommands.
+    ##
+    # Base command class for all gempilot subcommands.
     class Command < CommandKit::Command
       include CommandKit::Colors
       include CommandKit::Interactive

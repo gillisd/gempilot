@@ -3,7 +3,8 @@ require "bundler"
 module Gempilot
   class CLI
     module Commands
-      ## Delegates version bumping to +rake version:bump[segment]+.
+      ##
+      # Delegates version bumping to +rake version:bump[segment]+.
       class Bump < Command
         include GemContext
 

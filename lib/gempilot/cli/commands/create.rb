@@ -1,8 +1,9 @@
 module Gempilot
   class CLI
     module Commands
-      ## Scaffolds a new gem with Zeitwerk autoloading, test framework, RuboCop config,
-      ## CI workflow, and version management rake tasks.
+      ##
+      # Scaffolds a new gem with Zeitwerk autoloading, test framework, RuboCop config,
+      # CI workflow, and version management rake tasks.
       class Create < Command
         using String::Inflectable
 

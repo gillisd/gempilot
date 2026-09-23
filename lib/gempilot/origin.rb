@@ -1,11 +1,12 @@
 require "open3"
 
 module Gempilot
-  ## Pushes the current branch and a release tag to the branch's git remote.
-  ## Backs the +release:source_control_push+ task. Idempotent: pushing an
-  ## already-pushed branch or tag is a no-op, so re-running a release never
-  ## fails on an existing tag (unlike bundler's +already_tagged?+ guard, which
-  ## skips the push entirely once the tag exists locally).
+  ##
+  # Pushes the current branch and a release tag to the branch's git remote.
+  # Backs the +release:source_control_push+ task. Idempotent: pushing an
+  # already-pushed branch or tag is a no-op, so re-running a release never
+  # fails on an existing tag (unlike bundler's +already_tagged?+ guard, which
+  # skips the push entirely once the tag exists locally).
   class Origin
     include StrictShell
 
