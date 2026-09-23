@@ -83,6 +83,10 @@ RSpec.describe Gempilot::VersionTask do
       expect(Rake::Task["release:rubygems"].prerequisites).to eq(chain)
     end
 
+    it "builds before pushing to RubyGems" do
+      expect(Rake::Task["release:rubygem_push"].prerequisites).to eq(["build"])
+    end
+
     it "composes unrelease from the github task" do
       expect(Rake::Task["unrelease"].prerequisites).to eq(%w[unrelease:github])
     end
@@ -91,15 +95,22 @@ RSpec.describe Gempilot::VersionTask do
   describe "release task behavior" do
     let(:origin) { instance_double(Gempilot::Origin, push: nil) }
     let(:github) { instance_double(Gempilot::GithubRelease, create: nil, destroy: nil, list: nil) }
+    let(:rubygems) { instance_double(Gempilot::RubygemsRelease, push: nil) }
 
     before do
       allow(Gempilot::Origin).to receive(:new).and_return(origin)
       allow(Gempilot::GithubRelease).to receive(:new).and_return(github)
+      allow(Gempilot::RubygemsRelease).to receive(:new).and_return(rubygems)
     end
 
     it "release:source_control_push pushes via Origin" do
       Rake::Task["release:source_control_push"].invoke
       expect(origin).to have_received(:push)
+    end
+
+    it "release:rubygem_push pushes every package via RubygemsRelease" do
+      Rake::Task["release:rubygem_push"].execute
+      expect(rubygems).to have_received(:push)
     end
 
     it "release:github pushes, then creates the release", :aggregate_failures do
