@@ -27,12 +27,24 @@ module Gempilot
     def scan
       return warn_missing unless betterleaks_available?
 
-      sh "betterleaks", "git", "--redact", "--verbose"
+      sh "betterleaks", mode, "--no-banner", "--redact", "--verbose", "."
+    end
+
+    # git mode walks the whole commit history; outside a work tree (a gem
+    # scaffolded with --no-git) dir mode scans the files on disk instead of
+    # failing on the missing repository.
+    def mode
+      git_work_tree? ? "git" : "dir"
+    end
+
+    def git_work_tree?
+      system("git", "rev-parse", "--is-inside-work-tree", out: File::NULL, err: File::NULL)
     end
 
     def betterleaks_available?
       ENV.fetch("PATH", "").split(File::PATH_SEPARATOR).any? do |dir|
-        File.executable?(File.join(dir, "betterleaks"))
+        binary = File.join(dir, "betterleaks")
+        File.file?(binary) && File.executable?(binary)
       end
     end
 
