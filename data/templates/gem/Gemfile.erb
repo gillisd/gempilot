@@ -2,9 +2,9 @@ source "https://rubygems.org"
 
 gemspec
 
-gem "json", "~> 2.21" # temporary json 3.0.0 is currently breaking everything
 gem "gempilot", require: false
 gem "irb"
+gem "json", "~> 2.21" # temporary json 3.0.0 is currently breaking everything
 <% if @test_framework == :minitest -%>
 gem "minitest"
 gem "minitest-reporters"
