@@ -61,6 +61,15 @@ module Gempilot
         File.write(path, content)
       end
 
+      def update_file(path, content)
+        print_action "update", path
+        File.write(path, content)
+      end
+
+      def ensure_directory(dir)
+        mkdir(dir) unless File.directory?(dir)
+      end
+
       def chmod(mode, path)
         print_action "chmod", path
         ::FileUtils.chmod(mode, path)
@@ -71,11 +80,12 @@ module Gempilot
         ::FileUtils.cp(File.join(@template_dir, source), dest)
       end
 
-      def erb(source, dest = nil)
+      # Renders +source+ from the command's template directory, or from the
+      # directory given as +from+ for templates shared across commands.
+      def erb(source, dest = nil, from: @template_dir)
         print_action("erb", dest, source: source) if dest
 
-        source_path = File.join(@template_dir, source)
-        super(source_path, dest)
+        super(File.join(from, source), dest)
       end
 
       def sh(command, *arguments)

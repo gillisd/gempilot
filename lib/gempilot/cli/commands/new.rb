@@ -83,10 +83,6 @@ module Gempilot
           puts
         end
 
-        def ensure_directory(dir)
-          mkdir(dir) unless File.directory?(dir)
-        end
-
         def add_class(constant)
           print_adding_banner("class", constant.qualified)
           ensure_directory(File.dirname(constant.lib_path))

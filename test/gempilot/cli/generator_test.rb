@@ -84,6 +84,33 @@ module Gempilot
         assert result
       end
 
+      def test_update_file_overwrites_content
+        path = File.join(@tmpdir, "existing.rb")
+        File.write(path, "old\n")
+        @generator.update_file(path, "new\n")
+
+        assert_equal "new\n", File.read(path)
+        assert_includes @stdout.string, "update"
+      end
+
+      def test_ensure_directory_creates_a_missing_directory_once
+        path = File.join(@tmpdir, "nested")
+        @generator.ensure_directory(path)
+        @generator.ensure_directory(path)
+
+        assert_predicate Pathname(path), :directory?
+        assert_equal 1, @stdout.string.scan("mkdir").size
+      end
+
+      def test_erb_renders_from_another_template_directory
+        @generator.instance_variable_set(:@require_path, "test_gem")
+        @generator.instance_variable_set(:@gem_module, "TestGem")
+        dest = File.join(@tmpdir, "exe")
+        @generator.erb("exe.erb", dest, from: File.join(Gempilot::ROOT, "data", "templates", "cli"))
+
+        assert_includes File.read(dest), "TestGem::CLI.start"
+      end
+
       def test_create_file_writes_content
         path = File.join(@tmpdir, "test_output.rb")
         content = "# hello\n"
