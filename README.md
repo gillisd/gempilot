@@ -130,7 +130,7 @@ Generated gems include rake tasks for the full version lifecycle:
 | `rake version:release` | Bump, commit, and tag (combined) |
 | `rake version:unrelease` | Untag and reset (combined) |
 | `rake release` | Publish the current version to all remotes (RubyGems + GitHub) |
-| `rake release:rubygems` | Build and push the gem to RubyGems |
+| `rake release:rubygems` | Build, then push every gem in `pkg/` for the current version to RubyGems |
 | `rake release:github` | Push commit + tag, then create the GitHub release |
 | `rake release:list:github` | List GitHub releases |
 | `rake unrelease` | Delete the release from all remotes that support it |
