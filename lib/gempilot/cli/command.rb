@@ -11,7 +11,7 @@ module Gempilot
       include CommandKit::Interactive
       include CommandKit::BugReport
 
-      bug_report_url "https://github.com/dgillis/gempilot/issues/new"
+      bug_report_url "https://github.com/gillisd/gempilot/issues/new"
     end
   end
 end

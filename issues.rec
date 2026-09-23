@@ -230,3 +230,96 @@ Updated: Fri, 07 Aug 2026 15:19:53 -0400
 Title: gempilot new class WebSocket::Server should respect zeitwerk inflectors if present
 Description: Currently generates web_socket.rb rather than the inflector set websocket.rb
 Status: open
+
+Id: F6C6EB04-8DA4-11F1-91EF-FA41C3164F3A
+Updated: Sat, 01 Aug 2026 12:31:47 +0000
+Title: release:rubygem_push only handles one gem per version
+Description: rake release:rubygems can publish only one gem per version. A project that publishes several -- platform gems each carrying a compiled executable, say -- either publishes one of them and silently leaves the rest, or, once it replaces the push task with a pkg glob, tries to re-push versions already on rubygems and stops halfway through the release.
++ 
++ MECHANISM
++ 
++ gempilot, lib/gempilot/release_tasks.rb: ReleaseTasks#define_rubygems_release wires release:rubygems to [build, release:guard_clean, release:source_control_push, release:rubygem_push], and, as the module's own rdoc says, expects bundler/gem_tasks to have supplied build, release:guard_clean and release:rubygem_push.
++ 
++ bundler 4.0.17, lib/bundler/gem_helper.rb: GemHelper#install_tasks defines
++ 
++   task "release:rubygem_push" => "build" do
++     rubygem_push(built_gem_path) if gem_push?
++   end
++ 
++ built_gem_path is the single .gem that #build_gem produced. One build, one gem, one push. Nothing in that chain can carry a second gem, so a project publishing more than one has to replace both build and release:rubygem_push itself.
++ 
++ There is no glob in gempilot's own source to go looking for. The glob is what a downstream project ends up writing once it takes over the push, and it is wrong in a way gempilot's own version:bump triggers.
++ 
++ REPRODUCE
++ 
++ 1. A gem publishing more than one gem per version. aws-session-manager on gempilot 0.3.0 publishes five: x86_64-linux, aarch64-linux, x86_64-darwin and arm64-darwin, each carrying a compiled session-manager-plugin executable, plus the plain ruby gem.
++ 2. It replaces build, and replaces the push with the obvious implementation:
++      task(:rubygem_push) { PACKAGES.glob("*.gem").each { sh "gem", "push", it.to_s } }
++ 3. rake build && rake release:rubygems -- 0.0.1 publishes.
++ 4. rake version:bump && rake build -- pkg/ now holds both 0.0.1 and 0.0.2 gems. Nothing empties pkg/ between versions; bundler never has, and gempilot's version tasks do not either.
++ 5. rake release:rubygems -- gem push rejects the 0.0.1 gems ("Repushing of gem versions is not allowed"), sh raises on the non-zero status, and the release aborts with part of 0.0.2 published and the rest not. Re-running repeats the failure, because the stale gems are still there.
++ 
++ FIX APPLIED DOWNSTREAM
++ 
++ aws-session-manager stopped globbing and took the list from the specifications its build packages, so that gem:build and the push share one source of truth:
++ 
++   PACKAGED = [*BUILDS.map { it.package.to_s }, GENERIC_PACKAGE].freeze
++ 
++   namespace :gem do
++     task build: PACKAGED
++   end
++ 
++   namespace :release do
++     task(:rubygem_push) { PACKAGED.each { sh "gem", "push", it } }
++   end
++ 
++ FIX SUGGESTED HERE
++ 
++ gempilot should own release:rubygem_push rather than inherit bundler's, and push every gem in pkg belonging to the version being released. It cannot know how a project builds, but it knows the name and the version, which is enough:
++ 
++   def define_rubygem_push(project)
++     clear_task "release:rubygem_push"
++     task "release:rubygem_push" => "build" do
++       packages(project).each { sh "gem", "push", it.to_s }
++     end
++   end
++ 
++   def packages(project)
++     stem = "#{project.name}-#{project.version_value}"
++     project.root.glob("pkg/{#{stem}.gem,#{stem}-*.gem}")
++   end
++ 
++ Project#name, #version_value and #root already exist in lib/gempilot/project.rb.
++ 
++ Two details worth keeping:
++ 
++ - The brace glob matches gempilot-0.3.0.gem and gempilot-0.3.0-x86_64-linux.gem, and does not match gempilot-0.3.10.gem. A bare "#{stem}*.gem" would match the latter and push the wrong version.
++ - An empty result should abort. Otherwise a project whose build writes gems elsewhere gets a release that reports success having published nothing, which is worse than the bug being fixed.
++ 
++ Single-gem projects are unaffected: pkg holds one gem for the current version, and it gets pushed, as today. Multi-gem projects stop having to reinvent the push.
++ 
++ If gempilot would rather not own the task, then the ReleaseTasks rdoc should state the contract instead: a project that replaces build must also replace release:rubygem_push, and must scope the push to the version being released rather than globbing pkg.
+Status: open
+
+Id: 2360FFA4-9388-11F1-8474-FE6CB9572C2F
+Updated: Wed, 23 Sep 2026 02:07:20 +0000
+Title: rake version:bump[dev] goes backward rather than forward
+Description: rubygems treats 0.2.0.dev as an *older* version than 0.2.0. The way gempilot handles dev version needs to be rethought. Additionally, how does a user trigger a bump on the fourth integer, e.g. 0.2.0.1?
+Status: closed
+
+Id: 69816386-9F7F-11F1-8629-FE6CB9572C2F
+Updated: Mon, 24 Aug 2026 01:48:20 -0400
+Title: Command generation is incomplete
+Description: it adds a "command" that is useless. It should:
++ 1. at the very least, chmod +x the "exe" in exe
++ 2. install command_kit
++ 3. bootstrap a command_kit setup
+Status: open
+
+Id: 93D7E88E-B6EB-11F1-8AF9-FE6CB9572C2E
+Updated: Tue, 22 Sep 2026 21:10:33 -0400
+Title: Problems with zeitwerk_task.rb
+Description: 1. Documentation is improperly formatted. sizing is all over the place. 2. The task is broken for projects that use an inflector, like ECS. The task looks for "Ecs" instead, despite having it set up in the zeitwerk config.
++ 
++ Fixing this should rely on idiomatic zeitwerk & zeitwerk inflector usage, and thoroughly thinking through how to fit this into user's loader. DO NOT rely on regexes of any kind to handle this.
+Status: open

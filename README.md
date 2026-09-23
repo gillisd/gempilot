@@ -82,7 +82,15 @@ Bump the version in `lib/<gem>/version.rb`.
 gempilot bump          # patch (default)
 gempilot bump minor
 gempilot bump major
+gempilot bump tiny     # fourth integer for tiny follow-ups: 0.2.0 -> 0.2.0.1
+gempilot bump dev      # preview of the next patch: 0.2.0 -> 0.2.1.dev1
 ```
+
+A `dev` version previews the next patch, so it always sorts ahead of the
+current release (`0.2.0 < 0.2.1.dev1 < 0.2.1`), and a numeric bump finalizes
+the cycle (`gempilot bump` from `0.2.1.dev3` gives `0.2.1`). A repo holding an
+old-style dev version — one created *after* its base version shipped — needs a
+one-time hand edit of `version.rb` past the last published version.
 
 ### `gempilot release`
 
@@ -113,7 +121,7 @@ Generated gems include rake tasks for the full version lifecycle:
 | Task | Description |
 |------|-------------|
 | `rake version:current` | Display the current version |
-| `rake version:bump` | Increment the patch version |
+| `rake version:bump` | Bump the version (patch default; major/minor/patch/tiny/dev) |
 | `rake version:commit` | Commit the version file change |
 | `rake version:tag` | Create a git tag for the version |
 | `rake version:untag` | Delete the version git tag |

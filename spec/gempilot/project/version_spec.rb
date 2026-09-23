@@ -3,87 +3,65 @@ require "spec_helper"
 RSpec.describe Gempilot::Project::Version do
   let(:path) { Pathname("lib/my_gem/version.rb") }
 
-  describe "#tag" do
-    it "prepends v to the value" do
-      version = described_class.new(path: path, value: "1.2.3")
-      expect(version.tag).to eq("v1.2.3")
-    end
+  def version(value)
+    described_class.new(path: path, value: value)
   end
 
-  describe "#next_version" do
-    subject { described_class.new(path: path, value: value).next_version }
-
-    context "with a simple semver" do
-      let(:value) { "1.2.3" }
-      let(:expected) { described_class.new(path: path, value: "1.2.4") }
-
-      it { is_expected.to eq(expected) }
-    end
-
-    context "with a dev suffix" do
-      let(:value) { "0.0.4.dev3" }
-      let(:expected) { described_class.new(path: path, value: "0.0.5") }
-
-      it { is_expected.to eq(expected) }
-    end
-
-    context "with a multi-digit patch" do
-      let(:value) { "1.0.99" }
-      let(:expected) { described_class.new(path: path, value: "1.0.100") }
-
-      it { is_expected.to eq(expected) }
+  describe "#tag" do
+    it "prepends v to the value" do
+      expect(version("1.2.3").tag).to eq("v1.2.3")
     end
   end
 
   describe "#bump" do
-    context "with a simple semver" do
-      subject { described_class.new(path: path, value: "1.2.3") }
+    transitions = {
+      "1.2.3" => { major: "2.0.0", minor: "1.3.0", patch: "1.2.4", tiny: "1.2.3.1", dev: "1.2.4.dev1" },
+      "1.2.3.1" => { major: "2.0.0", minor: "1.3.0", patch: "1.2.4", tiny: "1.2.3.2", dev: "1.2.4.dev1" },
+      "1.2.4.dev2" => { major: "2.0.0", minor: "1.3.0", patch: "1.2.4", tiny: "1.2.4.1", dev: "1.2.4.dev3" },
+      "1.3.0.dev2" => { major: "2.0.0", minor: "1.3.0", patch: "1.3.0", tiny: "1.3.0.1", dev: "1.3.0.dev3" },
+      "2.0.0.dev2" => { major: "2.0.0", minor: "2.0.0", patch: "2.0.0", tiny: "2.0.0.1", dev: "2.0.0.dev3" },
+    }
 
-      it "bumps patch by default" do
-        expect(subject.bump.value).to eq("1.2.4")
-      end
+    transitions.each do |from, bumps|
+      bumps.each do |segment, to|
+        it "bumps #{from} to #{to} for #{segment}" do
+          expect(version(from).bump(segment).value).to eq(to)
+        end
 
-      it "bumps minor" do
-        expect(subject.bump(:minor).value).to eq("1.3.0")
-      end
-
-      it "bumps major" do
-        expect(subject.bump(:major).value).to eq("2.0.0")
-      end
-
-      it "starts a dev cycle with :dev" do
-        expect(subject.bump(:dev).value).to eq("1.2.3.dev1")
+        it "moves #{from} strictly forward under Gem::Version ordering for #{segment}" do
+          expect(Gem::Version.new(version(from).bump(segment).value)).to be > Gem::Version.new(from)
+        end
       end
     end
 
-    context "with a dev version" do
-      subject { described_class.new(path: path, value: "3.1.4.dev2") }
-
-      it "increments the dev number" do
-        expect(subject.bump(:dev).value).to eq("3.1.4.dev3")
-      end
-
-      it "strips dev and bumps patch" do
-        expect(subject.bump(:patch).value).to eq("3.1.5")
-      end
-
-      it "strips dev and bumps minor" do
-        expect(subject.bump(:minor).value).to eq("3.2.0")
-      end
-
-      it "strips dev and bumps major" do
-        expect(subject.bump(:major).value).to eq("4.0.0")
-      end
+    it "bumps patch by default" do
+      expect(version("1.2.3").bump.value).to eq("1.2.4")
     end
 
     it "accepts segment as a string" do
-      version = described_class.new(path: path, value: "1.0.0")
-      expect(version.bump("minor").value).to eq("1.1.0")
+      expect(version("1.0.0").bump("minor").value).to eq("1.1.0")
     end
 
     it "raises for an unknown segment" do
-      version = described_class.new(path: path, value: "1.0.0")
-      expect { version.bump(:hotfix) }.to raise_error(ArgumentError, /unknown segment/i)
+      expect { version("1.0.0").bump(:hotfix) }.to raise_error(ArgumentError, /unknown segment/i)
+    end
+
+    it "raises for a two-integer version" do
+      expect { version("1.2").bump }.to raise_error(ArgumentError, /cannot parse/i)
+    end
+
+    it "raises for a non-dev prerelease version" do
+      expect { version("1.2.3.beta1").bump }.to raise_error(ArgumentError, /cannot parse/i)
+    end
+  end
+
+  describe "#next_version" do
+    it "finalizes a dev version to its target" do
+      expect(version("0.0.4.dev3").next_version.value).to eq("0.0.4")
+    end
+
+    it "bumps the patch of a release version" do
+      expect(version("1.0.99").next_version.value).to eq("1.0.100")
     end
   end
 end

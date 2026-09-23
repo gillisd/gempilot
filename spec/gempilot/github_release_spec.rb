@@ -20,6 +20,26 @@ RSpec.describe Gempilot::GithubRelease do
       release.create
       expect(release).not_to have_received(:sh).with("git", any_args)
     end
+
+    context "with a dev prerelease tag" do
+      let(:tag) { "v1.2.4.dev1" }
+
+      it "marks the release as a prerelease" do
+        release.create
+        args = ["gh", "release", "create", "--generate-notes", "--fail-on-no-commits", "--prerelease", tag]
+        expect(release).to have_received(:sh).with(*args)
+      end
+    end
+
+    context "with a tiny release tag" do
+      let(:tag) { "v1.2.3.1" }
+
+      it "does not mark the release as a prerelease" do
+        release.create
+        args = ["gh", "release", "create", "--generate-notes", "--fail-on-no-commits", tag]
+        expect(release).to have_received(:sh).with(*args)
+      end
+    end
   end
 
   describe "#destroy" do

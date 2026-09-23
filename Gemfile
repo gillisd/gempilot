@@ -2,6 +2,7 @@ source "https://rubygems.org"
 
 gemspec
 
+gem "json", "~> 2.21"
 gem "benchmark"
 gem "irb", "~> 1.15"
 gem "minitest"
