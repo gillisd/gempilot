@@ -1,15 +1,15 @@
-require "warning"
-
 module Gempilot
-  ## Introspects a gem project to discover its name, module, and version.
-  ## Works for both regular gems (+lib/my_gem.rb+) and extension gems whose
-  ## entry point nests deeper (+lib/my_gem/extension.rb+ for +my_gem-extension+).
+  ##
+  # Introspects a gem project to discover its name, require path, autoload
+  # root, and version. Works for both regular gems (+lib/my_gem.rb+) and
+  # extension gems whose entry point nests deeper (+lib/my_gem/extension.rb+
+  # for +my_gem-extension+).
+  #
+  # The version is read by loading +version.rb+ under a throwaway module, so
+  # the project's module name is never needed and reloading after a bump
+  # never redefines a real constant.
   class Project
     class ProjectIntrospectionError < StandardError; end
-
-    REDEFINITION_WARNING = /previous definition of VERSION was here/
-    REINITIALIZATION_WARNING = /already initialized constant [^\s]+::VERSION/
-    private_constant :REDEFINITION_WARNING, :REINITIALIZATION_WARNING
 
     using String::Inflectable
 
@@ -41,8 +41,11 @@ module Gempilot
       project_segments.map(&:camelize).join("::")
     end
 
-    def klass
-      Object.const_get(module_name)
+    ##
+    # The directory a loader set up with +for_gem+ or +for_gem_extension+
+    # manages: the parent of the project's namespace directory.
+    def autoload_root
+      lib_project.parent
     end
 
     def version
@@ -116,16 +119,27 @@ module Gempilot
     end
 
     def fetch_version
-      Warning.ignore(REDEFINITION_WARNING)
-      Warning.ignore(REINITIALIZATION_WARNING)
-      path = lib_project
-             .join("version.rb")
-             .tap { verify_existence! it }
-             .tap { load it }
+      path = lib_project.join("version.rb").tap { verify_existence! it }
+      Version.new(path:, value: version_defined_in(path))
+    end
 
-      value = klass.const_get(:VERSION)
+    # Loads the version file under an anonymous module so the modules it opens
+    # live there instead of in the real namespace, then walks that private
+    # module tree down to VERSION.
+    def version_defined_in(path)
+      sandbox = Module.new
+      load path.to_s, sandbox
+      version_in(sandbox) || raise(ProjectIntrospectionError, "Expected #{path} to define a VERSION constant")
+    end
 
-      Version.new(path:, value:)
+    def version_in(mod)
+      return mod.const_get(:VERSION, false) if mod.const_defined?(:VERSION, false)
+
+      mod.constants(false)
+         .map { mod.const_get(it, false) }
+         .grep(Module)
+         .filter_map { version_in(it) }
+         .first
     end
 
     def verify_existence!(path)

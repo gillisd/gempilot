@@ -26,18 +26,9 @@ RSpec.describe Gempilot::Project do
       end
     end
 
-    describe "#module_name" do
-      it "camelizes the lib segments into a constant path" do
-        expect(project.module_name).to eq(expected_module_name)
-      end
-    end
-
-    describe "#klass" do
-      def load_gem_namespace = project.version
-
-      it "returns the gem's root module" do
-        load_gem_namespace
-        expect(project.klass).to eq(expected_klass)
+    describe "#autoload_root" do
+      it "is the directory the gem's Zeitwerk loader manages" do
+        expect(project.autoload_root.to_s).to end_with(expected_autoload_root)
       end
     end
 
@@ -48,6 +39,11 @@ RSpec.describe Gempilot::Project do
 
       it "points at the version.rb file" do
         expect(project.version.path.to_s).to end_with(version_file)
+      end
+
+      it "does not define the gem's modules in the real namespace" do
+        project.version
+        expect(Object).not_to be_const_defined(root_constant)
       end
     end
 
@@ -78,9 +74,9 @@ RSpec.describe Gempilot::Project do
 
   describe "a regular gem" do
     let(:expected_name) { "my_gem" }
-    let(:expected_klass) { MyGem }
     let(:expected_require_path) { "my_gem" }
-    let(:expected_module_name) { "MyGem" }
+    let(:expected_autoload_root) { "/lib" }
+    let(:root_constant) { :MyGem }
     let(:version_file) { "lib/my_gem/version.rb" }
 
     around do |example|
@@ -121,13 +117,22 @@ RSpec.describe Gempilot::Project do
           .to raise_error(Gempilot::Project::ProjectIntrospectionError, /more than one/)
       end
     end
+
+    context "when version.rb defines no VERSION constant" do
+      before { File.write(version_file, "module MyGem\nend\n") }
+
+      it "raises ProjectIntrospectionError naming the file" do
+        expect { project.version }
+          .to raise_error(Gempilot::Project::ProjectIntrospectionError, /VERSION constant/)
+      end
+    end
   end
 
   describe "a gem extension" do
     let(:expected_name) { "my_gem-extension" }
-    let(:expected_klass) { MyGem::Extension }
     let(:expected_require_path) { "my_gem/extension" }
-    let(:expected_module_name) { "MyGem::Extension" }
+    let(:expected_autoload_root) { "/lib/my_gem" }
+    let(:root_constant) { :MyGem }
     let(:version_file) { "lib/my_gem/extension/version.rb" }
 
     around do |example|
@@ -151,5 +156,22 @@ RSpec.describe Gempilot::Project do
     end
 
     it_behaves_like "a gem project"
+  end
+
+  describe "a gem whose module name is inflected" do
+    let(:version_file) { "lib/ecs/version.rb" }
+
+    around do |example|
+      in_tempdir do
+        Pathname("lib/ecs").mkpath
+        File.write "lib/ecs.rb", "module ECS; end\n"
+        File.write version_file, "module ECS\n  VERSION = \"1.2.3\".freeze\nend\n"
+        example.run
+      end
+    end
+
+    it "reads the version without guessing the module name" do
+      expect(project.version.value).to eq("1.2.3")
+    end
   end
 end

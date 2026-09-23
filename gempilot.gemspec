@@ -27,7 +27,6 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "command_kit"
   spec.add_dependency "rake"
-  spec.add_dependency "warning"
   spec.add_dependency "zeitwerk"
   spec.metadata["rubygems_mfa_required"] = "true"
 end
