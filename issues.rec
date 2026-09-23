@@ -309,3 +309,11 @@ Description: it adds a "command" that is useless. It should:
 + 2. install command_kit
 + 3. bootstrap a command_kit setup
 Status: open
+
+Id: 93D7E88E-B6EB-11F1-8AF9-FE6CB9572C2E
+Updated: Tue, 22 Sep 2026 21:10:33 -0400
+Title: Problems with zeitwerk_task.rb
+Description: 1. Documentation is improperly formatted. sizing is all over the place. 2. The task is broken for projects that use an inflector, like ECS. The task looks for "Ecs" instead, despite having it set up in the zeitwerk config.
++ 
++ Fixing this should rely on idiomatic zeitwerk & zeitwerk inflector usage, and thoroughly thinking through how to fit this into user's loader. DO NOT rely on regexes of any kind to handle this.
+Status: open
