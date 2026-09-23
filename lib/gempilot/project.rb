@@ -11,8 +11,6 @@ module Gempilot
   class Project
     class ProjectIntrospectionError < StandardError; end
 
-    using String::Inflectable
-
     attr_reader :root
 
     def initialize(root = Dir.pwd)
@@ -35,10 +33,6 @@ module Gempilot
 
     def require_path
       project_segments.join("/")
-    end
-
-    def module_name
-      project_segments.map(&:camelize).join("::")
     end
 
     ##
