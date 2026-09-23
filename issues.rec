@@ -226,7 +226,7 @@ Description: Ensure betterleaks is integrated into the commit and build pipeline
 Status: open
 
 Id: F6C6EB04-8DA4-11F1-91EF-FA41C3164F3A
-Updated: Sat, 01 Aug 2026 12:31:47 +0000
+Updated: Wed, 23 Sep 2026 03:15:11 +0000
 Title: release:rubygem_push only handles one gem per version
 Description: rake release:rubygems can publish only one gem per version. A project that publishes several -- platform gems each carrying a compiled executable, say -- either publishes one of them and silently leaves the rest, or, once it replaces the push task with a pkg glob, tries to re-push versions already on rubygems and stops halfway through the release.
 + 
@@ -293,7 +293,7 @@ Description: rake release:rubygems can publish only one gem per version. A proje
 + Single-gem projects are unaffected: pkg holds one gem for the current version, and it gets pushed, as today. Multi-gem projects stop having to reinvent the push.
 + 
 + If gempilot would rather not own the task, then the ReleaseTasks rdoc should state the contract instead: a project that replaces build must also replace release:rubygem_push, and must scope the push to the version being released rather than globbing pkg.
-Status: open
+Status: closed
 
 Id: 2360FFA4-9388-11F1-8474-FE6CB9572C2F
 Updated: Wed, 23 Sep 2026 02:07:20 +0000
