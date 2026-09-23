@@ -7,6 +7,7 @@ module Gempilot
 
         include Generator
         include GemContext
+        include CliBootstrap
 
         template_dir File.join(Gempilot::ROOT, "data", "templates", "new")
 
@@ -100,17 +101,26 @@ module Gempilot
 
         def add_command(name)
           name = name.split("::").last if name.include?("::")
-          file_name = name.underscore
-          command_name = name.camelize
-          file_path = File.join("lib", @require_path, "cli", "commands", "#{file_name}.rb")
+          @command_file_name = name.underscore
+          @command_name = name.camelize
 
-          print_adding_banner("command", command_name)
+          print_adding_banner("command", @command_name)
+          dependency_added = bootstrap_cli
+          write_command_files
+          bundle_install if dependency_added
+        end
+
+        def write_command_files
+          file_path = File.join("lib", @require_path, "cli", "commands", "#{@command_file_name}.rb")
           ensure_directory(File.dirname(file_path))
-
-          @command_name = command_name
-          @command_file_name = file_name
           erb "command.rb.erb", file_path
-          add_command_test_file(command_name, file_name)
+          add_command_test_file(@command_name, @command_file_name)
+        end
+
+        def bundle_install
+          return unless File.exist?("Gemfile")
+
+          sh "bundle", "install"
         end
 
         def command_test_path(file_name)
@@ -126,8 +136,8 @@ module Gempilot
             require "spec_helper"
 
             RSpec.describe #{@gem_module}::CLI::Commands::#{command_name} do
-              it "is defined" do
-                expect(described_class).not_to be_nil
+              it "is registered under its command name" do
+                expect(described_class.command_name).to eq("#{command_line_name}")
               end
             end
           RUBY
@@ -137,20 +147,23 @@ module Gempilot
           <<~RUBY
             require "test_helper"
             require "#{@require_path}/cli"
-            require "stringio"
 
             module #{@gem_module}
               class CLI
                 class #{command_name}Test < Minitest::Test
-                  def test_placeholder
-                    stdout = StringIO.new
-                    command = Commands::#{command_name}.new(stdout: stdout)
-                    assert command
+                  def test_command_name
+                    assert_equal "#{command_line_name}", Commands::#{command_name}.command_name
                   end
                 end
               end
             end
           RUBY
+        end
+
+        # The name CommandKit registers the command under: dashes, not
+        # underscores, matching how AutoLoad maps the file name.
+        def command_line_name
+          @command_file_name.tr("_", "-")
         end
 
         def add_command_test_file(command_name, file_name)

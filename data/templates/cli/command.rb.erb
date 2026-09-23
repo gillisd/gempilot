@@ -1,0 +1,14 @@
+require "command_kit/command"
+require "command_kit/colors"
+require "command_kit/interactive"
+
+module <%= @gem_module %>
+  class CLI
+    ##
+    # Base command class for all <%= @gem_name %> subcommands.
+    class Command < CommandKit::Command
+      include CommandKit::Colors
+      include CommandKit::Interactive
+    end
+  end
+end
