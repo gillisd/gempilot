@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if ! command -v betterleaks >/dev/null 2>&1; then
+  echo "betterleaks not found on PATH; skipping secret scan." >&2
+  echo "Install it (e.g. 'brew install betterleaks') to scan staged changes." >&2
+  exit 0
+fi
+
+exec betterleaks git --pre-commit --redact --staged --verbose

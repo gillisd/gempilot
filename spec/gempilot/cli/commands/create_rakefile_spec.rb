@@ -9,7 +9,7 @@ RSpec.describe Gempilot::CLI::Commands::Create do
     command.main([
                    "--author", "Test Author", "--email", "test@example.com",
                    "--summary", "A test gem", "--ruby-version", "3.4.8",
-                   "--test", "minitest", "--no-exe", "--no-git", name
+                   "--test", "minitest", "--no-exe", "--no-git", "--no-betterleaks", name
                  ])
   end
 

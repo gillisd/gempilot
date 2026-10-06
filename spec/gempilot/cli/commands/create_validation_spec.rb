@@ -8,7 +8,7 @@ RSpec.describe Gempilot::CLI::Commands::Create do
 
   let(:valid_opts) do
     ["--author", "Test", "--email", "t@t.com", "--summary", "test",
-     "--test", "minitest", "--no-exe", "--no-git"]
+     "--test", "minitest", "--no-exe", "--no-git", "--no-betterleaks"]
   end
 
   describe "gem name validation" do
