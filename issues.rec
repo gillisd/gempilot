@@ -317,3 +317,9 @@ Description: 1. Documentation is improperly formatted. sizing is all over the pl
 + 
 + Fixing this should rely on idiomatic zeitwerk & zeitwerk inflector usage, and thoroughly thinking through how to fit this into user's loader. DO NOT rely on regexes of any kind to handle this.
 Status: open
+
+Id: C2BD1E80-C1DB-11F1-8378-FE6CB9572C2E
+Updated: Tue, 06 Oct 2026 19:15:03 -0400
+Title: gempilot new should not auto-override existing file
+Description: Use same pattern that rails uses. Prompt for y/n/m/d whatever the options are
+Status: open
