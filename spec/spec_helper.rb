@@ -18,6 +18,17 @@ RSpec.configure do |config|
 
   config.define_derived_metadata(file_path: COMMAND_SPEC_PATH) do |meta|
     meta[:tmpdir] = true unless meta.key?(:tmpdir)
+    meta[:mute_stdout] = true unless meta.key?(:mute_stdout)
+  end
+
+  config.around(:example, :mute_stdout) do |example|
+    File.open(File::NULL, "w") do |null|
+      original_stdout = $stdout
+      $stdout = null
+      example.run
+    ensure
+      $stdout = original_stdout
+    end
   end
 
   config.around(:example, :tmpdir) do |example|

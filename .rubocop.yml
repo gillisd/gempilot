@@ -259,3 +259,12 @@ RSpec/NamedSubject:
 # have_file_content matcher accepts a filename string in expect()
 RSpec/ExpectActual:
   Enabled: false
+
+# Commands shell out through their own #sh and #system. Those calls are the
+# process boundary, so specs stub them on the command under test.
+#
+#   subject(:command) { described_class.new }
+#
+#   before { allow(command).to receive(:sh) }
+RSpec/SubjectStub:
+  Enabled: false

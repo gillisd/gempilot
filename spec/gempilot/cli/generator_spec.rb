@@ -1,16 +1,15 @@
 require "spec_helper"
-require "stringio"
 
-RSpec.describe Gempilot::CLI::Generator, :tmpdir do
+RSpec.describe Gempilot::CLI::Generator, :mute_stdout, :tmpdir do
   let(:gem_templates) { File.join(Gempilot::ROOT, "data", "templates", "gem") }
-  let(:stdout) { StringIO.new }
-  let(:generator) { generator_class.new(stdout:) }
   let(:generator_class) do
     templates = gem_templates
     stub_const("TemplateGenerator", Class.new(Gempilot::CLI::Command))
       .tap { it.include(described_class) }
       .tap { it.template_dir(templates) }
   end
+
+  subject(:generator) { generator_class.new }
 
   describe "#template_dir" do
     it "exposes the configured template directory" do
@@ -19,14 +18,13 @@ RSpec.describe Gempilot::CLI::Generator, :tmpdir do
   end
 
   describe "#mkdir" do
-    before { generator.mkdir("new_dir") }
-
     it "creates the directory" do
+      generator.mkdir("new_dir")
       expect(Pathname("new_dir")).to be_directory
     end
 
     it "prints the action" do
-      expect(stdout.string).to include("mkdir")
+      expect { generator.mkdir("new_dir") }.to output(/mkdir/).to_stdout
     end
   end
 

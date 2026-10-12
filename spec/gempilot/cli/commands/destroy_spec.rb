@@ -1,10 +1,9 @@
 require "spec_helper"
-require "stringio"
 
 RSpec.describe Gempilot::CLI::Commands::Destroy do
   include FileUtils
 
-  subject(:command) { described_class.new(stdout: StringIO.new) }
+  subject(:command) { described_class.new }
 
   before do
     mkdir_p("lib/my_gem")

@@ -1,9 +1,8 @@
 require "spec_helper"
 require "open3"
-require "stringio"
 
 RSpec.describe Gempilot::CLI::Commands::Create do
-  let(:command) { described_class.new(stdout: StringIO.new) }
+  subject(:command) { described_class.new }
 
   def create(name, *flags)
     command.main([
@@ -515,8 +514,7 @@ RSpec.describe Gempilot::CLI::Commands::Create do
         <<~RUBY
           require "bundler/setup"
           require "gempilot"
-          require "stringio"
-          cmd = Gempilot::CLI::Commands::Create.new(stdout: StringIO.new)
+          cmd = Gempilot::CLI::Commands::Create.new
           puts cmd.options[:author].inspect
           puts cmd.options[:email].inspect
         RUBY

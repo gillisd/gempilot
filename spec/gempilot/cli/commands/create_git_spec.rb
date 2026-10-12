@@ -1,8 +1,10 @@
 require "spec_helper"
-require "stringio"
 
 RSpec.describe Gempilot::CLI::Commands::Create do
-  let(:command) { described_class.new(stdout: StringIO.new) }
+  include FileUtils
+
+  subject(:command) { described_class.new }
+
   let(:sh_calls) { [] }
 
   def create_with_git(name, branch: "master")
@@ -22,12 +24,12 @@ RSpec.describe Gempilot::CLI::Commands::Create do
   end
 
   def seed_repo_with_history(dir)
-    FileUtils.mkdir_p(dir)
+    mkdir_p(dir)
     Dir.chdir(dir) do
       system("git", "init", "-q", "-b", "master")
       system("git", "config", "user.email", "seed@example.com")
       system("git", "config", "user.name", "Seed")
-      FileUtils.touch("README.md")
+      touch("README.md")
       system("git", "add", ".")
       system("git", "commit", "-q", "-m", "Pre-existing history")
     end

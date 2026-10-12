@@ -1,10 +1,7 @@
 require "spec_helper"
-require "stringio"
 
 RSpec.describe Gempilot::CLI::Commands::Create do
-  let(:command) { described_class.new(stdout: stdout) }
-
-  let(:stdout) { StringIO.new }
+  subject(:command) { described_class.new }
 
   let(:create_args) do
     ["--author", "Test Author", "--email", "test@example.com",
