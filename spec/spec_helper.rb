@@ -2,6 +2,8 @@ require "rake"
 require "tmpdir"
 require_relative "../lib/gempilot"
 
+Pathname(__dir__).glob("support/**/*.rb").each { require it }
+
 COMMAND_SPEC_PATH = %r{/spec/gempilot/cli/commands/}
 
 RSpec.configure do |config|
