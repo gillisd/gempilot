@@ -5,12 +5,16 @@ RSpec.describe Gempilot::CLI::Commands::Create do
   let(:command) { described_class.new(stdout: StringIO.new) }
   let(:sh_calls) { [] }
 
-  def create_with_git(name)
+  def create_with_git(name, branch: "master")
     command.main([
                    "--author", "Test Author", "--email", "test@example.com",
                    "--summary", "A test gem", "--ruby-version", "3.4.8",
-                   "--test", "minitest", "--no-exe", "--git", "--branch", "master", name
+                   "--test", "minitest", "--no-exe", "--git", "--branch", branch, name
                  ])
+  end
+
+  def git_init_call
+    sh_calls.find { |call| call[0] == "git" && call[1] == "init" }
   end
 
   def committed_message
@@ -50,6 +54,20 @@ RSpec.describe Gempilot::CLI::Commands::Create do
       it "names the commit after the scaffolded gem" do
         create_with_git("test_gem")
         expect(committed_message).to eq("Add test_gem gem scaffolding.")
+      end
+    end
+  end
+
+  describe "git branch" do
+    context "with a custom branch" do
+      before { create_with_git("test_gem", branch: "develop") }
+
+      it "passes the branch flag" do
+        expect(git_init_call).to include("-b")
+      end
+
+      it "initializes the requested branch" do
+        expect(git_init_call).to include("develop")
       end
     end
   end

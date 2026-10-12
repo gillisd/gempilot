@@ -25,8 +25,8 @@ A CLI tool for creating and managing Ruby gems, built on CommandKit.
 - CommandKit::Commands::AutoLoad maps filenames in `commands/` to command names
 
 ### Testing
-- Minitest with minitest-reporters
-- Run tests: `bundle exec rake test`
+- RSpec
+- Run specs: `bundle exec rake spec`
 
 ### Generated Gem Features
 - Zeitwerk autoloading with `LOADER` constant exposed for eager loading
