@@ -13,6 +13,11 @@ RSpec.describe Gempilot::Project do
     end
   end
 
+  def write_rival_gem
+    Pathname("lib/other").mkpath
+    File.write("lib/other.rb", "module Other; end\n")
+  end
+
   shared_examples "a gem project" do
     describe "#name" do
       it "derives the gem name from the lib layout" do
@@ -98,6 +103,21 @@ RSpec.describe Gempilot::Project do
 
     it_behaves_like "a gem project"
 
+    context "with a declared project name" do
+      subject(:project) { described_class.new(Dir.pwd, name: "my_gem") }
+
+      it_behaves_like "a gem project"
+    end
+
+    context "with a declared project name absent from lib" do
+      subject(:project) { described_class.new(Dir.pwd, name: "missing_gem") }
+
+      it "raises a project introspection error naming the missing directory" do
+        expect { project.version }
+          .to raise_error(Gempilot::Project::ProjectIntrospectionError, %r{lib/missing_gem})
+      end
+    end
+
     context "when lib has a .rb file with no matching gem directory" do
       before do
         rm_rf("lib/my_gem")
@@ -111,14 +131,21 @@ RSpec.describe Gempilot::Project do
     end
 
     context "when lib has more than one candidate gem" do
-      before do
-        Pathname("lib/other").mkpath
-        File.write("lib/other.rb", "module Other; end\n")
-      end
+      before { write_rival_gem }
 
       it "raises ProjectIntrospectionError naming the ambiguity" do
         expect { project.name }
           .to raise_error(Gempilot::Project::ProjectIntrospectionError, /more than one/)
+      end
+    end
+
+    context "when lib has more than one candidate gem but a declared project name" do
+      subject(:project) { described_class.new(Dir.pwd, name: "my_gem") }
+
+      before { write_rival_gem }
+
+      it "resolves the declared gem" do
+        expect(project.name).to eq("my_gem")
       end
     end
   end
@@ -151,5 +178,11 @@ RSpec.describe Gempilot::Project do
     end
 
     it_behaves_like "a gem project"
+
+    context "with a declared project name" do
+      subject(:project) { described_class.new(Dir.pwd, name: "my_gem-extension") }
+
+      it_behaves_like "a gem project"
+    end
   end
 end

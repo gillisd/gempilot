@@ -1,6 +1,10 @@
 require "spec_helper"
 
 RSpec.describe Gempilot::VersionTask do
+  include FileUtils
+
+  subject(:version_task) { described_class.new(root: Dir.pwd) }
+
   around do |example|
     old_app = Rake.application
     Rake.application = Rake::Application.new
@@ -16,7 +20,7 @@ RSpec.describe Gempilot::VersionTask do
     system("git config user.email 'test@test.com'")
     system("git config user.name 'Test'")
     File.write("my_gem.gemspec", 'Gem::Specification.new { |s| s.name = "my_gem" }')
-    FileUtils.mkdir_p("lib/my_gem")
+    mkdir_p("lib/my_gem")
     File.write("lib/my_gem.rb", "module MyGem; end\n")
     File.write("lib/my_gem/version.rb", <<~RUBY)
       module MyGem
@@ -24,7 +28,7 @@ RSpec.describe Gempilot::VersionTask do
       end
     RUBY
     system("git add . && git commit -m 'Initial commit' --quiet")
-    described_class.new(root: Dir.pwd)
+    version_task
   end
 
   def version_in_file
@@ -116,6 +120,27 @@ RSpec.describe Gempilot::VersionTask do
     it "unrelease:github destroys the release" do
       Rake::Task["unrelease:github"].invoke
       expect(github).to have_received(:destroy)
+    end
+  end
+
+  describe "project name option" do
+    before do
+      mkdir_p("lib/other")
+      File.write("lib/other.rb", "module Other; end\n")
+    end
+
+    context "without a project name" do
+      it "raises a project introspection error" do
+        expect { version_task.project.version }.to raise_error(Gempilot::Project::ProjectIntrospectionError)
+      end
+    end
+
+    context "with a project name" do
+      subject(:version_task) { described_class.new(root: Dir.pwd, project_name: "my_gem") }
+
+      it "reports the named project version" do
+        expect { Rake::Task["version:current"].invoke }.to output("Current version: 1.0.0.dev3\n").to_stdout
+      end
     end
   end
 end
