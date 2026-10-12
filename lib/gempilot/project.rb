@@ -91,9 +91,14 @@ module Gempilot
 
     def fetch_lib_project
       case @declared_name
-      in String then lib.join(*@declared_name.split("-")).tap { verify_existence! it }
+      in String then declared_lib_project
       in nil then discover_lib_project
       end
+    end
+
+    def declared_lib_project
+      name_segments = @declared_name.split("-")
+      lib.join(*name_segments).tap { verify_existence! it }
     end
 
     def discover_lib_project
