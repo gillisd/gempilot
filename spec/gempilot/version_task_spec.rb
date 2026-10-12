@@ -2,6 +2,7 @@ require "spec_helper"
 
 RSpec.describe Gempilot::VersionTask do
   include FileUtils
+  include GemLayout
 
   subject(:version_task) { described_class.new(root: Dir.pwd) }
 
@@ -124,10 +125,7 @@ RSpec.describe Gempilot::VersionTask do
   end
 
   describe "project name option" do
-    before do
-      mkdir_p("lib/other")
-      File.write("lib/other.rb", "module Other; end\n")
-    end
+    before { write_rival_gem }
 
     context "without a project name" do
       it "raises a project introspection error" do
