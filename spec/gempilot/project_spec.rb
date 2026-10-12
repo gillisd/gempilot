@@ -2,6 +2,7 @@ require "spec_helper"
 
 RSpec.describe Gempilot::Project do
   include FileUtils
+  include GemLayout
 
   subject(:project) { described_class.new(Dir.pwd) }
 
@@ -11,11 +12,6 @@ RSpec.describe Gempilot::Project do
         yield tmpdir
       end
     end
-  end
-
-  def write_rival_gem
-    Pathname("lib/other").mkpath
-    File.write("lib/other.rb", "module Other; end\n")
   end
 
   shared_examples "a gem project" do
