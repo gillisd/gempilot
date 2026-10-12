@@ -15,8 +15,9 @@ module Gempilot
 
     attr_reader :root
 
-    def initialize(root = Dir.pwd)
+    def initialize(root = Dir.pwd, name: nil)
       @root = Pathname(root)
+      @declared_name = name
       @verifications = Set.new
     end
 
@@ -89,6 +90,13 @@ module Gempilot
     end
 
     def fetch_lib_project
+      case @declared_name
+      in String then lib.join(*@declared_name.split("-")).tap { verify_existence! it }
+      in nil then discover_lib_project
+      end
+    end
+
+    def discover_lib_project
       dirs = shallowest_entry_dirs
       case dirs.count
       in 0 then raise ProjectIntrospectionError, "Could not identify project dir"

@@ -8,9 +8,9 @@ module Gempilot
 
     attr_reader :project
 
-    def initialize(root: Dir.pwd)
+    def initialize(root: Dir.pwd, project_name: nil)
       super()
-      @project = Project.new(root)
+      @project = Project.new(root, name: project_name)
       define_tasks
     end
 
