@@ -10,11 +10,7 @@ RSpec.describe Gempilot::CLI::Commands::Destroy do
     File.write("my_gem.gemspec", 'Gem::Specification.new { |s| s.name = "my_gem" }')
   end
 
-  def destroy(keystrokes)
-    out = StringIO.new
-    described_class.new(stdin: StringIO.new(keystrokes), stdout: out).main([])
-    out.string
-  end
+  def destroy(keystrokes) = described_class.new(stdin: StringIO.new(keystrokes)).main([])
 
   describe "interactive mode" do
     context "when destroying a class" do
@@ -24,9 +20,7 @@ RSpec.describe Gempilot::CLI::Commands::Destroy do
       end
 
       it "prepends the gem namespace to a bare name", :aggregate_failures do
-        output = destroy("1\nServices::Auth\n")
-
-        expect(output).to include("class:")
+        expect { destroy("1\nServices::Auth\n") }.to output(a_string_including("class:")).to_stdout
         expect(File).not_to exist("lib/my_gem/services/auth.rb")
       end
 
@@ -36,11 +30,8 @@ RSpec.describe Gempilot::CLI::Commands::Destroy do
         expect(File).not_to exist("lib/my_gem/services/auth.rb")
       end
 
-      it "drops the old hint and label", :aggregate_failures do
-        output = destroy("1\nServices::Auth\n")
-
-        expect(output).not_to include("Fully-qualified")
-        expect(output).not_to include("Constant")
+      it "drops the old hint and label" do
+        expect { destroy("1\nServices::Auth\n") }.not_to output(/Fully-qualified|Constant/).to_stdout
       end
     end
 
@@ -61,9 +52,7 @@ RSpec.describe Gempilot::CLI::Commands::Destroy do
       end
 
       it "uses the type label and does not namespace the command", :aggregate_failures do
-        output = destroy("3\ndeploy\n")
-
-        expect(output).to include("command:")
+        expect { destroy("3\ndeploy\n") }.to output(a_string_including("command:")).to_stdout
         expect(File).not_to exist("lib/my_gem/cli/commands/deploy.rb")
       end
     end
