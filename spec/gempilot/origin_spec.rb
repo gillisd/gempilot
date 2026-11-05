@@ -15,20 +15,16 @@ RSpec.describe Gempilot::Origin do
   end
 
   describe "#push" do
-    let(:pushes) { [] }
-    let(:remotes) { pushes.map(&:first).uniq }
-    let(:refs) { pushes.map(&:last) }
+    before { allow(origin).to receive(:sh) }
 
-    before { allow(origin).to receive(:sh) { |*command| pushes << command.drop(2) } }
-
-    it "pushes the branch before the tag" do
+    it "pushes the branch to origin" do
       origin.push
-      expect(refs).to eq(%w[refs/heads/main refs/tags/v1.2.3])
+      expect(origin).to have_received(:sh).with("git", "push", "origin", "refs/heads/main")
     end
 
-    it "pushes to origin" do
+    it "pushes the tag to origin" do
       origin.push
-      expect(remotes).to eq(%w[origin])
+      expect(origin).to have_received(:sh).with("git", "push", "origin", "refs/tags/v1.2.3")
     end
 
     context "when the branch has a configured remote" do
@@ -37,23 +33,28 @@ RSpec.describe Gempilot::Origin do
         system("git", "config", "branch.main.remote", "upstream")
       end
 
-      it "pushes to that remote" do
+      it "pushes the branch to that remote" do
         origin.push
-        expect(remotes).to eq(%w[upstream])
+        expect(origin).to have_received(:sh).with("git", "push", "upstream", "refs/heads/main")
+      end
+
+      it "pushes the tag to that remote" do
+        origin.push
+        expect(origin).to have_received(:sh).with("git", "push", "upstream", "refs/tags/v1.2.3")
       end
     end
 
     context "when HEAD is detached" do
       before { system("git", "checkout", "--detach", "--quiet") }
 
-      it "pushes only the tag" do
+      it "pushes the tag to origin" do
         origin.push
-        expect(refs).to eq(%w[refs/tags/v1.2.3])
+        expect(origin).to have_received(:sh).with("git", "push", "origin", "refs/tags/v1.2.3")
       end
 
-      it "pushes to origin" do
+      it "pushes no branch" do
         origin.push
-        expect(remotes).to eq(%w[origin])
+        expect(origin).not_to have_received(:sh).with("git", "push", anything, %r{\Arefs/heads/})
       end
     end
   end
