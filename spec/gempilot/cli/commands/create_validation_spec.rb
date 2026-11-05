@@ -1,10 +1,7 @@
 require "spec_helper"
-require "stringio"
 
 RSpec.describe Gempilot::CLI::Commands::Create do
-  subject(:command) { described_class.new(stdout: stdout) }
-
-  let(:stdout) { StringIO.new }
+  subject(:command) { described_class.new }
 
   let(:valid_opts) do
     ["--author", "Test", "--email", "t@t.com", "--summary", "test",
@@ -18,9 +15,7 @@ RSpec.describe Gempilot::CLI::Commands::Create do
       end
 
       it "prints a helpful message" do
-        command.main(["A foo"])
-
-        expect(stdout.string).to include("Invalid gem name")
+        expect { command.main(["A foo"]) }.to output(/Invalid gem name/).to_stdout
       end
     end
 
@@ -38,17 +33,13 @@ RSpec.describe Gempilot::CLI::Commands::Create do
 
     context "when name is valid lowercase with hyphens" do
       it "does not fail validation" do
-        command.main(valid_opts + ["my-gem"])
-
-        expect(stdout.string).not_to include("Invalid gem name")
+        expect { command.main(valid_opts + ["my-gem"]) }.not_to output(/Invalid gem name/).to_stdout
       end
     end
 
     context "when name is valid lowercase with underscores" do
       it "does not fail validation" do
-        command.main(valid_opts + ["my_gem"])
-
-        expect(stdout.string).not_to include("Invalid gem name")
+        expect { command.main(valid_opts + ["my_gem"]) }.not_to output(/Invalid gem name/).to_stdout
       end
     end
   end

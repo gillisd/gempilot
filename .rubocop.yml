@@ -11,7 +11,6 @@
 
 plugins:
   - rubocop-claude
-  - rubocop-minitest
   - rubocop-performance
   - rubocop-rake
   - rubocop-rspec
@@ -108,30 +107,12 @@ Metrics/BlockLength:
   AllowedMethods:
     - command
   Exclude:
-    - "test/**/*"
     - "gempilot.gemspec"
     - "rakelib/**/*.rake"
-
-Metrics/ClassLength:
-  Exclude:
-    - "test/**/*"
-
-Metrics/MethodLength:
-  Exclude:
-    - "test/**/*"
-
-Metrics/AbcSize:
-  Exclude:
-    - "test/**/*"
 
 Claude/NoFancyUnicode:
   Exclude:
     - "gempilot.gemspec"
-
-# Minitest tests legitimately define many assertions per test method
-# when testing multi-file generators. Default is 3, too tight.
-Minitest/MultipleAssertions:
-  Max: 10
 
 # Anonymous forwarding (*, **, &) breaks TruffleRuby, JRuby, and
 # Ruby < 3.2. Named args are explicit and portable.
@@ -191,7 +172,6 @@ Style/Documentation:
   Enabled: true
   Exclude:
     - "spec/**/*"
-    - "test/**/*"
 
 # Trailing commas in multiline literals and arguments.
 # Cleaner diffs — adding an element doesn't touch the previous line.
@@ -278,4 +258,13 @@ RSpec/NamedSubject:
 
 # have_file_content matcher accepts a filename string in expect()
 RSpec/ExpectActual:
+  Enabled: false
+
+# Commands shell out through their own #sh and #system. Those calls are the
+# process boundary, so specs stub them on the command under test.
+#
+#   subject(:command) { described_class.new }
+#
+#   before { allow(command).to receive(:sh) }
+RSpec/SubjectStub:
   Enabled: false

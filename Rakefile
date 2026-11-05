@@ -1,8 +1,5 @@
 require "bundler/gem_tasks"
 
-require "minitest/test_task"
-Minitest::TestTask.create
-
 require "rspec/core/rake_task"
 RSpec::Core::RakeTask.new(:spec)
 
@@ -33,11 +30,9 @@ RuboCop::RakeTask.new do |t|
     "lib/**/*.rb",
     "spec/*.rb",
     "spec/**/*.rb",
-    "test/*.rb",
-    "test/**/*.rb",
   ]
 end
 
 Gempilot::VersionTask.new
 
-task default: [:test, :spec, :rubocop]
+task default: [:spec, :rubocop]

@@ -10,18 +10,12 @@ RSpec.describe Gempilot::CLI::Commands::New do
     File.write("my_gem.gemspec", 'Gem::Specification.new { |s| s.name = "my_gem" }')
   end
 
-  def generate(keystrokes)
-    out = StringIO.new
-    described_class.new(stdin: StringIO.new(keystrokes), stdout: out).main([])
-    out.string
-  end
+  def generate(keystrokes) = described_class.new(stdin: StringIO.new(keystrokes)).main([])
 
   describe "interactive mode" do
     context "when generating a class" do
       it "prepends the gem namespace to a bare name", :aggregate_failures do
-        output = generate("1\nServices::Auth\n")
-
-        expect(output).to include("class:")
+        expect { generate("1\nServices::Auth\n") }.to output(a_string_including("class:")).to_stdout
         expect(File).to exist("lib/my_gem/services/auth.rb")
         expect(File.read("lib/my_gem/services/auth.rb")).to include("class Auth")
       end
@@ -32,11 +26,8 @@ RSpec.describe Gempilot::CLI::Commands::New do
         expect(File).to exist("lib/my_gem/services/auth.rb")
       end
 
-      it "drops the old hint and label", :aggregate_failures do
-        output = generate("1\nServices::Auth\n")
-
-        expect(output).not_to include("Fully-qualified")
-        expect(output).not_to include("Constant")
+      it "drops the old hint and label" do
+        expect { generate("1\nServices::Auth\n") }.not_to output(/Fully-qualified|Constant/).to_stdout
       end
     end
 
@@ -53,9 +44,7 @@ RSpec.describe Gempilot::CLI::Commands::New do
       before { mkdir_p("lib/my_gem/cli/commands") }
 
       it "uses the type label and does not namespace the command", :aggregate_failures do
-        output = generate("3\ndeploy\n")
-
-        expect(output).to include("command:")
+        expect { generate("3\ndeploy\n") }.to output(a_string_including("command:")).to_stdout
         expect(File).to exist("lib/my_gem/cli/commands/deploy.rb")
         expect(File.read("lib/my_gem/cli/commands/deploy.rb")).to include("class Deploy < Command")
       end
