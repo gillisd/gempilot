@@ -7,7 +7,7 @@ RSpec.describe Gempilot::CLI::Commands::Create do
   let(:create_args) do
     ["--author", "Test Author", "--email", "test@example.com",
      "--summary", "A test gem", "--ruby-version", "3.4.8",
-     "--test", "minitest", "--no-exe", "--no-git", "test_gem"]
+     "--test", "minitest", "--no-exe", "--no-git", "--no-betterleaks", "test_gem"]
   end
 
   describe "generated minitest test_helper" do

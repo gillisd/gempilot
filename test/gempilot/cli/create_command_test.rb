@@ -198,6 +198,7 @@ module Gempilot
           "--no-exe",
           "--git",
           "--branch", "develop",
+          "--no-betterleaks",
           "test_gem"
         ]
 
@@ -225,6 +226,7 @@ module Gempilot
           "--test", "minitest",
           "--no-exe",
           "--no-git",
+          "--no-betterleaks",
           "test_gem"
         ]
 
@@ -580,6 +582,7 @@ module Gempilot
           "--test", "minitest",
           "--no-exe",
           "--no-git",
+          "--betterleaks",
           "test_gem"
         ]
 
@@ -607,6 +610,7 @@ module Gempilot
           "--test", "minitest",
           "--no-exe",
           "--no-git",
+          "--betterleaks",
           "gempilot-encryption"
         ]
 
@@ -624,7 +628,78 @@ module Gempilot
         end
       end
 
+      # betterleaks integration
+
+      def test_betterleaks_creates_executable_hook
+        run_create_with_betterleaks("test_gem")
+
+        assert_path_exists "test_gem/.githooks/pre-commit"
+        assert_predicate Pathname("test_gem/.githooks/pre-commit"), :executable?
+        assert_includes File.read("test_gem/.githooks/pre-commit"), "betterleaks git --pre-commit"
+      end
+
+      def test_betterleaks_creates_secrets_workflow
+        run_create_with_betterleaks("test_gem")
+
+        assert_path_exists "test_gem/.github/workflows/secrets.yml"
+      end
+
+      def test_betterleaks_wires_rakefile
+        run_create_with_betterleaks("test_gem")
+
+        assert_includes File.read("test_gem/Rakefile"), "Gempilot::BetterleaksTask.new"
+      end
+
+      def test_betterleaks_wires_bin_setup
+        run_create_with_betterleaks("test_gem")
+
+        assert_includes File.read("test_gem/bin/setup"), "git config core.hooksPath .githooks"
+      end
+
+      def test_betterleaks_sets_hooks_path_on_git_init
+        sh_calls = []
+        stdout = StringIO.new
+        args = [
+          "--author", "Test Author", "--email", "test@example.com",
+          "--summary", "A test gem", "--ruby-version", "3.4.8",
+          "--test", "minitest", "--no-exe", "--git", "--branch", "master",
+          "--betterleaks", "test_gem"
+        ]
+        command = Commands::Create.new(stdout: stdout)
+        command.define_singleton_method(:sh) { |cmd, *arguments| sh_calls << [cmd, *arguments] }
+        command.main(args)
+
+        assert_includes sh_calls, ["git", "config", "core.hooksPath", ".githooks"]
+      end
+
+      def test_no_betterleaks_flag_omits_integration
+        run_create_command("test_gem")
+
+        refute_path_exists "test_gem/.githooks/pre-commit"
+        refute_path_exists "test_gem/.github/workflows/secrets.yml"
+        refute_includes File.read("test_gem/Rakefile"), "BetterleaksTask"
+        refute_includes File.read("test_gem/bin/setup"), "core.hooksPath"
+      end
+
       private
+
+      def run_create_with_betterleaks(gem_name)
+        stdout = StringIO.new
+        args = [
+          "--author", "Test Author",
+          "--email", "test@example.com",
+          "--summary", "A test gem",
+          "--ruby-version", "3.4.8",
+          "--test", "minitest",
+          "--no-exe",
+          "--no-git",
+          "--betterleaks",
+          gem_name
+        ]
+        command = Commands::Create.new(stdout: stdout)
+        command.define_singleton_method(:sh) { |_cmd, *_arguments| nil }
+        command.main(args)
+      end
 
       def patch_gemfile_gempilot_path(gemfile_path)
         content = File.read(gemfile_path)
@@ -645,6 +720,7 @@ module Gempilot
           "--test", "minitest",
           "--no-exe",
           "--no-git",
+          "--no-betterleaks",
           *extra_args,
           gem_name
         ]

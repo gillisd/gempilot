@@ -39,5 +39,6 @@ RuboCop::RakeTask.new do |t|
 end
 
 Gempilot::VersionTask.new
+Gempilot::BetterleaksTask.new
 
 task default: [:test, :spec, :rubocop]

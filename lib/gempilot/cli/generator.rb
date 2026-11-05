@@ -61,6 +61,15 @@ module Gempilot
         File.write(path, content)
       end
 
+      def update(path, content)
+        print_action "update", path
+        File.write(path, content)
+      end
+
+      def skip(dest)
+        puts "\t#{colors.bold(colors.yellow("skip"))}\t#{colors.yellow(dest)}"
+      end
+
       def chmod(mode, path)
         print_action "chmod", path
         ::FileUtils.chmod(mode, path)
