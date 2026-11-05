@@ -39,9 +39,15 @@ RSpec.describe Gempilot::Origin do
   end
 
   describe "#push from a detached HEAD" do
-    it "raises before attempting any push" do
+    before do
+      allow(origin).to receive(:sh)
       system("git", "checkout", "--detach", "--quiet")
-      expect { described_class.new("v1.2.3").push }.to raise_error(/detached HEAD/i)
+    end
+
+    it "pushes only the tag, to origin", :aggregate_failures do
+      origin.push
+      expect(origin).to have_received(:sh).with("git", "push", "origin", "refs/tags/v1.2.3").once
+      expect(origin).not_to have_received(:sh).with("git", "push", "origin", start_with("refs/heads/"))
     end
   end
 

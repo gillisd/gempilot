@@ -5,7 +5,9 @@ module Gempilot
   ## Backs the +release:source_control_push+ task. Idempotent: pushing an
   ## already-pushed branch or tag is a no-op, so re-running a release never
   ## fails on an existing tag (unlike bundler's +already_tagged?+ guard, which
-  ## skips the push entirely once the tag exists locally).
+  ## skips the push entirely once the tag exists locally). From a detached
+  ## HEAD, such as a CI checkout of the tag, there is no branch to push, so
+  ## only the tag goes to +origin+.
   class Origin
     include StrictShell
 
@@ -16,21 +18,21 @@ module Gempilot
     end
 
     def push
-      sh "git", "push", remote, "refs/heads/#{branch}"
+      sh "git", "push", remote, "refs/heads/#{branch}" if branch
       sh "git", "push", remote, "refs/tags/#{tag}"
     end
 
     private
 
     def branch
-      @branch ||= resolve_branch
+      return @branch if defined?(@branch)
+
+      @branch = attached_branch
     end
 
-    def resolve_branch
-      name = capture("git", "rev-parse", "--abbrev-ref", "HEAD")
-      raise "Cannot push from a detached HEAD; check out a branch first" if name == "HEAD"
-
-      name
+    def attached_branch
+      out, status = Open3.capture2("git", "symbolic-ref", "--quiet", "--short", "HEAD")
+      out.strip if status.success?
     end
 
     def remote
@@ -38,15 +40,10 @@ module Gempilot
     end
 
     def configured_remote
+      return unless branch
+
       out, status = Open3.capture2("git", "config", "--get", "branch.#{branch}.remote")
       out.strip if status.success?
-    end
-
-    def capture(*args)
-      out, status = Open3.capture2(*args)
-      raise "Command #{args.join(" ").inspect} failed (exit #{status.exitstatus})" unless status.success?
-
-      out.strip
     end
   end
 end
