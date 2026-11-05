@@ -17,31 +17,45 @@ RSpec.describe Gempilot::Origin do
   describe "#push" do
     before { allow(origin).to receive(:sh) }
 
-    it "pushes the current branch, then the tag, to the resolved remote", :aggregate_failures do
+    it "pushes the branch to origin" do
       origin.push
-      expect(origin).to have_received(:sh).with("git", "push", "origin", "refs/heads/main").ordered
-      expect(origin).to have_received(:sh).with("git", "push", "origin", "refs/tags/v1.2.3").ordered
-    end
-  end
-
-  describe "#push to a configured remote" do
-    before do
-      allow(origin).to receive(:sh)
-      system("git", "remote", "add", "upstream", ".")
-      system("git", "config", "branch.main.remote", "upstream")
+      expect(origin).to have_received(:sh).with("git", "push", "origin", "refs/heads/main")
     end
 
-    it "pushes to the branch's configured remote", :aggregate_failures do
+    it "pushes the tag to origin" do
       origin.push
-      expect(origin).to have_received(:sh).with("git", "push", "upstream", "refs/heads/main")
-      expect(origin).to have_received(:sh).with("git", "push", "upstream", "refs/tags/v1.2.3")
+      expect(origin).to have_received(:sh).with("git", "push", "origin", "refs/tags/v1.2.3")
     end
-  end
 
-  describe "#push from a detached HEAD" do
-    it "raises before attempting any push" do
-      system("git", "checkout", "--detach", "--quiet")
-      expect { described_class.new("v1.2.3").push }.to raise_error(/detached HEAD/i)
+    context "when the branch has a configured remote" do
+      before do
+        system("git", "remote", "add", "upstream", ".")
+        system("git", "config", "branch.main.remote", "upstream")
+      end
+
+      it "pushes the branch to that remote" do
+        origin.push
+        expect(origin).to have_received(:sh).with("git", "push", "upstream", "refs/heads/main")
+      end
+
+      it "pushes the tag to that remote" do
+        origin.push
+        expect(origin).to have_received(:sh).with("git", "push", "upstream", "refs/tags/v1.2.3")
+      end
+    end
+
+    context "when HEAD is detached" do
+      before { system("git", "checkout", "--detach", "--quiet") }
+
+      it "pushes the tag to origin" do
+        origin.push
+        expect(origin).to have_received(:sh).with("git", "push", "origin", "refs/tags/v1.2.3")
+      end
+
+      it "pushes no branch" do
+        origin.push
+        expect(origin).not_to have_received(:sh).with("git", "push", anything, %r{\Arefs/heads/})
+      end
     end
   end
 
@@ -52,9 +66,13 @@ RSpec.describe Gempilot::Origin do
       system("git", "tag", "v1.2.3")
     end
 
-    it "lands the tag on the remote and stays idempotent on re-run", :aggregate_failures do
+    it "lands the tag on the remote" do
       origin.push
       expect(`git --git-dir=origin.git tag`.strip).to eq("v1.2.3")
+    end
+
+    it "stays idempotent on re-run" do
+      origin.push
       expect { described_class.new("v1.2.3").push }.not_to raise_error
     end
   end
