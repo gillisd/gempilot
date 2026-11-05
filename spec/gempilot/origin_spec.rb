@@ -16,12 +16,19 @@ RSpec.describe Gempilot::Origin do
 
   describe "#push" do
     let(:pushes) { [] }
+    let(:remotes) { pushes.map(&:first).uniq }
+    let(:refs) { pushes.map(&:last) }
 
     before { allow(origin).to receive(:sh) { |*command| pushes << command.drop(2) } }
 
-    it "pushes the current branch, then the tag, to origin" do
+    it "pushes the branch before the tag" do
       origin.push
-      expect(pushes).to eq([%w[origin refs/heads/main], %w[origin refs/tags/v1.2.3]])
+      expect(refs).to eq(%w[refs/heads/main refs/tags/v1.2.3])
+    end
+
+    it "pushes to origin" do
+      origin.push
+      expect(remotes).to eq(%w[origin])
     end
 
     context "when the branch has a configured remote" do
@@ -32,16 +39,21 @@ RSpec.describe Gempilot::Origin do
 
       it "pushes to that remote" do
         origin.push
-        expect(pushes).to eq([%w[upstream refs/heads/main], %w[upstream refs/tags/v1.2.3]])
+        expect(remotes).to eq(%w[upstream])
       end
     end
 
     context "when HEAD is detached" do
       before { system("git", "checkout", "--detach", "--quiet") }
 
-      it "pushes only the tag, to origin" do
+      it "pushes only the tag" do
         origin.push
-        expect(pushes).to eq([%w[origin refs/tags/v1.2.3]])
+        expect(refs).to eq(%w[refs/tags/v1.2.3])
+      end
+
+      it "pushes to origin" do
+        origin.push
+        expect(remotes).to eq(%w[origin])
       end
     end
   end
