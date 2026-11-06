@@ -7,6 +7,7 @@ module Gempilot
       class Destroy < Command
         using String::Inflectable
 
+        include ::FileUtils
         include GemContext
 
         usage "[options] TYPE CONSTANT"
@@ -57,8 +58,8 @@ module Gempilot
           lib_path = constant.lib_path
           test_path = constant.test_path(@test_framework)
 
-          remove_file(lib_path)
-          remove_file(test_path)
+          destroy_file(lib_path)
+          destroy_file(test_path)
           cleanup_empty_dirs(lib_path, test_path)
         end
 
@@ -71,7 +72,7 @@ module Gempilot
         def destroy_module(constant)
           lib_path = constant.lib_path
 
-          remove_file(lib_path)
+          destroy_file(lib_path)
           remove_empty_parents(File.dirname(lib_path), File.join("lib", @require_path))
         end
 
@@ -79,20 +80,20 @@ module Gempilot
           name = name.split("::").last if name.include?("::")
           file_name = name.underscore
           file_path = File.join("lib", @require_path, "cli", "commands", "#{file_name}.rb")
-          remove_file(file_path)
+          destroy_file(file_path)
 
           test_path = if @test_framework == :rspec
                         File.join("spec", @require_path, "cli", "commands", "#{file_name}_spec.rb")
                       else
                         File.join("test", @require_path, "cli", "commands", "#{file_name}_test.rb")
                       end
-          remove_file(test_path)
+          destroy_file(test_path)
         end
 
-        def remove_file(path)
+        def destroy_file(path)
           if File.exist?(path)
             print_remove(path)
-            ::FileUtils.rm(path)
+            rm(path)
           else
             print_skip(path)
           end
@@ -104,7 +105,7 @@ module Gempilot
             break unless Dir.empty?(dir)
 
             print_remove(dir)
-            ::FileUtils.rmdir(dir)
+            rmdir(dir)
             dir = File.dirname(dir)
           end
         end

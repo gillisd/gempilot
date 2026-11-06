@@ -5,18 +5,20 @@ require "stringio"
 module Gempilot
   class CLI
     class DestroyCommandTest < Minitest::Test
+      include FileUtils
+
       def setup
         @tmpdir = Dir.mktmpdir("destroy_command_test")
         @original_dir = Dir.pwd
         Dir.chdir(@tmpdir)
-        FileUtils.mkdir_p("lib/my_gem")
-        FileUtils.mkdir_p("test")
+        mkdir_p("lib/my_gem")
+        mkdir_p("test")
         File.write("my_gem.gemspec", 'Gem::Specification.new { |s| s.name = "my_gem" }')
       end
 
       def teardown
         Dir.chdir(@original_dir)
-        FileUtils.rm_rf(@tmpdir)
+        rm_rf(@tmpdir)
       end
 
       # --- Class destruction ---
@@ -37,9 +39,9 @@ module Gempilot
       end
 
       def test_destroy_class_removes_empty_parent_dirs
-        FileUtils.mkdir_p("lib/my_gem/services")
+        mkdir_p("lib/my_gem/services")
         create_class_file("lib/my_gem/services/authentication.rb")
-        FileUtils.mkdir_p("test/my_gem/services")
+        mkdir_p("test/my_gem/services")
         create_test_file("test/my_gem/services/authentication_test.rb")
 
         run_destroy_command("class", "MyGem::Services::Authentication")
@@ -53,7 +55,7 @@ module Gempilot
       end
 
       def test_destroy_class_preserves_non_empty_parent_dirs
-        FileUtils.mkdir_p("lib/my_gem/services")
+        mkdir_p("lib/my_gem/services")
         create_class_file("lib/my_gem/services/authentication.rb")
         create_class_file("lib/my_gem/services/authorization.rb")
 
@@ -74,8 +76,8 @@ module Gempilot
       end
 
       def test_destroy_class_removes_rspec_spec_file
-        FileUtils.rm_rf("test")
-        FileUtils.mkdir_p("spec/my_gem")
+        rm_rf("test")
+        mkdir_p("spec/my_gem")
         File.write("spec/spec_helper.rb", "")
         create_class_file("lib/my_gem/authentication.rb")
         File.write("spec/my_gem/authentication_spec.rb", "# spec")
@@ -97,7 +99,7 @@ module Gempilot
 
       def test_destroy_module_does_not_touch_test_dir
         create_class_file("lib/my_gem/middleware.rb")
-        FileUtils.mkdir_p("test/my_gem")
+        mkdir_p("test/my_gem")
         File.write("test/my_gem/something_test.rb", "# test")
 
         run_destroy_command("module", "MyGem::Middleware")
@@ -108,7 +110,7 @@ module Gempilot
       # --- Command destruction ---
 
       def test_destroy_command_removes_command_file
-        FileUtils.mkdir_p("lib/my_gem/cli/commands")
+        mkdir_p("lib/my_gem/cli/commands")
         File.write("lib/my_gem/cli/commands/deploy.rb", "# command")
 
         run_destroy_command("command", "deploy")
@@ -117,9 +119,9 @@ module Gempilot
       end
 
       def test_destroy_command_removes_test_file
-        FileUtils.mkdir_p("lib/my_gem/cli/commands")
+        mkdir_p("lib/my_gem/cli/commands")
         File.write("lib/my_gem/cli/commands/deploy.rb", "# command")
-        FileUtils.mkdir_p("test/my_gem/cli/commands")
+        mkdir_p("test/my_gem/cli/commands")
         File.write("test/my_gem/cli/commands/deploy_test.rb", "# test")
 
         run_destroy_command("command", "deploy")
@@ -129,12 +131,12 @@ module Gempilot
       end
 
       def test_destroy_command_removes_rspec_test_file
-        FileUtils.rm_rf("test")
-        FileUtils.mkdir_p("spec")
+        rm_rf("test")
+        mkdir_p("spec")
         File.write("spec/spec_helper.rb", "")
-        FileUtils.mkdir_p("lib/my_gem/cli/commands")
+        mkdir_p("lib/my_gem/cli/commands")
         File.write("lib/my_gem/cli/commands/deploy.rb", "# command")
-        FileUtils.mkdir_p("spec/my_gem/cli/commands")
+        mkdir_p("spec/my_gem/cli/commands")
         File.write("spec/my_gem/cli/commands/deploy_spec.rb", "# spec")
 
         run_destroy_command("command", "deploy")
@@ -146,7 +148,7 @@ module Gempilot
       # --- Error handling ---
 
       def test_destroy_fails_without_gemspec
-        FileUtils.rm("my_gem.gemspec")
+        rm("my_gem.gemspec")
         stdout = StringIO.new
         command = Commands::Destroy.new(stdout: stdout)
 
@@ -184,12 +186,12 @@ module Gempilot
       end
 
       def create_class_file(path)
-        FileUtils.mkdir_p(File.dirname(path))
+        mkdir_p(File.dirname(path))
         File.write(path, "# placeholder\n")
       end
 
       def create_test_file(path)
-        FileUtils.mkdir_p(File.dirname(path))
+        mkdir_p(File.dirname(path))
         File.write(path, "# test placeholder\n")
       end
     end

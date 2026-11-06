@@ -2,6 +2,8 @@ require "spec_helper"
 
 # Runs the real rbs CLI inside a minimal gem whose only dependency is rbs.
 RSpec.describe Gempilot::RBSTask do
+  include FileUtils
+
   let(:rbs_task) { described_class.new(root: Dir.pwd) }
 
   around do |example|
@@ -22,7 +24,7 @@ RSpec.describe Gempilot::RBSTask do
   end
 
   def write_sig(source)
-    FileUtils.mkdir_p("sig")
+    mkdir_p("sig")
     File.write("sig/my_gem.rbs", source)
   end
 
@@ -115,7 +117,7 @@ RSpec.describe Gempilot::RBSTask do
   describe "rbs:collection:update" do
     before do
       invoke("rbs:collection:init")
-      FileUtils.rm_f("rbs_collection.lock.yaml")
+      rm_f("rbs_collection.lock.yaml")
     end
 
     it "writes the lockfile" do

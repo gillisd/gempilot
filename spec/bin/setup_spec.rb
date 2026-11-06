@@ -4,6 +4,8 @@ require "open3"
 # Integration: gempilot's own bin/setup, run against a copy of this checkout,
 # installs the rbs collection through rake setup. Needs network access.
 RSpec.describe "bin/setup", :integration do
+  include FileUtils
+
   let(:gempilot_root) { Pathname(__dir__).parent.parent }
   let(:setup_run) { Bundler.with_unbundled_env { Open3.capture2e("bin/setup") } }
 
@@ -17,14 +19,14 @@ RSpec.describe "bin/setup", :integration do
       source = gempilot_root / file
       next unless source.file?
 
-      FileUtils.mkdir_p(File.dirname(file))
-      FileUtils.cp(source, file, preserve: true)
+      mkdir_p(File.dirname(file))
+      cp(source, file, preserve: true)
     end
   end
 
   before do
     copy_checkout
-    FileUtils.rm_f("rbs_collection.lock.yaml")
+    rm_f("rbs_collection.lock.yaml")
     setup_run
   end
 

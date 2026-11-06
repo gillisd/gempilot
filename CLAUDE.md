@@ -25,6 +25,10 @@ A CLI tool for creating and managing Ruby gems, built on CommandKit.
 - `SegmentedVersion` value object (`lib/gempilot/segmented_version.rb`) owns version parsing and bump arithmetic; every bump moves to the smallest version of the requested shape greater than the current version (RubyGems ordering)
 - CommandKit::Commands::AutoLoad maps filenames in `commands/` to command names
 
+### Ruby Conventions
+- Every `rescue` and `ensure` sits inside an explicit `begin ... end`; never attach one directly to a `def` or `do` body (`Style/RedundantBegin` is disabled for this). Capture state to restore before `begin`, so `ensure` only guards what it undoes
+- A spec, class, or module that calls `FileUtils` more than once mixes it in (`include FileUtils`) and calls its methods bare. Don't define methods that share a name with FileUtils' own helpers in such a class: FileUtils calls them on `self` (e.g. `rm` calls `remove_file`), so an override changes FileUtils' behavior. Where a wrapper deliberately overrides one (e.g. `Generator#touch`), it reaches the original with `super`
+
 ### Testing
 - Minitest with minitest-reporters
 - Run tests: `bundle exec rake test`
