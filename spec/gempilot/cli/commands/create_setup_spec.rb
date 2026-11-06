@@ -13,11 +13,13 @@ RSpec.describe Gempilot::CLI::Commands::Create, :integration do
       "GIT_COMMITTER_NAME" => "Test Author", "GIT_COMMITTER_EMAIL" => "test@example.com"
     }
     saved = ENV.to_h.slice(*git_identity.keys)
-    ENV.update(git_identity)
-    example.run
-  ensure
-    git_identity.each_key { ENV.delete(it) }
-    ENV.update(saved)
+    begin
+      ENV.update(git_identity)
+      example.run
+    ensure
+      git_identity.each_key { ENV.delete(it) }
+      ENV.update(saved)
+    end
   end
 
   # The scaffolded Gemfile resolves gempilot from rubygems.org; point it at

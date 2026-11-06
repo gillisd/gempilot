@@ -8,12 +8,14 @@ RSpec.describe Gempilot::VersionTask do
 
   around do |example|
     old_app = Rake.application
-    Rake.application = Rake::Application.new
-    Dir.mktmpdir("version_task_spec") do |tmpdir|
-      Dir.chdir(tmpdir) { example.run }
+    begin
+      Rake.application = Rake::Application.new
+      Dir.mktmpdir("version_task_spec") do |tmpdir|
+        Dir.chdir(tmpdir) { example.run }
+      end
+    ensure
+      Rake.application = old_app
     end
-  ensure
-    Rake.application = old_app
   end
 
   before do

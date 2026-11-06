@@ -6,12 +6,14 @@ RSpec.describe Gempilot::RBSTask do
 
   around do |example|
     old_app = Rake.application
-    Rake.application = Rake::Application.new
-    Dir.mktmpdir("rbs_task_spec") do |tmpdir|
-      Dir.chdir(tmpdir) { Bundler.with_unbundled_env { example.run } }
+    begin
+      Rake.application = Rake::Application.new
+      Dir.mktmpdir("rbs_task_spec") do |tmpdir|
+        Dir.chdir(tmpdir) { Bundler.with_unbundled_env { example.run } }
+      end
+    ensure
+      Rake.application = old_app
     end
-  ensure
-    Rake.application = old_app
   end
 
   def write_gem
