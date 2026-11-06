@@ -2,11 +2,7 @@ source "https://rubygems.org"
 
 gemspec
 
-<% if @gempilot_path -%>
-gem "gempilot", path: <%= @gempilot_path.inspect %>, require: false
-<% else -%>
 gem "gempilot", require: false
-<% end -%>
 gem "irb"
 gem "json", "~> 2.21" # temporary json 3.0.0 is currently breaking everything
 <% if @test_framework == :minitest -%>

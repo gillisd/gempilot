@@ -6,8 +6,6 @@ require "stringio"
 module Gempilot
   class CLI
     class CreateCommandTest < Minitest::Test
-      GEMPILOT_ROOT = File.expand_path("../../..", __dir__).freeze
-
       def setup
         @tmpdir = Dir.mktmpdir("create_command_test")
         @original_dir = Dir.pwd
@@ -164,19 +162,6 @@ module Gempilot
 
         assert_includes gemfile, 'gem "gempilot"'
         refute_includes gemfile, 'gem "warning"'
-      end
-
-      def test_gemfile_bundles_gempilot_from_rubygems_by_default
-        run_create_command("test_gem")
-
-        assert_includes File.readlines("test_gem/Gemfile", chomp: true), 'gem "gempilot", require: false'
-      end
-
-      def test_gempilot_path_option_bundles_gempilot_from_that_path
-        run_create_command("test_gem", "--gempilot-path", GEMPILOT_ROOT)
-
-        assert_includes File.readlines("test_gem/Gemfile", chomp: true),
-                        %(gem "gempilot", path: #{GEMPILOT_ROOT.inspect}, require: false)
       end
 
       def test_rspec_gemfile_has_rspec_gem
@@ -579,60 +564,6 @@ module Gempilot
 
         assert_includes ["\"\"", "nil"], lines[0],
                         "Author default should be empty string or nil when git config unavailable"
-      end
-
-      # Integration: generated gem's default rake task passes
-
-      def test_generated_gem_default_rake_task_passes
-        stdout = StringIO.new
-        args = [
-          "--author", "Test Author",
-          "--email", "test@example.com",
-          "--summary", "A test gem",
-          "--ruby-version", RUBY_VERSION,
-          "--test", "minitest",
-          "--no-exe",
-          "--no-git",
-          "--gempilot-path", GEMPILOT_ROOT,
-          "test_gem"
-        ]
-
-        command = Commands::Create.new(stdout: stdout)
-        command.main(args)
-
-        Dir.chdir("test_gem") do
-          Bundler.with_unbundled_env do
-            output = `bundle exec rake 2>&1`
-
-            assert_equal 0, $CHILD_STATUS.exitstatus, "Default rake task failed in generated gem:\n#{output}"
-          end
-        end
-      end
-
-      def test_hyphenated_gem_default_rake_task_passes
-        stdout = StringIO.new
-        args = [
-          "--author", "Test Author",
-          "--email", "test@example.com",
-          "--summary", "A test gem",
-          "--ruby-version", RUBY_VERSION,
-          "--test", "minitest",
-          "--no-exe",
-          "--no-git",
-          "--gempilot-path", GEMPILOT_ROOT,
-          "gempilot-encryption"
-        ]
-
-        command = Commands::Create.new(stdout: stdout)
-        command.main(args)
-
-        Dir.chdir("gempilot-encryption") do
-          Bundler.with_unbundled_env do
-            output = `bundle exec rake 2>&1`
-
-            assert_equal 0, $CHILD_STATUS.exitstatus, "Default rake task failed in hyphenated gem:\n#{output}"
-          end
-        end
       end
 
       private

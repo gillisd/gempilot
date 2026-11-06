@@ -32,7 +32,7 @@ A CLI tool for creating and managing Ruby gems, built on CommandKit.
 ### Testing
 - Minitest with minitest-reporters
 - Run tests: `bundle exec rake test`
-- End-to-end tests (`spec/e2e/`, and the `*_default_rake_task_passes` tests in `test/gempilot/cli/create_command_test.rb`) build a full gem project and run it. They use no mocks, stubs, or wrapped methods, and never patch generated files mid-run; if a real run can't work, fix the code (e.g. `gempilot create --gempilot-path` points a generated gem at this checkout) rather than faking around it
+- End-to-end specs live in `spec/e2e/`. They build gempilot from this checkout, install it into an isolated gem directory (`spec/support/installed_gempilot.rb`), and run the installed `gempilot` executable to build a full gem project and run it. They use no mocks, stubs, or wrapped methods, and never patch generated files mid-run; if a real run can't work, fix the code rather than faking around it
 
 ### Generated Gem Features
 - Zeitwerk autoloading with `LOADER` constant exposed for eager loading
