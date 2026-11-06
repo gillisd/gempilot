@@ -16,7 +16,10 @@ RSpec.describe Gempilot::RBSTask do
   describe "task definitions" do
     before { rbs_task }
 
-    %w[rbs:setup rbs:clobber rbs:collection:init rbs:collection:install rbs:collection:update].each do |name|
+    %w[
+      rbs:setup rbs:clobber rbs:validate
+      rbs:collection:init rbs:collection:install rbs:collection:update
+    ].each do |name|
       it "defines #{name}" do
         expect(Rake::Task).to be_task_defined(name)
       end
@@ -56,6 +59,22 @@ RSpec.describe Gempilot::RBSTask do
       rbs_task
       Rake::Task["rbs:clobber"].invoke
       expect(File).not_to exist(".gem_rbs_collection")
+    end
+  end
+
+  describe "rbs:validate" do
+    before do
+      File.write("rbs_collection.yaml", "gems: []\n")
+      allow(rbs_task).to receive(:sh)
+    end
+
+    it "sets up rbs first" do
+      expect(Rake::Task["rbs:validate"].prerequisites).to eq(["rbs:setup"])
+    end
+
+    it "runs rbs validate" do
+      Rake::Task["rbs:validate"].invoke
+      expect(rbs_task).to have_received(:sh).with("bundle", "exec", "rbs", "validate", chdir: Dir.pwd)
     end
   end
 

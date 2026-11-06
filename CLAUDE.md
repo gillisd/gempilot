@@ -21,7 +21,7 @@ A CLI tool for creating and managing Ruby gems, built on CommandKit.
 - Generator module (`lib/gempilot/cli/generator.rb`) provides template rendering via ERB
 - GemContext module (`lib/gempilot/cli/gem_context.rb`) shared by new, destroy, release, console
 - `GemConstant` value object (`lib/gempilot/gem_constant.rb`) owns constant→namespace/path resolution for `new`/`destroy`; constants are rooted at the gem module by construction
-- `Gempilot::RBSTask` (`lib/gempilot/rbs_task.rb`, a `Rake::TaskLib`) wraps `rbs collection`: `rbs:setup`, `rbs:clobber`, `rbs:collection:init/install/update` (requires `rbs` in the consuming gem's bundle)
+- `Gempilot::RBSTask` (`lib/gempilot/rbs_task.rb`, a `Rake::TaskLib`) wraps `rbs collection`: `rbs:setup`, `rbs:clobber`, `rbs:validate`, `rbs:collection:init/install/update` (requires `rbs` in the consuming gem's bundle)
 - `SegmentedVersion` value object (`lib/gempilot/segmented_version.rb`) owns version parsing and bump arithmetic; every bump moves to the smallest version of the requested shape greater than the current version (RubyGems ordering)
 - CommandKit::Commands::AutoLoad maps filenames in `commands/` to command names
 

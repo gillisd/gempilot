@@ -31,6 +31,7 @@ module Gempilot
       namespace :rbs do
         define_setup_task
         define_clobber_task
+        define_validate_task
         namespace(:collection) { define_collection_tasks }
       end
       define_top_level_hooks
@@ -51,6 +52,11 @@ module Gempilot
       dir = collection_dir
       desc "Remove the installed rbs collection"
       task(:clobber) { rm_rf dir }
+    end
+
+    def define_validate_task
+      desc "Validate the RBS signatures against the installed collection"
+      task(validate: ["rbs:setup"]) { sh "bundle", "exec", "rbs", "validate", chdir: root.to_s }
     end
 
     def define_collection_tasks
