@@ -239,11 +239,11 @@ module Gempilot
         end
         command.main(args)
 
-        bundle_call = system_calls.find { |c| c[:command].first == "bundle" }
+        setup_call = system_calls.find { |c| c[:command].first == "bin/setup" }
 
-        refute_nil bundle_call, "Expected a 'bundle' system call"
-        assert_nil bundle_call[:bundle_gemfile],
-                   "bundle install should run without BUNDLE_GEMFILE set (inside Bundler.with_unbundled_env)"
+        refute_nil setup_call, "Expected a 'bin/setup' system call"
+        assert_nil setup_call[:bundle_gemfile],
+                   "bin/setup should run without BUNDLE_GEMFILE set (inside Bundler.with_unbundled_env)"
       end
 
       def test_generated_files_have_no_leading_blank_lines

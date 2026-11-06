@@ -85,9 +85,11 @@ module Gempilot
         chmod "+x", "#{@gem_name}/exe/#{@gem_name}"
       end
 
-      def run_bundle_install
+      # bin/setup installs the bundle and runs <tt>rake setup</tt>, the same
+      # entry point a developer uses after cloning the gem.
+      def run_setup
         cd @gem_name do
-          sh "bundle", "install"
+          sh "bin/setup"
         end
       end
 

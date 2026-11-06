@@ -83,7 +83,7 @@ module Gempilot
           render_dev_files
           render_config_files
           render_executable
-          run_bundle_install
+          run_setup
           initialize_git_repo
         end
 

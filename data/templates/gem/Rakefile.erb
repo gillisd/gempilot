@@ -21,6 +21,9 @@ Gempilot::VersionTask.new
 require "gempilot/zeitwerk_task"
 Gempilot::ZeitwerkTask.new
 
+require "gempilot/rbs_task"
+Gempilot::RBSTask.new
+
 <% if @test_framework == :minitest -%>
 task default: [:test, :rubocop]
 <% elsif @test_framework == :rspec -%>
