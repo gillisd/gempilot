@@ -39,5 +39,6 @@ RuboCop::RakeTask.new do |t|
 end
 
 Gempilot::VersionTask.new
+Gempilot::RBSTask.new
 
 task default: [:test, :spec, :rubocop]
