@@ -25,7 +25,7 @@ require "gempilot/rbs_task"
 Gempilot::RBSTask.new
 
 <% if @test_framework == :minitest -%>
-task default: [:test, :rubocop]
+task default: [:test, :rubocop, "rbs:validate"]
 <% elsif @test_framework == :rspec -%>
-task default: [:spec, :rubocop]
+task default: [:spec, :rubocop, "rbs:validate"]
 <% end -%>

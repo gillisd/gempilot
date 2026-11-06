@@ -41,4 +41,4 @@ end
 Gempilot::VersionTask.new
 Gempilot::RBSTask.new
 
-task default: [:test, :spec, :rubocop]
+task default: [:test, :spec, :rubocop, "rbs:validate"]

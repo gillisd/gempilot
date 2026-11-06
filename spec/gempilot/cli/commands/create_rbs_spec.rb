@@ -28,6 +28,16 @@ RSpec.describe Gempilot::CLI::Commands::Create do
     it "instantiates the rbs task" do
       expect(rakefile).to include("Gempilot::RBSTask.new")
     end
+
+    it "validates rbs in the default task" do
+      expect(rakefile).to include('task default: [:test, :rubocop, "rbs:validate"]')
+    end
+  end
+
+  describe "generated CI workflow" do
+    it "validates rbs" do
+      expect(File.read("test_gem/.github/workflows/ci.yml")).to include("bundle exec rake rbs:validate")
+    end
   end
 
   describe "generated Gemfile" do
