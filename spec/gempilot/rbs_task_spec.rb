@@ -1,5 +1,6 @@
 require "spec_helper"
 
+# Runs the real rbs CLI inside a minimal gem whose only dependency is rbs.
 RSpec.describe Gempilot::RBSTask do
   let(:rbs_task) { described_class.new(root: Dir.pwd) }
 
@@ -7,15 +8,32 @@ RSpec.describe Gempilot::RBSTask do
     old_app = Rake.application
     Rake.application = Rake::Application.new
     Dir.mktmpdir("rbs_task_spec") do |tmpdir|
-      Dir.chdir(tmpdir) { example.run }
+      Dir.chdir(tmpdir) { Bundler.with_unbundled_env { example.run } }
     end
   ensure
     Rake.application = old_app
   end
 
-  describe "task definitions" do
-    before { rbs_task }
+  def write_gem
+    File.write("Gemfile", %(source "https://rubygems.org"\ngem "rbs"\n))
+    system("bundle", "lock", "--local", out: File::NULL, exception: true)
+  end
 
+  def write_sig(source)
+    FileUtils.mkdir_p("sig")
+    File.write("sig/my_gem.rbs", source)
+  end
+
+  def invoke(name)
+    Rake::Task[name].invoke
+  end
+
+  before do
+    write_gem
+    rbs_task
+  end
+
+  describe "task definitions" do
     %w[
       rbs:setup rbs:clobber rbs:validate
       rbs:collection:init rbs:collection:install rbs:collection:update
@@ -26,91 +44,93 @@ RSpec.describe Gempilot::RBSTask do
     end
   end
 
-  describe "rbs:setup" do
-    it "installs the collection" do
-      rbs_task
-      expect(Rake::Task["rbs:setup"].prerequisites).to eq(["rbs:collection:install"])
-    end
-  end
-
   describe "setup" do
-    it "sets up rbs" do
-      rbs_task
-      expect(Rake::Task["setup"].prerequisites).to include("rbs:setup")
+    it "installs the collection" do
+      invoke("setup")
+      expect(Pathname(".gem_rbs_collection")).to be_directory
     end
 
-    it "keeps an existing description" do
-      Rake::Task.define_task(:setup).add_description("Prepare everything")
-      rbs_task
-      expect(Rake::Task["setup"].comment).to eq("Prepare everything")
+    context "when setup is already described" do
+      let(:rbs_task) do
+        Rake::Task.define_task(:setup).add_description("Prepare everything")
+        described_class.new(root: Dir.pwd)
+      end
+
+      it "keeps the existing description" do
+        expect(Rake::Task["setup"].comment).to eq("Prepare everything")
+      end
     end
   end
 
   describe "clobber" do
-    it "clobbers rbs" do
-      rbs_task
-      expect(Rake::Task["clobber"].prerequisites).to include("rbs:clobber")
+    it "removes the installed collection" do
+      invoke("rbs:setup")
+      invoke("clobber")
+      expect(Pathname(".gem_rbs_collection")).not_to exist
+    end
+  end
+
+  describe "rbs:setup" do
+    it "installs the collection" do
+      invoke("rbs:setup")
+      expect(Pathname(".gem_rbs_collection")).to be_directory
+    end
+
+    it "pins the collection" do
+      invoke("rbs:setup")
+      expect(Pathname("rbs_collection.lock.yaml")).to be_file
     end
   end
 
   describe "rbs:clobber" do
     it "removes the installed collection" do
-      FileUtils.mkdir_p(".gem_rbs_collection/json")
-      rbs_task
-      Rake::Task["rbs:clobber"].invoke
-      expect(File).not_to exist(".gem_rbs_collection")
-    end
-  end
-
-  describe "rbs:validate" do
-    before do
-      File.write("rbs_collection.yaml", "gems: []\n")
-      allow(rbs_task).to receive(:sh)
-    end
-
-    it "sets up rbs first" do
-      expect(Rake::Task["rbs:validate"].prerequisites).to eq(["rbs:setup"])
-    end
-
-    it "runs rbs validate" do
-      Rake::Task["rbs:validate"].invoke
-      expect(rbs_task).to have_received(:sh).with("bundle", "exec", "rbs", "validate", chdir: Dir.pwd)
+      invoke("rbs:setup")
+      invoke("rbs:clobber")
+      expect(Pathname(".gem_rbs_collection")).not_to exist
     end
   end
 
   describe "rbs:collection:init" do
-    before { allow(rbs_task).to receive(:sh) }
-
-    it "runs rbs collection init when rbs_collection.yaml is missing" do
-      Rake::Task["rbs:collection:init"].invoke
-      expect(rbs_task).to have_received(:sh).with("bundle", "exec", "rbs", "collection", "init", chdir: Dir.pwd)
+    it "writes rbs_collection.yaml when it is missing" do
+      invoke("rbs:collection:init")
+      expect(Pathname("rbs_collection.yaml")).to be_file
     end
 
     it "leaves an existing rbs_collection.yaml alone" do
-      File.write("rbs_collection.yaml", "gems: []\n")
-      Rake::Task["rbs:collection:init"].invoke
-      expect(rbs_task).not_to have_received(:sh)
+      File.write("rbs_collection.yaml", "path: .gem_rbs_collection\n")
+      invoke("rbs:collection:init")
+      expect(File.read("rbs_collection.yaml")).to eq("path: .gem_rbs_collection\n")
     end
   end
 
   describe "rbs:collection:install" do
-    before do
-      File.write("rbs_collection.yaml", "gems: []\n")
-      allow(rbs_task).to receive(:sh)
-    end
-
-    it "runs rbs collection install" do
-      Rake::Task["rbs:collection:install"].invoke
-      expect(rbs_task).to have_received(:sh).with("bundle", "exec", "rbs", "collection", "install", chdir: Dir.pwd)
+    it "installs the collection" do
+      invoke("rbs:collection:install")
+      expect(Pathname(".gem_rbs_collection")).to be_directory
     end
   end
 
   describe "rbs:collection:update" do
-    before { allow(rbs_task).to receive(:sh) }
+    before do
+      invoke("rbs:collection:init")
+      FileUtils.rm_f("rbs_collection.lock.yaml")
+    end
 
-    it "runs rbs collection update" do
-      Rake::Task["rbs:collection:update"].invoke
-      expect(rbs_task).to have_received(:sh).with("bundle", "exec", "rbs", "collection", "update", chdir: Dir.pwd)
+    it "writes the lockfile" do
+      invoke("rbs:collection:update")
+      expect(Pathname("rbs_collection.lock.yaml")).to be_file
+    end
+  end
+
+  describe "rbs:validate" do
+    it "passes for signatures that resolve" do
+      write_sig("module MyGem\n  def self.name: () -> String\nend\n")
+      expect { invoke("rbs:validate") }.not_to raise_error
+    end
+
+    it "fails for a signature naming an unknown type" do
+      write_sig("module MyGem\n  def self.name: () -> NoSuchType\nend\n")
+      expect { invoke("rbs:validate") }.to raise_error(RuntimeError, /rbs -I sig validate/)
     end
   end
 end

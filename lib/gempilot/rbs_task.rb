@@ -8,7 +8,8 @@ module Gempilot
   ## Wraps <tt>rbs collection</tt>: +rbs_collection.yaml+ lists the gems whose
   ## signatures to fetch, +rbs_collection.lock.yaml+ pins them, and the
   ## signatures install into +.gem_rbs_collection+. The gem's bundle must
-  ## include +rbs+.
+  ## include +rbs+. +rbs:validate+ checks the signatures in +sig/+, which
+  ## <tt>rbs validate</tt> skips unless passed <tt>-I sig</tt>.
   ##
   ## Hooks into the top-level task tree: +setup+ (run by <tt>bin/setup</tt>)
   ## depends on +rbs:setup+, and +clobber+ depends on +rbs:clobber+.
@@ -55,8 +56,8 @@ module Gempilot
     end
 
     def define_validate_task
-      desc "Validate the RBS signatures against the installed collection"
-      task(validate: ["rbs:setup"]) { sh "bundle", "exec", "rbs", "validate", chdir: root.to_s }
+      desc "Validate sig/ against the installed collection"
+      task(validate: ["rbs:setup"]) { sh "bundle", "exec", "rbs", "-I", "sig", "validate", chdir: root.to_s }
     end
 
     def define_collection_tasks
