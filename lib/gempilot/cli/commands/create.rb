@@ -55,6 +55,9 @@ module Gempilot
         option :branch, value: { type: String },
                         desc: "Git branch name"
 
+        option :gempilot_path, value: { type: String, usage: "PATH" },
+                               desc: "Bundle gempilot from PATH instead of rubygems.org"
+
         argument :gem_name, required: false,
                             desc: "Name of the gem"
 
@@ -133,6 +136,7 @@ module Gempilot
             ask(colors.green("Summary"), default: "A new Ruby gem")
           end
           @ruby_version = options[:ruby_version]
+          @gempilot_path = options[:gempilot_path]&.then { File.expand_path(it) }
         end
 
         def collect_build_options

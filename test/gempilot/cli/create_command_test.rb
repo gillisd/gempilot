@@ -166,6 +166,19 @@ module Gempilot
         refute_includes gemfile, 'gem "warning"'
       end
 
+      def test_gemfile_bundles_gempilot_from_rubygems_by_default
+        run_create_command("test_gem")
+
+        assert_includes File.readlines("test_gem/Gemfile", chomp: true), 'gem "gempilot", require: false'
+      end
+
+      def test_gempilot_path_option_bundles_gempilot_from_that_path
+        run_create_command("test_gem", "--gempilot-path", GEMPILOT_ROOT)
+
+        assert_includes File.readlines("test_gem/Gemfile", chomp: true),
+                        %(gem "gempilot", path: #{GEMPILOT_ROOT.inspect}, require: false)
+      end
+
       def test_rspec_gemfile_has_rspec_gem
         run_create_command("test_gem", "--test", "rspec")
 
@@ -580,13 +593,12 @@ module Gempilot
           "--test", "minitest",
           "--no-exe",
           "--no-git",
+          "--gempilot-path", GEMPILOT_ROOT,
           "test_gem"
         ]
 
         command = Commands::Create.new(stdout: stdout)
         command.main(args)
-
-        patch_gemfile_gempilot_path("test_gem/Gemfile")
 
         Dir.chdir("test_gem") do
           Bundler.with_unbundled_env do
@@ -607,13 +619,12 @@ module Gempilot
           "--test", "minitest",
           "--no-exe",
           "--no-git",
+          "--gempilot-path", GEMPILOT_ROOT,
           "gempilot-encryption"
         ]
 
         command = Commands::Create.new(stdout: stdout)
         command.main(args)
-
-        patch_gemfile_gempilot_path("gempilot-encryption/Gemfile")
 
         Dir.chdir("gempilot-encryption") do
           Bundler.with_unbundled_env do
@@ -625,15 +636,6 @@ module Gempilot
       end
 
       private
-
-      def patch_gemfile_gempilot_path(gemfile_path)
-        content = File.read(gemfile_path)
-        patched = content.sub(
-          /^gem "gempilot".*$/,
-          %(gem "gempilot", path: #{GEMPILOT_ROOT.inspect}, require: false),
-        )
-        File.write(gemfile_path, patched)
-      end
 
       def run_create_command(gem_name, *extra_args)
         stdout = StringIO.new
