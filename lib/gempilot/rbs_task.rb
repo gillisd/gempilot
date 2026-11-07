@@ -2,17 +2,14 @@ require "rake/clean"
 require "rake/tasklib"
 
 module Gempilot
-  ## Rake tasks for managing a gem's RBS collection.
+  ## Defines rake tasks that install and validate a gem's RBS collection.
   ##
-  ## Consumed via <tt>require "gempilot/rbs_task"; Gempilot::RBSTask.new</tt>.
-  ## Wraps <tt>rbs collection</tt>: +rbs_collection.yaml+ lists the gems whose
-  ## signatures to fetch, +rbs_collection.lock.yaml+ pins them, and the
-  ## signatures install into +.gem_rbs_collection+. The gem's bundle must
-  ## include +rbs+. +rbs:validate+ checks the signatures in +sig/+, which
-  ## <tt>rbs validate</tt> skips unless passed <tt>-I sig</tt>.
+  ##   # Rakefile
+  ##   require "gempilot/rbs_task"
+  ##   Gempilot::RBSTask.new
   ##
-  ## Hooks into the top-level task tree: +setup+ (run by <tt>bin/setup</tt>)
-  ## depends on +rbs:setup+, and +clobber+ depends on +rbs:clobber+.
+  ##   $ rake rbs:validate
+  ##   # It's done! 27 gems' RBSs now installed.
   class RBSTask < Rake::TaskLib
     attr_reader :root
 
@@ -57,7 +54,7 @@ module Gempilot
 
     def define_validate_task
       desc "Validate sig/ against the installed collection"
-      task(validate: ["rbs:setup"]) { sh "bundle", "exec", "rbs", "-I", "sig", "validate", chdir: root.to_s }
+      task(validate: ["rbs:setup"]) { rbs("-I", "sig", "validate") }
     end
 
     def define_collection_tasks
@@ -79,7 +76,11 @@ module Gempilot
     end
 
     def rbs_collection(subcommand)
-      sh "bundle", "exec", "rbs", "collection", subcommand, chdir: root.to_s
+      rbs("collection", subcommand)
+    end
+
+    def rbs(*args)
+      Shell.run("bundle", "exec", "rbs", "--collection", collection_yaml.to_s, *args, chdir: root)
     end
   end
 end

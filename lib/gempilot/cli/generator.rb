@@ -78,13 +78,13 @@ module Gempilot
         super(source_path, dest)
       end
 
-      def sh(command, *arguments)
-        print_action "run", [command, *arguments].join(" ")
-        success = Bundler.with_unbundled_env do
-          system(command, *arguments)
-        end
-        puts colors.yellow("Warning: '#{[command, *arguments].join(" ")}' exited with non-zero status") unless success
-        success
+      ## Prints and runs a command outside gempilot's bundle.
+      ##
+      ##   run_command "bin/setup"
+      ##   # run  bin/setup
+      def run_command(*command)
+        print_action "run", command.join(" ")
+        Shell.run(*command, unbundled: true)
       end
     end
   end

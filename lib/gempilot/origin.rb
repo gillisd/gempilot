@@ -1,5 +1,3 @@
-require "open3"
-
 module Gempilot
   ## Pushes the current branch and a release tag to the branch's git remote.
   ## Backs the +release:source_control_push+ task. Idempotent: pushing an
@@ -9,8 +7,6 @@ module Gempilot
   ## HEAD, such as a CI checkout of the tag, there is no branch to push, so
   ## only the tag goes to +origin+.
   class Origin
-    include StrictShell
-
     attr_reader :tag
 
     def initialize(tag)
@@ -18,8 +14,8 @@ module Gempilot
     end
 
     def push
-      sh "git", "push", remote, "refs/heads/#{branch}" if branch
-      sh "git", "push", remote, "refs/tags/#{tag}"
+      Shell.run("git", "push", remote, "refs/heads/#{branch}") if branch
+      Shell.run("git", "push", remote, "refs/tags/#{tag}")
     end
 
     private
@@ -31,8 +27,8 @@ module Gempilot
     end
 
     def attached_branch
-      out, status = Open3.capture2("git", "symbolic-ref", "--quiet", "--short", "HEAD")
-      out.strip if status.success?
+      result = Shell.capture("git", "symbolic-ref", "--quiet", "--short", "HEAD")
+      result.output.strip if result.success?
     end
 
     def remote
@@ -42,8 +38,8 @@ module Gempilot
     def configured_remote
       return unless branch
 
-      out, status = Open3.capture2("git", "config", "--get", "branch.#{branch}.remote")
-      out.strip if status.success?
+      result = Shell.capture("git", "config", "--get", "branch.#{branch}.remote")
+      result.output.strip if result.success?
     end
   end
 end

@@ -1,9 +1,8 @@
 require "spec_helper"
 require "stringio"
 
-RSpec.describe Gempilot::CLI::Commands::Create do
+RSpec.describe Gempilot::CLI::GemScaffold do
   let(:command) { described_class.new(stdout: StringIO.new) }
-  let(:sh_calls) { [] }
 
   def create(name)
     command.main([
@@ -13,10 +12,7 @@ RSpec.describe Gempilot::CLI::Commands::Create do
                  ])
   end
 
-  before do
-    allow(command).to receive(:sh) { |*args| sh_calls << args }
-    create("test_gem")
-  end
+  before { create("test_gem") }
 
   describe "generated Rakefile rbs wiring" do
     let(:rakefile) { File.read("test_gem/Rakefile") }
@@ -56,12 +52,6 @@ RSpec.describe Gempilot::CLI::Commands::Create do
     it "runs rake setup after installing the bundle" do
       lines = File.readlines("test_gem/bin/setup", chomp: true)
       expect(lines.last(2)).to eq(["bundle install", "bundle exec rake setup"])
-    end
-  end
-
-  describe "setup" do
-    it "runs the generated bin/setup" do
-      expect(sh_calls).to include(["bin/setup"])
     end
   end
 end

@@ -1,16 +1,14 @@
 module Gempilot
   class CLI
     module Commands
-      ## Scaffolds a new gem with Zeitwerk autoloading, test framework, RuboCop config,
-      ## CI workflow, and version management rake tasks.
-      class Create < Command
-        using String::Inflectable
-
-        include Generator
-        include GemBuilder
-
-        template_dir File.join(Gempilot::ROOT, "data", "templates", "gem")
-
+      ## Creates a new gem: writes its files, runs its +bin/setup+, and commits it.
+      ##
+      ##   $ gempilot create --test minitest --git my_gem
+      ##   # Creating gem 'my_gem'...
+      ##   # ...
+      ##   # run  bin/setup
+      ##   # run  git init -q -b master
+      class Create < GemScaffold
         usage "[options] GEM_NAME"
         description "Create a new gem"
 
@@ -22,175 +20,44 @@ module Gempilot
           "--summary 'A web scraper' my_gem",
         ]
 
-        option :summary, value: { type: String },
-                         desc: "Gem summary"
-
-        option :author, value: {
-                          type: String,
-                          default: -> { `git config user.name 2>/dev/null`.strip },
-                        },
-                        desc: "Author name"
-
-        option :email, value: {
-                         type: String,
-                         default: -> { `git config user.email 2>/dev/null`.strip },
-                       },
-                       desc: "Author email"
-
-        option :ruby_version, value: {
-                                type: String,
-                                default: RUBY_VERSION,
-                              },
-                              desc: "Minimum Ruby version"
-
-        option :test, value: {
-                        type: { "minitest" => :minitest, "rspec" => :rspec },
-                      },
-                      desc: "Test framework"
-
-        option :exe, long: "--[no-]exe", desc: "Create an executable"
-
-        option :git, long: "--[no-]git", desc: "Initialize git repo"
-
-        option :branch, value: { type: String },
-                        desc: "Git branch name"
-
-        argument :gem_name, required: false,
-                            desc: "Name of the gem"
-
         def run(gem_name = nil)
-          puts colors.bold("Creating gem...")
-          puts
-          collect_options(gem_name)
-          print_header
-          scaffold_gem
+          super
+          begin
+            run_setup
+            initialize_git_repo
+          rescue Shell::CommandFailed => e
+            puts colors.red(e.message)
+            exit 1
+          end
         end
 
         private
 
-        def collect_options(gem_name)
-          collect_gem_name(gem_name)
-          derive_naming
-          collect_author_info
-          collect_summary
-          collect_build_options
-        end
-
-        def scaffold_gem
-          create_directories
-          render_core_templates
-          render_test_templates
-          render_dev_files
-          render_config_files
-          render_executable
-          run_setup
-          initialize_git_repo
-        end
-
-        GEM_NAME_PATTERN = /\A[a-z][a-z0-9]*([_-][a-z0-9]+)*\z/
-        private_constant :GEM_NAME_PATTERN
-
-        def collect_gem_name(gem_name)
-          @gem_name = gem_name || begin
-            puts colors.bright_black("The gem name determines the directory, require path, and gemspec name.")
-            ask(colors.green("Gem name"), required: true)
-          end
-          validate_gem_name
-        end
-
-        def validate_gem_name
-          return if @gem_name.match?(GEM_NAME_PATTERN)
-
-          puts colors.red("Invalid gem name '#{@gem_name}'.")
-          puts colors.red("Use lowercase letters, digits, hyphens, or underscores (e.g., my_gem or my-gem).")
-          exit 1
-        end
-
-        def derive_naming
-          @require_path = @gem_name.tr("-", "/")
-          @module_name = @require_path.camelize
-          @module_parts = @module_name.split("::")
-          @base_module = @module_parts.first
-          @hyphenated = @gem_name.include?("-")
-        end
-
-        def collect_author_info
-          @author = option_or_ask(:author, "The author name for the gemspec and LICENSE.", "Author name")
-          @email = option_or_ask(:email, "The contact email for the gemspec.", "Author email")
-        end
-
-        def option_or_ask(key, hint, label)
-          options[key].then { |v| v.to_s.empty? ? nil : v } || begin
-            puts colors.bright_black(hint)
-            ask(colors.green(label), required: true)
+        def run_setup
+          cd @gem_name do
+            run_command "bin/setup"
           end
         end
 
-        def collect_summary
-          @summary = options[:summary] || begin
-            puts
-            puts colors.bright_black("A short (one line) summary of what your gem does.")
-            ask(colors.green("Summary"), default: "A new Ruby gem")
-          end
-          @ruby_version = options[:ruby_version]
-        end
+        def initialize_git_repo
+          return unless options[:git]
 
-        def collect_build_options
-          collect_test_framework
-          collect_exe_option
-          collect_git_options
-        end
-
-        def collect_test_framework
-          @test_framework = options[:test] || begin
-            puts
-            puts colors.bright_black("Choose a test framework for your gem:")
-            puts "  * #{colors.bold("Minitest")} - https://github.com/minitest/minitest"
-            puts "  * #{colors.bold("RSpec")}    - https://rspec.info"
-            ask_multiple_choice(colors.green("Test framework"), { "minitest" => :minitest, "rspec" => :rspec })
+          cd @gem_name do
+            run_command "git", "init", "-q", "-b", @branch
+            run_command "git", "add", "."
+            run_command "git", "commit", "-q", "-m", commit_message
           end
         end
 
-        def collect_exe_option
-          return if options.key?(:exe)
-
-          puts
-          puts colors.bright_black("An executable in exe/ lets users run your gem from the command line.")
-          prompt = colors.green("Create an executable")
-          options[:exe] = ask_yes_or_no(prompt, default: false)
+        # "Initial commit." is wrong when scaffolding into a directory that is
+        # already a repository with history (e.g. a cloned remote), so name the
+        # commit after the gem in that case.
+        def commit_message
+          existing_history? ? "Add #{@gem_name} gem scaffolding." : "Initial commit."
         end
 
-        def collect_git_options
-          collect_git_flag
-          collect_branch if options[:git]
-        end
-
-        def collect_git_flag
-          return if options.key?(:git)
-
-          puts
-          puts colors.bright_black("Initialize a git repository with an initial commit.")
-          prompt = colors.green("Initialize git repo")
-          options[:git] = ask_yes_or_no(prompt, default: true)
-        end
-
-        def collect_branch
-          @branch = options[:branch] || begin
-            puts
-            puts colors.bright_black("The default branch name for the new git repository.")
-            ask(colors.green("Branch name"), default: "master")
-          end
-        end
-
-        def print_header
-          styled_name = colors.bold(colors.cyan(@gem_name))
-          puts
-          puts colors.bright_white("Creating gem '") + styled_name + colors.bright_white("'...")
-          puts
-        end
-
-        def minor_version_for(version)
-          version.split(".")[0..1].join(".")
+        def existing_history?
+          Shell.capture("git", "rev-parse", "--verify", "--quiet", "HEAD").success?
         end
       end
     end

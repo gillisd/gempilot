@@ -20,7 +20,7 @@ RSpec.describe Gempilot::RBSTask do
 
   def write_gem
     File.write("Gemfile", %(source "https://rubygems.org"\ngem "rbs"\n))
-    system("bundle", "lock", "--local", out: File::NULL, exception: true)
+    Gempilot::Shell.run("bundle", "lock", "--local")
   end
 
   def write_sig(source)
@@ -107,6 +107,27 @@ RSpec.describe Gempilot::RBSTask do
     end
   end
 
+  context "when the gem sits inside another project's git repository" do
+    let(:rbs_task) { described_class.new(root: Pathname("nested_gem").expand_path) }
+
+    before do
+      Gempilot::Shell.run("git", "init", "--quiet", ".")
+      File.write("rbs_collection.yaml", "path: .gem_rbs_collection\n")
+      FileUtils.mkdir("nested_gem")
+      Dir.chdir("nested_gem") { write_gem }
+    end
+
+    it "writes the gem's own rbs_collection.yaml" do
+      invoke("rbs:collection:init")
+      expect(Pathname("nested_gem/rbs_collection.yaml")).to be_file
+    end
+
+    it "installs the gem's own collection" do
+      invoke("rbs:setup")
+      expect(Pathname("nested_gem/.gem_rbs_collection")).to be_directory
+    end
+  end
+
   describe "rbs:collection:install" do
     it "installs the collection" do
       invoke("rbs:collection:install")
@@ -134,7 +155,9 @@ RSpec.describe Gempilot::RBSTask do
 
     it "fails for a signature naming an unknown type" do
       write_sig("module MyGem\n  def self.name: () -> NoSuchType\nend\n")
-      expect { invoke("rbs:validate") }.to raise_error(RuntimeError, /rbs -I sig validate/)
+      command = "bundle exec rbs --collection #{rbs_task.collection_yaml} -I sig validate"
+      expect { invoke("rbs:validate") }
+        .to raise_error(Gempilot::Shell::CommandFailed, "Command failed with status (1): [#{command}]")
     end
   end
 end

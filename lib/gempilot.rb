@@ -1,7 +1,5 @@
 require "zeitwerk"
 
-autoload :Open3, "open3"
-
 # CLI toolkit for creating and managing Ruby gems.
 module Gempilot
   ROOT = Pathname(__dir__).parent.expand_path.freeze

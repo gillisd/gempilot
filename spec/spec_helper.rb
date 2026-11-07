@@ -4,7 +4,7 @@ require_relative "../lib/gempilot"
 
 Pathname(__dir__).glob("support/**/*.rb").each { require it }
 
-COMMAND_SPEC_PATH = %r{/spec/gempilot/cli/commands/}
+COMMAND_SPEC_PATH = %r{/spec/gempilot/cli/(commands/|gem_scaffold_)}
 
 RSpec.configure do |config|
   config.example_status_persistence_file_path = ".rspec_status"

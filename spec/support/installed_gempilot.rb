@@ -1,7 +1,8 @@
-## Builds gempilot from this checkout and installs it into its own gem
-## directory, so end-to-end specs run the packaged +gempilot+ executable a
-## user would. The build packages tracked files only (the gemspec lists
-## files with <tt>git ls-files</tt>).
+## Builds gempilot from this repository's working tree and installs it into its own gem directory.
+##
+##   gempilot = InstalledGempilot.new(Dir.mktmpdir).install
+##   Gempilot::Shell.capture("gempilot", "--version", env: gempilot.env).output
+##   # => "gempilot 0.3.5\n"
 class InstalledGempilot
   ROOT = Pathname(__dir__).parent.parent
 
@@ -13,8 +14,10 @@ class InstalledGempilot
 
   def install
     package = gem_home.parent / "gempilot.gem"
-    quietly("gem", "build", (ROOT / "gempilot.gemspec").to_s, "--output", package.to_s, chdir: ROOT.to_s)
-    quietly("gem", "install", "--local", "--ignore-dependencies", "--no-document",
+    index = { "GIT_INDEX_FILE" => (gem_home.parent / "git-index").to_s }
+    succeed("git", "add", "--all", chdir: ROOT, env: index)
+    succeed("gem", "build", "gempilot.gemspec", "--output", package.to_s, chdir: ROOT, env: index)
+    succeed("gem", "install", "--local", "--ignore-dependencies", "--no-document",
             "--install-dir", gem_home.to_s, package.to_s)
     self
   end
@@ -29,7 +32,8 @@ class InstalledGempilot
 
   private
 
-  def quietly(*command, **)
-    system(*command, out: File::NULL, err: File::NULL, exception: true, **)
+  def succeed(*command, chdir: Dir.pwd, env: {})
+    result = Gempilot::Shell.capture(*command, chdir:, env:, unbundled: true)
+    raise "#{command.join(" ")} failed:\n#{result.output}" unless result.success?
   end
 end

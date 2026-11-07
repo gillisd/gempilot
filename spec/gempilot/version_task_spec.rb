@@ -2,6 +2,7 @@ require "spec_helper"
 
 RSpec.describe Gempilot::VersionTask do
   include FileUtils
+  include GitHelpers
   include GemLayout
 
   subject(:version_task) { described_class.new(root: Dir.pwd) }
@@ -19,9 +20,9 @@ RSpec.describe Gempilot::VersionTask do
   end
 
   before do
-    system("git init --quiet .")
-    system("git config user.email 'test@test.com'")
-    system("git config user.name 'Test'")
+    git("init", "--quiet", ".")
+    git("config", "user.email", "test@test.com")
+    git("config", "user.name", "Test")
     File.write("my_gem.gemspec", 'Gem::Specification.new { |s| s.name = "my_gem" }')
     mkdir_p("lib/my_gem")
     File.write("lib/my_gem.rb", "module MyGem; end\n")
@@ -30,7 +31,8 @@ RSpec.describe Gempilot::VersionTask do
         VERSION = "1.0.0.dev3".freeze
       end
     RUBY
-    system("git add . && git commit -m 'Initial commit' --quiet")
+    git("add", ".")
+    git("commit", "--quiet", "-m", "Initial commit")
     version_task
   end
 
@@ -63,8 +65,8 @@ RSpec.describe Gempilot::VersionTask do
 
     it "commits and tags after bumping", :aggregate_failures do
       Rake::Task["version:release"].invoke("dev")
-      expect(`git log -1 --pretty=%B`.strip).to eq("Bump version to 1.0.0.dev4")
-      expect(`git tag`.strip).to eq("v1.0.0.dev4")
+      expect(git_output("log", "-1", "--pretty=%B")).to eq("Bump version to 1.0.0.dev4")
+      expect(git_output("tag")).to eq("v1.0.0.dev4")
     end
   end
 

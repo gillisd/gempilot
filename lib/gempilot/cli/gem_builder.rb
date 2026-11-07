@@ -3,9 +3,8 @@ module Gempilot
     ## File rendering and directory creation logic for scaffolding a new gem.
     ##
     ## Expects the including class to provide Generator methods (+mkdir+, +erb+,
-    ## +chmod+, +cp+, +cd+, +sh+) and the following instance variables:
-    ## +@gem_name+, +@require_path+, +@module_name+, +@hyphenated+,
-    ## +@test_framework+, +@branch+.
+    ## +chmod+, +cp+) and the following instance variables: +@gem_name+,
+    ## +@require_path+, +@module_name+, +@hyphenated+, +@test_framework+.
     module GemBuilder
       private
 
@@ -83,36 +82,6 @@ module Gempilot
 
         erb "exe/gem_name.erb", "#{@gem_name}/exe/#{@gem_name}"
         chmod "+x", "#{@gem_name}/exe/#{@gem_name}"
-      end
-
-      # bin/setup installs the bundle and runs <tt>rake setup</tt>, the same
-      # entry point a developer uses after cloning the gem.
-      def run_setup
-        cd @gem_name do
-          sh "bin/setup"
-        end
-      end
-
-      def initialize_git_repo
-        return unless options[:git]
-
-        cd @gem_name do
-          sh "git", "init", "-q", "-b", @branch
-          sh "git", "add", "."
-          sh "git", "commit", "-q", "-m", commit_message
-        end
-      end
-
-      # "Initial commit." is wrong when scaffolding into a directory that is
-      # already a repository with history (e.g. a cloned remote), so name the
-      # commit after the gem in that case.
-      def commit_message
-        existing_history? ? "Add #{@gem_name} gem scaffolding." : "Initial commit."
-      end
-
-      def existing_history?
-        system("git", "rev-parse", "--verify", "--quiet", "HEAD",
-               out: File::NULL, err: File::NULL)
       end
     end
   end

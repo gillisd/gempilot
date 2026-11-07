@@ -1,5 +1,3 @@
-require "bundler"
-
 module Gempilot
   class CLI
     module Commands
@@ -13,7 +11,7 @@ module Gempilot
           detect_gem_context
           console_path = find_console_script
           print_console_banner
-          Bundler.with_unbundled_env { exec(console_path) }
+          Shell.exec(console_path, unbundled: true)
         end
 
         private

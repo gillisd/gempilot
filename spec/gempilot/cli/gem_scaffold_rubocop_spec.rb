@@ -1,7 +1,7 @@
 require "spec_helper"
 require "stringio"
 
-RSpec.describe Gempilot::CLI::Commands::Create do
+RSpec.describe Gempilot::CLI::GemScaffold do
   subject(:command) { described_class.new(stdout: stdout) }
 
   let(:stdout) { StringIO.new }

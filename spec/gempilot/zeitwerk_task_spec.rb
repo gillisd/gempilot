@@ -53,7 +53,7 @@ RSpec.describe Gempilot::ZeitwerkTask do
       before { File.write("lib/my_gem/oops.rb", "module MyGem; class Correct; end; end\n") }
 
       it "fails" do
-        expect { Rake::Task["zeitwerk:validate"].invoke }.to raise_error(RuntimeError)
+        expect { Rake::Task["zeitwerk:validate"].invoke }.to raise_error(Gempilot::Shell::CommandFailed)
       end
     end
   end
