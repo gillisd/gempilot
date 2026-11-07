@@ -5,19 +5,21 @@ require "stringio"
 module Gempilot
   class CLI
     class NewCommandTest < Minitest::Test
+      include FileUtils
+
       def setup
         @tmpdir = Dir.mktmpdir("new_command_test")
         @original_dir = Dir.pwd
 
         Dir.chdir(@tmpdir)
-        FileUtils.mkdir_p("lib/my_gem")
-        FileUtils.mkdir_p("test")
+        mkdir_p("lib/my_gem")
+        mkdir_p("test")
         File.write("my_gem.gemspec", 'Gem::Specification.new { |s| s.name = "my_gem" }')
       end
 
       def teardown
         Dir.chdir(@original_dir)
-        FileUtils.rm_rf(@tmpdir)
+        rm_rf(@tmpdir)
       end
 
       # --- Class generation ---
@@ -94,8 +96,8 @@ module Gempilot
       end
 
       def test_new_class_creates_rspec_file_when_spec_dir_exists
-        FileUtils.rm_rf("test")
-        FileUtils.mkdir_p("spec")
+        rm_rf("test")
+        mkdir_p("spec")
         File.write("spec/spec_helper.rb", "")
         run_new_command("class", "MyGem::Authentication")
 
@@ -143,7 +145,7 @@ module Gempilot
       # --- Command generation ---
 
       def test_new_command_creates_command_file
-        FileUtils.mkdir_p("lib/my_gem/cli/commands")
+        mkdir_p("lib/my_gem/cli/commands")
         run_new_command("command", "deploy")
 
         assert_path_exists "lib/my_gem/cli/commands/deploy.rb"
@@ -157,7 +159,7 @@ module Gempilot
       end
 
       def test_new_command_creates_minitest_file
-        FileUtils.mkdir_p("lib/my_gem/cli/commands")
+        mkdir_p("lib/my_gem/cli/commands")
         run_new_command("command", "deploy")
 
         assert_path_exists "test/my_gem/cli/commands/deploy_test.rb"
@@ -169,10 +171,10 @@ module Gempilot
       end
 
       def test_new_command_creates_rspec_file_when_spec_dir_exists
-        FileUtils.rm_rf("test")
-        FileUtils.mkdir_p("spec")
+        rm_rf("test")
+        mkdir_p("spec")
         File.write("spec/spec_helper.rb", "")
-        FileUtils.mkdir_p("lib/my_gem/cli/commands")
+        mkdir_p("lib/my_gem/cli/commands")
         run_new_command("command", "deploy")
 
         assert_path_exists "spec/my_gem/cli/commands/deploy_spec.rb"
@@ -185,7 +187,7 @@ module Gempilot
       # --- Error handling ---
 
       def test_new_fails_without_gemspec
-        FileUtils.rm("my_gem.gemspec")
+        rm("my_gem.gemspec")
         stdout = StringIO.new
         command = Commands::New.new(stdout: stdout)
 

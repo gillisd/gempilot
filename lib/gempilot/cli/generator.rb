@@ -48,12 +48,12 @@ module Gempilot
 
       def mkdir(path)
         print_action "mkdir", path
-        ::FileUtils.mkdir_p(path)
+        mkdir_p(path)
       end
 
       def touch(path)
         print_action "touch", path
-        ::FileUtils.touch(path)
+        super
       end
 
       def create_file(path, content)
@@ -63,12 +63,12 @@ module Gempilot
 
       def chmod(mode, path)
         print_action "chmod", path
-        ::FileUtils.chmod(mode, path)
+        super
       end
 
       def cp(source, dest)
         print_action "cp", dest, source: source
-        ::FileUtils.cp(File.join(@template_dir, source), dest)
+        super(File.join(@template_dir, source), dest)
       end
 
       def erb(source, dest = nil)
@@ -78,13 +78,13 @@ module Gempilot
         super(source_path, dest)
       end
 
-      def sh(command, *arguments)
-        print_action "run", [command, *arguments].join(" ")
-        success = Bundler.with_unbundled_env do
-          system(command, *arguments)
-        end
-        puts colors.yellow("Warning: '#{[command, *arguments].join(" ")}' exited with non-zero status") unless success
-        success
+      ## Prints and runs a command outside gempilot's bundle.
+      ##
+      ##   run_command "bin/setup"
+      ##   # run  bin/setup
+      def run_command(*command)
+        print_action "run", command.join(" ")
+        Shell.run(*command, unbundled: true)
       end
     end
   end

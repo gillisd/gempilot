@@ -1,10 +1,6 @@
-require "open3"
-
 module Gempilot
   ## Manages git operations for version releases.
   class VersionTag
-    include StrictShell
-
     ## Commit-message prefix written for a version bump; the guard below
     ## matches on it, so the two must stay in sync.
     BUMP_MESSAGE_PREFIX = "Bump version to ".freeze
@@ -16,42 +12,42 @@ module Gempilot
     end
 
     def create
-      _, _, status = Open3.capture3("git", "diff", "--staged", "--quiet")
-      raise "Cannot proceed, staging area must be clean" unless status.success?
+      staging_clean = Shell.capture("git", "diff", "--staged", "--quiet").success?
+      raise "Cannot proceed, staging area must be clean" unless staging_clean
 
-      sh "git", "add", version.path.to_s
-      sh "git", "commit", "-m", "#{BUMP_MESSAGE_PREFIX}#{version.value}"
+      Shell.run("git", "add", version.path.to_s)
+      Shell.run("git", "commit", "-m", "#{BUMP_MESSAGE_PREFIX}#{version.value}")
     end
 
     def tag
       assert_last_commit_is_bump!
-      sh "git", "tag", version.tag
+      Shell.run("git", "tag", version.tag)
     end
 
     def untag
       assert_last_commit_is_bump!
-      sh "git", "tag", "--delete", version.tag
+      Shell.run("git", "tag", "--delete", version.tag)
     end
 
     def reset
       assert_last_commit_is_bump!
-      sh "git", "reset", "--quiet", "--mixed", "HEAD~1"
-      sh "git", "restore", version.path.to_s
+      Shell.run("git", "reset", "--quiet", "--mixed", "HEAD~1")
+      Shell.run("git", "restore", version.path.to_s)
     end
 
     def revert
       assert_last_commit_is_bump!
-      sh "git", "revert", "HEAD", "--no-edit"
+      Shell.run("git", "revert", "HEAD", "--no-edit")
     end
 
     private
 
     def assert_last_commit_is_bump!
-      message, status = Open3.capture2("git", "log", "-1", "--pretty=%B")
-      raise "Failed to read last commit message" unless status.success?
+      result = Shell.capture("git", "log", "-1", "--pretty=%B")
+      raise "Failed to read last commit message" unless result.success?
 
-      message.strip!
-      raise "Last commit does not appear to be a version bump." unless message.start_with?(BUMP_MESSAGE_PREFIX)
+      bump = result.output.strip.start_with?(BUMP_MESSAGE_PREFIX)
+      raise "Last commit does not appear to be a version bump." unless bump
     end
   end
 end

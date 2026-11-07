@@ -11,7 +11,7 @@ require_relative "lib/gempilot"
 namespace :spec do
   desc "Prints the specification suite in documentation format and exits"
   task :print do
-    exec("rspec", "--format", "documentation", "--dry-run")
+    Gempilot::Shell.exec("rspec", "--format", "documentation", "--dry-run")
   end
 end
 
@@ -39,5 +39,6 @@ RuboCop::RakeTask.new do |t|
 end
 
 Gempilot::VersionTask.new
+Gempilot::RBSTask.new
 
-task default: [:test, :spec, :rubocop]
+task default: [:test, :spec, :rubocop, "rbs:validate"]

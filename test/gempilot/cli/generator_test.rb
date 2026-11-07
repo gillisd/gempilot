@@ -78,10 +78,21 @@ module Gempilot
         assert_predicate Pathname(path), :executable?
       end
 
-      def test_sh_runs_command
-        result = @generator.sh("true")
+      def test_run_command_runs_the_command
+        path = File.join(@tmpdir, "ran")
+        @generator.run_command(RbConfig.ruby, "-e", "File.write(#{path.inspect}, '')")
 
-        assert result
+        assert_path_exists path
+      end
+
+      def test_run_command_prints_action
+        @generator.run_command("true")
+
+        assert_includes @stdout.string, "run"
+      end
+
+      def test_run_command_raises_when_the_command_fails
+        assert_raises(Shell::CommandFailed) { @generator.run_command("false") }
       end
 
       def test_create_file_writes_content

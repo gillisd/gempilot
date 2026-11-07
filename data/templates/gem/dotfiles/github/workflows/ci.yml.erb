@@ -31,3 +31,5 @@ jobs:
 <% end -%>
     - name: Run RuboCop
       run: bundle exec rake rubocop
+    - name: Validate RBS
+      run: bundle exec rake rbs:validate
