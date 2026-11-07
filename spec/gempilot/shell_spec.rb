@@ -1,6 +1,8 @@
 require "spec_helper"
 
 RSpec.describe Gempilot::Shell do
+  include FileUtils
+
   around do |example|
     Dir.mktmpdir("shell_spec") { |dir| Dir.chdir(dir) { example.run } }
   end
@@ -29,7 +31,7 @@ RSpec.describe Gempilot::Shell do
     end
 
     it "runs in chdir" do
-      FileUtils.mkdir("sub")
+      mkdir("sub")
       described_class.run(RbConfig.ruby, "-e", "File.write('here', '')", chdir: "sub")
       expect(Pathname("sub/here")).to be_file
     end
@@ -53,7 +55,7 @@ RSpec.describe Gempilot::Shell do
     end
 
     it "runs in chdir" do
-      FileUtils.mkdir("sub")
+      mkdir("sub")
       expect(described_class.capture(*ruby_print("Dir.pwd"), chdir: "sub").output).to eq(File.realpath("sub"))
     end
 

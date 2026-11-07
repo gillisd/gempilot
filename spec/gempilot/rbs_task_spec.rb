@@ -37,6 +37,14 @@ RSpec.describe Gempilot::RBSTask do
     rbs_task
   end
 
+  it "loads gempilot when a Rakefile requires only gempilot/rbs_task" do
+    script = 'require "rake"; require "gempilot/rbs_task"; print Gempilot::Shell'
+    root = InstalledGempilot::ROOT
+    result = Gempilot::Shell.capture(RbConfig.ruby, "-rbundler/setup", "-I#{root}/lib", "-e", script,
+                                     env: { "BUNDLE_GEMFILE" => "#{root}/Gemfile" })
+    expect(result.output).to eq("Gempilot::Shell")
+  end
+
   describe "task definitions" do
     %w[
       rbs:setup rbs:clobber rbs:validate
@@ -113,7 +121,7 @@ RSpec.describe Gempilot::RBSTask do
     before do
       Gempilot::Shell.run("git", "init", "--quiet", ".")
       File.write("rbs_collection.yaml", "path: .gem_rbs_collection\n")
-      FileUtils.mkdir("nested_gem")
+      mkdir("nested_gem")
       Dir.chdir("nested_gem") { write_gem }
     end
 

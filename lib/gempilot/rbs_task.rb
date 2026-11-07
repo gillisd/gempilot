@@ -1,5 +1,6 @@
 require "rake/clean"
 require "rake/tasklib"
+require_relative "../gempilot"
 
 module Gempilot
   ## Defines rake tasks that install and validate a gem's RBS collection.
