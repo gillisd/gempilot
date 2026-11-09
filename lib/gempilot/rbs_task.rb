@@ -1,5 +1,6 @@
 require "rake/clean"
 require "rake/tasklib"
+require "yaml"
 require_relative "../gempilot"
 
 module Gempilot
@@ -31,6 +32,7 @@ module Gempilot
         define_setup_task
         define_clobber_task
         define_validate_task
+        define_default_gems_task
         namespace(:collection) { define_collection_tasks }
       end
       define_top_level_hooks
@@ -44,7 +46,21 @@ module Gempilot
 
     def define_setup_task
       desc "Install the rbs collection rbs_collection.lock.yaml pins"
-      task setup: ["rbs:collection:install"]
+      task setup: ["rbs:default_gems", "rbs:collection:install"]
+    end
+
+    def define_default_gems_task
+      yaml = collection_yaml
+      desc "List the default gems the bundle uses in rbs_collection.yaml"
+      task(default_gems: ["rbs:collection:init"]) { add_collection_gems(yaml, Rubygems::Env.new.default_gems.map(&:name)) }
+    end
+
+    def add_collection_gems(yaml, names)
+      collection = YAML.load_file(yaml) || {}
+      listed = collection.fetch("gems", nil) || []
+      missing = names - listed.map { it["name"] }
+      collection["gems"] = listed + missing.map { { "name" => it } }
+      File.write(yaml, YAML.dump(collection))
     end
 
     def define_clobber_task

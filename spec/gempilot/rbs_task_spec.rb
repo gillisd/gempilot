@@ -37,17 +37,19 @@ RSpec.describe Gempilot::RBSTask do
     rbs_task
   end
 
-  it "loads gempilot when a Rakefile requires only gempilot/rbs_task" do
-    script = 'require "rake"; require "gempilot/rbs_task"; print Gempilot::Shell'
-    root = InstalledGempilot::ROOT
-    result = Gempilot::Shell.capture(RbConfig.ruby, "-rbundler/setup", "-I#{root}/lib", "-e", script,
-                                     env: { "BUNDLE_GEMFILE" => "#{root}/Gemfile" })
-    expect(result.output).to eq("Gempilot::Shell")
+  context "when a Rakefile requires only gempilot/rbs_task" do
+    it "loads gempilot" do
+      script = 'require "rake"; require "gempilot/rbs_task"; print Gempilot::Shell'
+      root = InstalledGempilot::ROOT
+      result = Gempilot::Shell.capture(RbConfig.ruby, "-rbundler/setup", "-I#{root}/lib", "-e", script,
+                                       env: { "BUNDLE_GEMFILE" => "#{root}/Gemfile" })
+      expect(result.output).to eq("Gempilot::Shell")
+    end
   end
 
   describe "task definitions" do
     %w[
-      rbs:setup rbs:clobber rbs:validate
+      rbs:setup rbs:clobber rbs:validate rbs:default_gems
       rbs:collection:init rbs:collection:install rbs:collection:update
     ].each do |name|
       it "defines #{name}" do
@@ -91,6 +93,18 @@ RSpec.describe Gempilot::RBSTask do
     it "pins the collection" do
       invoke("rbs:setup")
       expect(Pathname("rbs_collection.lock.yaml")).to be_file
+    end
+
+    it "lists the bundle's default gems in the collection" do
+      invoke("rbs:setup")
+      names = YAML.load_file("rbs_collection.yaml").fetch("gems").map { it.fetch("name") }
+      expect(names).to include("erb")
+    end
+
+    it "pins the bundle's default gems" do
+      invoke("rbs:setup")
+      names = YAML.load_file("rbs_collection.lock.yaml").fetch("gems").map { it.fetch("name") }
+      expect(names).to include("erb")
     end
   end
 
@@ -152,6 +166,49 @@ RSpec.describe Gempilot::RBSTask do
     it "writes the lockfile" do
       invoke("rbs:collection:update")
       expect(Pathname("rbs_collection.lock.yaml")).to be_file
+    end
+  end
+
+  describe "rbs:default_gems" do
+    let(:collected_names) { YAML.load_file("rbs_collection.yaml").fetch("gems").map { it.fetch("name") } }
+
+    before { File.write("rbs_collection.yaml", "path: .gem_rbs_collection\n") }
+
+    it "adds a default gem the bundle uses" do
+      invoke("rbs:default_gems")
+      expect(collected_names).to include("erb")
+    end
+
+    it "leaves out a default gem the bundle does not use" do
+      invoke("rbs:default_gems")
+      expect(collected_names).not_to include("ruby2_keywords")
+    end
+
+    it "keeps the collection's other settings" do
+      invoke("rbs:default_gems")
+      expect(YAML.load_file("rbs_collection.yaml")).to include("path" => ".gem_rbs_collection")
+    end
+
+    context "when the collection already lists gems" do
+      before do
+        File.write("rbs_collection.yaml", <<~YAML)
+          path: .gem_rbs_collection
+          gems:
+            - name: erb
+            - name: steep
+              ignore: true
+        YAML
+      end
+
+      it "keeps the existing entries" do
+        invoke("rbs:default_gems")
+        expect(YAML.load_file("rbs_collection.yaml")["gems"]).to include({ "name" => "steep", "ignore" => true })
+      end
+
+      it "does not list a gem twice" do
+        invoke("rbs:default_gems")
+        expect(collected_names.count("erb")).to eq(1)
+      end
     end
   end
 
