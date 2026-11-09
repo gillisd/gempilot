@@ -8,12 +8,13 @@ RSpec.describe Gempilot::Rubygems::Env do
     it "ensures this project contains the include control" do
       expect($LOADED_FEATURES).not_to match_array(include_control)
     end
+
     it "ensures this project does not contain the exclude control" do
       expect($LOADED_FEATURES).not_to match_array(exclude_control)
     end
   end
 
-  describe '#all_default_gems' do
+  describe "#all_default_gems" do
     let(:all_default_gem_names) do
       subject.all_default_gems.map(&:name)
     end
@@ -27,7 +28,7 @@ RSpec.describe Gempilot::Rubygems::Env do
     end
   end
 
-  describe '#default_gems' do
+  describe "#default_gems" do
     let(:default_gem_names) do
       subject.default_gems.map(&:name)
     end
