@@ -37,12 +37,14 @@ RSpec.describe Gempilot::RBSTask do
     rbs_task
   end
 
-  it "loads gempilot when a Rakefile requires only gempilot/rbs_task" do
-    script = 'require "rake"; require "gempilot/rbs_task"; print Gempilot::Shell'
-    root = InstalledGempilot::ROOT
-    result = Gempilot::Shell.capture(RbConfig.ruby, "-rbundler/setup", "-I#{root}/lib", "-e", script,
-                                     env: { "BUNDLE_GEMFILE" => "#{root}/Gemfile" })
-    expect(result.output).to eq("Gempilot::Shell")
+  context "when a Rakefile requires only gempilot/rbs_task" do
+    it "loads gempilot" do
+      script = 'require "rake"; require "gempilot/rbs_task"; print Gempilot::Shell'
+      root = InstalledGempilot::ROOT
+      result = Gempilot::Shell.capture(RbConfig.ruby, "-rbundler/setup", "-I#{root}/lib", "-e", script,
+                                       env: { "BUNDLE_GEMFILE" => "#{root}/Gemfile" })
+      expect(result.output).to eq("Gempilot::Shell")
+    end
   end
 
   describe "task definitions" do
