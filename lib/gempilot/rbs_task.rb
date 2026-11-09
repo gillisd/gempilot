@@ -47,6 +47,10 @@ module Gempilot
       task setup: ["rbs:collection:install"]
     end
 
+    def define_default_gems_task
+      desc "Adds default gems in use to the collection"
+    end
+
     def define_clobber_task
       dir = collection_dir
       desc "Remove the installed rbs collection"
