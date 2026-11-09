@@ -12,3 +12,5 @@ gems:
 - name: prettyprint
 - name: prism
 - name: tsort
+- name: io-console
+- name: json
