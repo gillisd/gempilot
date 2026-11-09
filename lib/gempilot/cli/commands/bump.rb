@@ -1,5 +1,3 @@
-require "bundler"
-
 module Gempilot
   class CLI
     module Commands
@@ -39,10 +37,11 @@ module Gempilot
         end
 
         def run_rake_bump(segment)
-          success = Bundler.with_unbundled_env do
-            system("bundle", "exec", "rake", "version:bump[#{segment}]")
+          begin
+            Shell.run("bundle", "exec", "rake", "version:bump[#{segment}]", unbundled: true)
+          rescue Shell::CommandFailed
+            exit 1
           end
-          exit 1 unless success
         end
       end
     end

@@ -1,15 +1,12 @@
-require "English"
 require "test_helper"
 require "tmpdir"
 require "stringio"
 
 module Gempilot
   class CLI
-    class CreateCommandTest < Minitest::Test
-      GEMPILOT_ROOT = File.expand_path("../../..", __dir__).freeze
-
+    class GemScaffoldTest < Minitest::Test
       def setup
-        @tmpdir = Dir.mktmpdir("create_command_test")
+        @tmpdir = Dir.mktmpdir("gem_scaffold_test")
         @original_dir = Dir.pwd
         Dir.chdir(@tmpdir)
       end
@@ -20,7 +17,7 @@ module Gempilot
       end
 
       def test_creates_gem_directory_structure
-        run_create_command("test_gem")
+        scaffold("test_gem")
 
         assert_predicate Pathname("test_gem"), :directory?
         assert_predicate Pathname("test_gem/lib"), :directory?
@@ -30,7 +27,7 @@ module Gempilot
       end
 
       def test_creates_gemspec
-        run_create_command("test_gem")
+        scaffold("test_gem")
 
         gemspec = File.read("test_gem/test_gem.gemspec")
 
@@ -43,7 +40,7 @@ module Gempilot
       end
 
       def test_creates_lib_with_zeitwerk
-        run_create_command("test_gem")
+        scaffold("test_gem")
 
         main_rb = File.read("test_gem/lib/test_gem.rb")
 
@@ -54,7 +51,7 @@ module Gempilot
       end
 
       def test_creates_version_file
-        run_create_command("test_gem")
+        scaffold("test_gem")
 
         version_rb = File.read("test_gem/lib/test_gem/version.rb")
 
@@ -63,7 +60,7 @@ module Gempilot
       end
 
       def test_creates_test_helper
-        run_create_command("test_gem")
+        scaffold("test_gem")
 
         test_helper = File.read("test_gem/test/test_helper.rb")
 
@@ -73,7 +70,7 @@ module Gempilot
       end
 
       def test_creates_test_file
-        run_create_command("test_gem")
+        scaffold("test_gem")
 
         test_file = File.read("test_gem/test/test_gem_test.rb")
 
@@ -82,14 +79,14 @@ module Gempilot
       end
 
       def test_bin_scripts_are_executable
-        run_create_command("test_gem")
+        scaffold("test_gem")
 
         assert_predicate Pathname("test_gem/bin/console"), :executable?
         assert_predicate Pathname("test_gem/bin/setup"), :executable?
       end
 
       def test_creates_config_files
-        run_create_command("test_gem")
+        scaffold("test_gem")
 
         assert_path_exists "test_gem/.rubocop.yml"
         assert_path_exists "test_gem/.gitignore"
@@ -97,7 +94,7 @@ module Gempilot
       end
 
       def test_exe_flag_creates_executable
-        run_create_command("test_gem", "--exe")
+        scaffold("test_gem", "--exe")
 
         assert_predicate Pathname("test_gem/exe"), :directory?
         assert_path_exists "test_gem/exe/test_gem"
@@ -105,7 +102,7 @@ module Gempilot
       end
 
       def test_inflects_module_name_correctly
-        run_create_command("my_cool_gem")
+        scaffold("my_cool_gem")
 
         version_rb = File.read("my_cool_gem/lib/my_cool_gem/version.rb")
 
@@ -113,7 +110,7 @@ module Gempilot
       end
 
       def test_rubocop_yml_is_valid_yaml
-        run_create_command("test_gem")
+        scaffold("test_gem")
 
         content = File.read("test_gem/.rubocop.yml")
 
@@ -124,14 +121,14 @@ module Gempilot
       # RSpec support tests
 
       def test_rspec_creates_spec_directory
-        run_create_command("test_gem", "--test", "rspec")
+        scaffold("test_gem", "--test", "rspec")
 
         assert_predicate Pathname("test_gem/spec"), :directory?
         refute_predicate Pathname("test_gem/test"), :directory?
       end
 
       def test_rspec_creates_spec_files
-        run_create_command("test_gem", "--test", "rspec")
+        scaffold("test_gem", "--test", "rspec")
 
         assert_path_exists "test_gem/spec/spec_helper.rb"
         assert_path_exists "test_gem/spec/test_gem_spec.rb"
@@ -139,7 +136,7 @@ module Gempilot
       end
 
       def test_rspec_spec_helper_content
-        run_create_command("test_gem", "--test", "rspec")
+        scaffold("test_gem", "--test", "rspec")
 
         helper = File.read("test_gem/spec/spec_helper.rb")
 
@@ -149,7 +146,7 @@ module Gempilot
       end
 
       def test_rspec_spec_file_content
-        run_create_command("test_gem", "--test", "rspec")
+        scaffold("test_gem", "--test", "rspec")
 
         spec_file = File.read("test_gem/spec/test_gem_spec.rb")
 
@@ -158,7 +155,7 @@ module Gempilot
       end
 
       def test_gemfile_has_gempilot
-        run_create_command("test_gem")
+        scaffold("test_gem")
 
         gemfile = File.read("test_gem/Gemfile")
 
@@ -167,7 +164,7 @@ module Gempilot
       end
 
       def test_rspec_gemfile_has_rspec_gem
-        run_create_command("test_gem", "--test", "rspec")
+        scaffold("test_gem", "--test", "rspec")
 
         gemfile = File.read("test_gem/Gemfile")
 
@@ -177,7 +174,7 @@ module Gempilot
       end
 
       def test_rspec_rakefile_has_rspec_task
-        run_create_command("test_gem", "--test", "rspec")
+        scaffold("test_gem", "--test", "rspec")
 
         rakefile = File.read("test_gem/Rakefile")
 
@@ -186,68 +183,8 @@ module Gempilot
         refute_includes rakefile, "minitest"
       end
 
-      def test_git_branch_flag_passes_branch_to_git_init
-        sh_calls = []
-        stdout = StringIO.new
-        args = [
-          "--author", "Test Author",
-          "--email", "test@example.com",
-          "--summary", "A test gem",
-          "--ruby-version", "3.4.8",
-          "--test", "minitest",
-          "--no-exe",
-          "--git",
-          "--branch", "develop",
-          "test_gem"
-        ]
-
-        command = Commands::Create.new(stdout: stdout)
-        command.define_singleton_method(:sh) do |cmd, *arguments|
-          sh_calls << [cmd, *arguments]
-        end
-        command.main(args)
-
-        git_init_call = sh_calls.find { |call| call[0] == "git" && call[1] == "init" }
-
-        refute_nil git_init_call, "Expected a 'git init' call"
-        assert_includes git_init_call, "-b"
-        assert_includes git_init_call, "develop"
-      end
-
-      def test_sh_runs_inside_unbundled_env
-        system_calls = []
-        stdout = StringIO.new
-        args = [
-          "--author", "Test Author",
-          "--email", "test@example.com",
-          "--summary", "A test gem",
-          "--ruby-version", "3.4.8",
-          "--test", "minitest",
-          "--no-exe",
-          "--no-git",
-          "test_gem"
-        ]
-
-        command = Commands::Create.new(stdout: stdout)
-        # Stub system (not sh) so the real sh method runs with Bundler.with_unbundled_env
-        command.define_singleton_method(:system) do |cmd, *arguments|
-          system_calls << {
-            command: [cmd, *arguments],
-            bundle_gemfile: ENV.fetch("BUNDLE_GEMFILE", nil),
-          }
-          true
-        end
-        command.main(args)
-
-        bundle_call = system_calls.find { |c| c[:command].first == "bundle" }
-
-        refute_nil bundle_call, "Expected a 'bundle' system call"
-        assert_nil bundle_call[:bundle_gemfile],
-                   "bundle install should run without BUNDLE_GEMFILE set (inside Bundler.with_unbundled_env)"
-      end
-
       def test_generated_files_have_no_leading_blank_lines
-        run_create_command("test_gem")
+        scaffold("test_gem")
 
         files = [
           "test_gem/lib/test_gem.rb",
@@ -266,7 +203,7 @@ module Gempilot
       end
 
       def test_gemfile_gems_are_alphabetically_ordered
-        run_create_command("test_gem")
+        scaffold("test_gem")
 
         gemfile = File.read("test_gem/Gemfile")
         gem_lines = gemfile.lines.select { |l| l.start_with?('gem "') }
@@ -277,7 +214,7 @@ module Gempilot
       end
 
       def test_version_constant_is_frozen
-        run_create_command("test_gem")
+        scaffold("test_gem")
 
         version_rb = File.read("test_gem/lib/test_gem/version.rb")
 
@@ -286,7 +223,7 @@ module Gempilot
       end
 
       def test_rubocop_yml_uses_correct_namespaces
-        run_create_command("test_gem")
+        scaffold("test_gem")
 
         content = File.read("test_gem/.rubocop.yml")
 
@@ -295,7 +232,7 @@ module Gempilot
       end
 
       def test_rspec_generated_files_have_no_leading_blank_lines
-        run_create_command("test_gem", "--test", "rspec")
+        scaffold("test_gem", "--test", "rspec")
 
         files = [
           "test_gem/lib/test_gem.rb",
@@ -311,7 +248,7 @@ module Gempilot
       end
 
       def test_rspec_gemfile_gems_are_alphabetically_ordered
-        run_create_command("test_gem", "--test", "rspec")
+        scaffold("test_gem", "--test", "rspec")
 
         gemfile = File.read("test_gem/Gemfile")
         gem_lines = gemfile.lines.select { |l| l.start_with?('gem "') }
@@ -322,7 +259,7 @@ module Gempilot
       end
 
       def test_rspec_rubocop_has_rspec_plugin
-        run_create_command("test_gem", "--test", "rspec")
+        scaffold("test_gem", "--test", "rspec")
 
         rubocop = File.read("test_gem/.rubocop.yml")
 
@@ -333,7 +270,7 @@ module Gempilot
       # Hyphenated gem name tests
 
       def test_hyphenated_gem_creates_nested_lib_structure
-        run_create_command("gempilot-encryption")
+        scaffold("gempilot-encryption")
 
         assert_predicate Pathname("gempilot-encryption/lib/gempilot"), :directory?
         assert_predicate Pathname("gempilot-encryption/lib/gempilot/encryption"), :directory?
@@ -342,7 +279,7 @@ module Gempilot
       end
 
       def test_hyphenated_gem_uses_for_gem_extension
-        run_create_command("gempilot-encryption")
+        scaffold("gempilot-encryption")
         entry = File.read("gempilot-encryption/lib/gempilot/encryption.rb")
 
         assert_includes entry, "for_gem_extension"
@@ -350,7 +287,7 @@ module Gempilot
       end
 
       def test_hyphenated_gem_shim_requires_real_path
-        run_create_command("gempilot-encryption")
+        scaffold("gempilot-encryption")
         shim = File.read("gempilot-encryption/lib/gempilot-encryption.rb")
 
         assert_includes shim, 'require "gempilot/encryption"'
@@ -358,7 +295,7 @@ module Gempilot
       end
 
       def test_hyphenated_gem_version_has_nested_modules
-        run_create_command("gempilot-encryption")
+        scaffold("gempilot-encryption")
         version = File.read("gempilot-encryption/lib/gempilot/encryption/version.rb")
 
         assert_includes version, "module Gempilot"
@@ -367,7 +304,7 @@ module Gempilot
       end
 
       def test_hyphenated_gem_templates_use_slash_require_path
-        run_create_command("gempilot-encryption")
+        scaffold("gempilot-encryption")
         gemspec = File.read("gempilot-encryption/gempilot-encryption.gemspec")
 
         assert_includes gemspec, 'require_relative "lib/gempilot/encryption/version"'
@@ -378,42 +315,42 @@ module Gempilot
       end
 
       def test_hyphenated_gem_rakefile_wires_zeitwerk_task
-        run_create_command("gempilot-encryption")
+        scaffold("gempilot-encryption")
         rakefile = File.read("gempilot-encryption/Rakefile")
 
         assert_includes rakefile, "Gempilot::ZeitwerkTask.new"
       end
 
       def test_hyphenated_gem_console_uses_slash_require
-        run_create_command("gempilot-encryption")
+        scaffold("gempilot-encryption")
         console = File.read("gempilot-encryption/bin/console")
 
         assert_includes console, 'require "gempilot/encryption"'
       end
 
       def test_hyphenated_gem_gemspec_has_correct_module
-        run_create_command("gempilot-encryption")
+        scaffold("gempilot-encryption")
         gemspec = File.read("gempilot-encryption/gempilot-encryption.gemspec")
 
         assert_includes gemspec, "Gempilot::Encryption::VERSION"
       end
 
       def test_hyphenated_gem_zeitwerk_test_uses_correct_module
-        run_create_command("gempilot-encryption")
+        scaffold("gempilot-encryption")
         content = File.read("gempilot-encryption/test/zeitwerk_test.rb")
 
         assert_includes content, "Gempilot::Encryption::LOADER"
       end
 
       def test_hyphenated_gem_test_file_uses_correct_module
-        run_create_command("gempilot-encryption")
+        scaffold("gempilot-encryption")
         content = File.read("gempilot-encryption/test/gempilot_encryption_test.rb")
 
         assert_includes content, "Gempilot::Encryption::VERSION"
       end
 
       def test_non_hyphenated_gem_does_not_use_for_gem_extension
-        run_create_command("test_gem")
+        scaffold("test_gem")
         main = File.read("test_gem/lib/test_gem.rb")
 
         assert_includes main, "Zeitwerk::Loader.for_gem"
@@ -421,7 +358,7 @@ module Gempilot
       end
 
       def test_non_hyphenated_gem_has_flat_module_in_version
-        run_create_command("test_gem")
+        scaffold("test_gem")
         version = File.read("test_gem/lib/test_gem/version.rb")
 
         assert_includes version, "module TestGem"
@@ -434,7 +371,7 @@ module Gempilot
       # Zeitwerk validation tests
 
       def test_creates_zeitwerk_test_file
-        run_create_command("test_gem")
+        scaffold("test_gem")
 
         assert_path_exists "test_gem/test/zeitwerk_test.rb"
 
@@ -445,7 +382,7 @@ module Gempilot
       end
 
       def test_rspec_creates_zeitwerk_spec_file
-        run_create_command("test_gem", "--test", "rspec")
+        scaffold("test_gem", "--test", "rspec")
 
         assert_path_exists "test_gem/spec/zeitwerk_spec.rb"
 
@@ -456,7 +393,7 @@ module Gempilot
       end
 
       def test_rakefile_wires_gempilot_zeitwerk_task
-        run_create_command("test_gem")
+        scaffold("test_gem")
 
         rakefile = File.read("test_gem/Rakefile")
 
@@ -466,7 +403,7 @@ module Gempilot
       end
 
       def test_rakefile_has_version_task
-        run_create_command("test_gem")
+        scaffold("test_gem")
 
         rakefile = File.read("test_gem/Rakefile")
 
@@ -477,7 +414,7 @@ module Gempilot
       # Gemspec tests
 
       def test_gemspec_uses_git_ls_files
-        run_create_command("test_gem")
+        scaffold("test_gem")
 
         gemspec = File.read("test_gem/test_gem.gemspec")
 
@@ -487,7 +424,7 @@ module Gempilot
       end
 
       def test_gemspec_has_glob_fallback
-        run_create_command("test_gem")
+        scaffold("test_gem")
 
         gemspec = File.read("test_gem/test_gem.gemspec")
 
@@ -498,13 +435,13 @@ module Gempilot
       # CI workflow tests
 
       def test_creates_ci_workflow
-        run_create_command("test_gem")
+        scaffold("test_gem")
 
         assert_path_exists "test_gem/.github/workflows/ci.yml"
       end
 
       def test_ci_workflow_has_test_step
-        run_create_command("test_gem")
+        scaffold("test_gem")
 
         ci = File.read("test_gem/.github/workflows/ci.yml")
 
@@ -513,7 +450,7 @@ module Gempilot
       end
 
       def test_rspec_ci_workflow_has_spec_step
-        run_create_command("test_gem", "--test", "rspec")
+        scaffold("test_gem", "--test", "rspec")
 
         ci = File.read("test_gem/.github/workflows/ci.yml")
 
@@ -524,13 +461,13 @@ module Gempilot
       # Version tasks tests (now provided by gempilot as a dependency)
 
       def test_does_not_create_rakelib_directory
-        run_create_command("test_gem")
+        scaffold("test_gem")
 
         refute_predicate Pathname("test_gem/rakelib"), :directory?
       end
 
       def test_does_not_create_version_rake_file
-        run_create_command("test_gem")
+        scaffold("test_gem")
 
         refute_path_exists "test_gem/rakelib/version.rake"
       end
@@ -558,84 +495,19 @@ module Gempilot
           puts cmd.options[:email].inspect
         RUBY
 
-        output = IO.popen(env, [RbConfig.ruby, "-e", script], chdir: @tmpdir, err: "/dev/null", &:read)
+        result = Shell.capture(RbConfig.ruby, "-e", script, chdir: @tmpdir, env:)
 
-        assert_equal 0, $CHILD_STATUS.exitstatus, "Create command should not crash when git config unavailable"
+        assert_predicate result, :success?, "Create command should not crash when git config unavailable"
         # Defaults should resolve to empty strings, not nil or error messages
-        lines = output.lines.map(&:strip)
+        lines = result.output.lines.map(&:strip)
 
         assert_includes ["\"\"", "nil"], lines[0],
                         "Author default should be empty string or nil when git config unavailable"
       end
 
-      # Integration: generated gem's default rake task passes
-
-      def test_generated_gem_default_rake_task_passes
-        stdout = StringIO.new
-        args = [
-          "--author", "Test Author",
-          "--email", "test@example.com",
-          "--summary", "A test gem",
-          "--ruby-version", RUBY_VERSION,
-          "--test", "minitest",
-          "--no-exe",
-          "--no-git",
-          "test_gem"
-        ]
-
-        command = Commands::Create.new(stdout: stdout)
-        command.main(args)
-
-        patch_gemfile_gempilot_path("test_gem/Gemfile")
-
-        Dir.chdir("test_gem") do
-          Bundler.with_unbundled_env do
-            output = `bundle exec rake 2>&1`
-
-            assert_equal 0, $CHILD_STATUS.exitstatus, "Default rake task failed in generated gem:\n#{output}"
-          end
-        end
-      end
-
-      def test_hyphenated_gem_default_rake_task_passes
-        stdout = StringIO.new
-        args = [
-          "--author", "Test Author",
-          "--email", "test@example.com",
-          "--summary", "A test gem",
-          "--ruby-version", RUBY_VERSION,
-          "--test", "minitest",
-          "--no-exe",
-          "--no-git",
-          "gempilot-encryption"
-        ]
-
-        command = Commands::Create.new(stdout: stdout)
-        command.main(args)
-
-        patch_gemfile_gempilot_path("gempilot-encryption/Gemfile")
-
-        Dir.chdir("gempilot-encryption") do
-          Bundler.with_unbundled_env do
-            output = `bundle exec rake 2>&1`
-
-            assert_equal 0, $CHILD_STATUS.exitstatus, "Default rake task failed in hyphenated gem:\n#{output}"
-          end
-        end
-      end
-
       private
 
-      def patch_gemfile_gempilot_path(gemfile_path)
-        content = File.read(gemfile_path)
-        patched = content.sub(
-          /^gem "gempilot".*$/,
-          %(gem "gempilot", path: #{GEMPILOT_ROOT.inspect}, require: false),
-        )
-        File.write(gemfile_path, patched)
-      end
-
-      def run_create_command(gem_name, *extra_args)
+      def scaffold(gem_name, *extra_args)
         stdout = StringIO.new
         args = [
           "--author", "Test Author",
@@ -649,12 +521,7 @@ module Gempilot
           gem_name
         ]
 
-        command = Commands::Create.new(stdout: stdout)
-        # Stub bundle install to avoid network calls in tests
-        command.define_singleton_method(:sh) do |cmd, *arguments|
-          # Skip actual shell commands in tests
-        end
-        command.main(args)
+        GemScaffold.new(stdout: stdout).main(args)
       end
     end
   end

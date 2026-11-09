@@ -1,9 +1,8 @@
 require "spec_helper"
 require "stringio"
 
-RSpec.describe Gempilot::CLI::Commands::Create do
+RSpec.describe Gempilot::CLI::GemScaffold do
   let(:command) { described_class.new(stdout: StringIO.new) }
-  let(:sh_calls) { [] }
 
   def create(name)
     command.main([
@@ -12,8 +11,6 @@ RSpec.describe Gempilot::CLI::Commands::Create do
                    "--test", "minitest", "--no-exe", "--no-git", name
                  ])
   end
-
-  before { allow(command).to receive(:sh) { |*args| sh_calls << args } }
 
   describe "generated Rakefile zeitwerk wiring" do
     let(:rakefile) { File.read("test_gem/Rakefile") }

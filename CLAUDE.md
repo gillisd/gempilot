@@ -19,14 +19,25 @@ A CLI tool for creating and managing Ruby gems, built on CommandKit.
 - Uses CommandKit for CLI framework (commands, options, arguments, interactive prompts)
 - Uses CommandKit::Inflector for name inflection
 - Generator module (`lib/gempilot/cli/generator.rb`) provides template rendering via ERB
+- `Gempilot::Shell` (`lib/gempilot/shell.rb`) is the only way gempilot runs external commands: `Shell.run` (raises `Shell::CommandFailed`), `Shell.capture` (returns output and status), `Shell.exec`. All three go through `Shell.gateway`; `Shell::Gateway` is the only code that spawns processes
+- `GemScaffold` (`lib/gempilot/cli/gem_scaffold.rb`) renders a new gem's files and runs no commands; `Commands::Create` subclasses it to run `bin/setup` and commit
 - GemContext module (`lib/gempilot/cli/gem_context.rb`) shared by new, destroy, release, console
 - `GemConstant` value object (`lib/gempilot/gem_constant.rb`) owns constant→namespace/path resolution for `new`/`destroy`; constants are rooted at the gem module by construction
+- `Gempilot::RBSTask` (`lib/gempilot/rbs_task.rb`, a `Rake::TaskLib`) wraps `rbs collection`: `rbs:setup`, `rbs:clobber`, `rbs:validate`, `rbs:collection:init/install/update` (requires `rbs` in the consuming gem's bundle)
 - `SegmentedVersion` value object (`lib/gempilot/segmented_version.rb`) owns version parsing and bump arithmetic; every bump moves to the smallest version of the requested shape greater than the current version (RubyGems ordering)
 - CommandKit::Commands::AutoLoad maps filenames in `commands/` to command names
+
+### Ruby Conventions
+- Every `rescue` and `ensure` sits inside an explicit `begin ... end`; never attach one directly to a `def` or `do` body (`Style/RedundantBegin` is disabled for this). Capture state to restore before `begin`, so `ensure` only guards what it undoes
+- A spec, class, or module that calls `FileUtils` more than once mixes it in (`include FileUtils`) and calls its methods bare. Don't define methods that share a name with FileUtils' own helpers in such a class: FileUtils calls them on `self` (e.g. `rm` calls `remove_file`), so an override changes FileUtils' behavior. Where a wrapper deliberately overrides one (e.g. `Generator#touch`), it reaches the original with `super`
+
+- RDoc is public documentation for users, not notes about the implementation: one or two plain sentences, then a real code example with its output
 
 ### Testing
 - Minitest with minitest-reporters
 - Run tests: `bundle exec rake test`
+- Never shell out directly (`system`, backticks, `Open3`, `exec`) in code or tests; use `Gempilot::Shell`. A test that must not run a command for real (one that publishes, like `gh release` or `rake release`) swaps in `Shell::StubGateway` with `Shell.with_gateway`, the way WebMock fakes HTTP; never stub `sh`/`system` on objects
+- End-to-end specs live in `spec/e2e/`. They build gempilot from this checkout, install it into an isolated gem directory (`spec/support/installed_gempilot.rb`), and run the installed `gempilot` executable to build a full gem project and run it. They use no mocks, stubs, or wrapped methods, and never patch generated files mid-run; if a real run can't work, fix the code rather than faking around it
 
 ### Generated Gem Features
 - Zeitwerk autoloading with `LOADER` constant exposed for eager loading
@@ -37,4 +48,5 @@ A CLI tool for creating and managing Ruby gems, built on CommandKit.
 - GitHub Actions CI workflow (`.github/workflows/ci.yml`)
 - `git ls-files`-based gemspec with glob fallback for non-git repos
 - Version lifecycle rake tasks installed via `Gempilot::VersionTask.new` (a `Rake::TaskLib`): `version:current/bump/commit/tag/untag/reset/revert` and composite `version:release`/`version:unrelease`
+- RBS collection rake tasks via `Gempilot::RBSTask.new`; `bin/setup` runs `rake setup`, which chains `rbs:setup` → `rbs:collection:install` → `rbs:collection:init`. `gempilot create` runs the new gem's `bin/setup`, so the collection (and `rbs_collection.lock.yaml`) exist before the initial commit
 - Publishing rake tasks (mixed into `VersionTask` via `Gempilot::ReleaseTasks`): `release` (all remotes), `release:rubygems`, `release:github`, `release:list:github`, `unrelease`, `unrelease:github`. These override and reuse bundler's `bundler/gem_tasks` release chain; `release:source_control_push` is replaced with `Gempilot::Origin` to push commit+tag idempotently

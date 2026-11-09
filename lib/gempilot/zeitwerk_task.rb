@@ -29,12 +29,12 @@ module Gempilot
 
     def define_validate_task
       desc "Verify all files follow Zeitwerk naming conventions"
-      task(:validate) { ruby "-Ilib", "-e", validate_script }
+      task(:validate) { Shell.run(RbConfig.ruby, "-Ilib", "-e", validate_script) }
     end
 
     def define_all_task
       desc "List every constant Zeitwerk manages and the file it expects"
-      task(:all) { ruby "-Ilib", "-e", all_script }
+      task(:all) { Shell.run(RbConfig.ruby, "-Ilib", "-e", all_script) }
     end
 
     def loader

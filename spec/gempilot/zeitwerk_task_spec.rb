@@ -3,12 +3,14 @@ require "spec_helper"
 RSpec.describe Gempilot::ZeitwerkTask do
   around do |example|
     old_app = Rake.application
-    Rake.application = Rake::Application.new
-    Dir.mktmpdir("zeitwerk_task_spec") do |tmpdir|
-      Dir.chdir(tmpdir) { example.run }
+    begin
+      Rake.application = Rake::Application.new
+      Dir.mktmpdir("zeitwerk_task_spec") do |tmpdir|
+        Dir.chdir(tmpdir) { example.run }
+      end
+    ensure
+      Rake.application = old_app
     end
-  ensure
-    Rake.application = old_app
   end
 
   def write_gem
@@ -51,7 +53,7 @@ RSpec.describe Gempilot::ZeitwerkTask do
       before { File.write("lib/my_gem/oops.rb", "module MyGem; class Correct; end; end\n") }
 
       it "fails" do
-        expect { Rake::Task["zeitwerk:validate"].invoke }.to raise_error(RuntimeError)
+        expect { Rake::Task["zeitwerk:validate"].invoke }.to raise_error(Gempilot::Shell::CommandFailed)
       end
     end
   end

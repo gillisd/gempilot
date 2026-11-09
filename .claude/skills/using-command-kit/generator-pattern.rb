@@ -40,12 +40,12 @@ module MyTool
 
       def mkdir(path)
         print_action "mkdir", path
-        ::FileUtils.mkdir_p(path)
+        mkdir_p(path)
       end
 
       def cp(source, dest)
         print_action "cp", source, dest
-        ::FileUtils.cp(File.join(@template_dir, source), dest)
+        super(File.join(@template_dir, source), dest)
       end
 
       def erb(source, dest = nil)

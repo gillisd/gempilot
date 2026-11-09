@@ -58,11 +58,13 @@ module Support
     end
 
     def touch(filename)
-      path = path_for filename
-      mkdir_p path.parent
-      add_object path, method: :touch
-    rescue Errno::ENOENT
-      raise "File not found: #{pathname}"
+      begin
+        path = path_for filename
+        mkdir_p path.parent
+        add_object path, method: :touch
+      rescue Errno::ENOENT
+        raise "File not found: #{pathname}"
+      end
     end
 
     def chdir(*args, **kwargs, &)
@@ -70,11 +72,13 @@ module Support
     end
 
     def mkdir_p(dirname)
-      pathname = path_for dirname
+      begin
+        pathname = path_for dirname
 
-      add_object pathname, method: :mkdir_p
-    rescue Errno::EEXIST
-      # Directory already exists, do nothing
+        add_object pathname, method: :mkdir_p
+      rescue Errno::EEXIST
+        # Directory already exists, do nothing
+      end
     end
 
     def path_for(filename)
@@ -93,44 +97,52 @@ module Support
     end
 
     def open_file(filename, mode = "r", &)
-      pathname = path_for filename
-      mkdir_p pathname.parent
-      @objects.add pathname
-      pathname.open(mode, &)
-    rescue Errno::ENOENT
-      raise "File not found: #{pathname.to_path}"
+      begin
+        pathname = path_for filename
+        mkdir_p pathname.parent
+        @objects.add pathname
+        pathname.open(mode, &)
+      rescue Errno::ENOENT
+        raise "File not found: #{pathname.to_path}"
+      end
     end
 
     def ln(source, target, **kwargs)
-      source_path = path_for source
-      target_path = path_for target
+      begin
+        source_path = path_for source
+        target_path = path_for target
 
-      mkdir_p target_path.parent
-      @objects.add target_path
-      FileUtils.ln source_path, target_path, **kwargs
-    rescue Errno::ENOENT
-      raise "File not found: #{source_path.to_path}"
+        mkdir_p target_path.parent
+        @objects.add target_path
+        FileUtils.ln source_path, target_path, **kwargs
+      rescue Errno::ENOENT
+        raise "File not found: #{source_path.to_path}"
+      end
     end
 
     def ln_s(source, target, **kwargs)
-      source_path = path_for source
-      target_path = path_for target
+      begin
+        source_path = path_for source
+        target_path = path_for target
 
-      mkdir_p target_path.parent
-      @objects.add target_path
-      FileUtils.ln_s source_path, target_path, **kwargs
-    rescue Errno::ENOENT
-      raise "File not found: #{source_path.to_path}"
-    rescue Errno::EEXIST
-      # Symlink already exists, do nothing
+        mkdir_p target_path.parent
+        @objects.add target_path
+        FileUtils.ln_s source_path, target_path, **kwargs
+      rescue Errno::ENOENT
+        raise "File not found: #{source_path.to_path}"
+      rescue Errno::EEXIST
+        # Symlink already exists, do nothing
+      end
     end
 
     def write(filename, content)
-      open_file(filename, "w") do |file|
-        file.write content
+      begin
+        open_file(filename, "w") do |file|
+          file.write content
+        end
+      rescue Errno::ENOENT
+        raise "File not found: #{pathname.to_path}"
       end
-    rescue Errno::ENOENT
-      raise "File not found: #{pathname.to_path}"
     end
 
     def safe_unlink(object)
@@ -186,9 +198,11 @@ module Support
     end
 
     def remove_workdir
-      FileUtils.rmdir workdir
-    rescue Errno::ENOTEMPTY, Errno::ENOENT
-      nil
+      begin
+        FileUtils.rmdir workdir
+      rescue Errno::ENOTEMPTY, Errno::ENOENT
+        nil
+      end
     end
 
     def remove_object(object, method:)

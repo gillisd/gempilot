@@ -1,5 +1,3 @@
-require "bundler"
-
 module Gempilot
   class CLI
     module Commands
@@ -24,14 +22,12 @@ module Gempilot
         end
 
         def run_rake_release
-          success = Bundler.with_unbundled_env do
-            system("bundle", "exec", "rake", "release")
+          begin
+            Shell.run("bundle", "exec", "rake", "release", unbundled: true)
+          rescue Shell::CommandFailed
+            puts colors.red("Release failed. Check the output above for errors.")
+            exit 1
           end
-
-          return if success
-
-          puts colors.red("Release failed. Check the output above for errors.")
-          exit 1
         end
       end
     end

@@ -5,21 +5,23 @@ require "stringio"
 module Gempilot
   class CLI
     class ConsoleCommandTest < Minitest::Test
+      include FileUtils
+
       def setup
         @tmpdir = Dir.mktmpdir("console_command_test")
         @original_dir = Dir.pwd
         Dir.chdir(@tmpdir)
         File.write("my_gem.gemspec", 'Gem::Specification.new { |s| s.name = "my_gem" }')
-        FileUtils.mkdir_p("test")
+        mkdir_p("test")
       end
 
       def teardown
         Dir.chdir(@original_dir)
-        FileUtils.rm_rf(@tmpdir)
+        rm_rf(@tmpdir)
       end
 
       def test_console_fails_without_gemspec
-        FileUtils.rm("my_gem.gemspec")
+        rm("my_gem.gemspec")
         stdout = StringIO.new
         command = Commands::Console.new(stdout: stdout)
 
