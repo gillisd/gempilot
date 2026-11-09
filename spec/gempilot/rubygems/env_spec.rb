@@ -4,13 +4,13 @@ RSpec.describe Gempilot::Rubygems::Env do
   let(:exclude_control) { "ruby2_keywords" }
   let(:include_control) { "erb" }
 
-  describe "LOADED_FEATURES" do
+  describe "loaded gems" do
     it "ensures this project contains the include control" do
-      expect($LOADED_FEATURES).not_to match_array(include_control)
+      expect(Gem.loaded_specs).to include(include_control)
     end
 
     it "ensures this project does not contain the exclude control" do
-      expect($LOADED_FEATURES).not_to match_array(exclude_control)
+      expect(Gem.loaded_specs).not_to include(exclude_control)
     end
   end
 
