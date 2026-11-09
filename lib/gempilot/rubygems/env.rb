@@ -1,5 +1,9 @@
 module Gempilot
   module Rubygems
+    # Finds the default gems (the gems that ship with Ruby) that the current bundle locks.
+    #
+    #   Gempilot::Rubygems::Env.new.default_gems.map(&:name)
+    #   # => ["erb", "pp", "prettyprint", "prism", "tsort"]
     class Env
       def default_gems_dir
         Pathname(Gem.default_specifications_dir)
