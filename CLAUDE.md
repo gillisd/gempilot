@@ -23,7 +23,7 @@ A CLI tool for creating and managing Ruby gems, built on CommandKit.
 - `GemScaffold` (`lib/gempilot/cli/gem_scaffold.rb`) renders a new gem's files and runs no commands; `Commands::Create` subclasses it to run `bin/setup` and commit
 - GemContext module (`lib/gempilot/cli/gem_context.rb`) shared by new, destroy, release, console
 - `GemConstant` value object (`lib/gempilot/gem_constant.rb`) owns constant→namespace/path resolution for `new`/`destroy`; constants are rooted at the gem module by construction
-- `Gempilot::RBSTask` (`lib/gempilot/rbs_task.rb`, a `Rake::TaskLib`) wraps `rbs collection`: `rbs:setup`, `rbs:clobber`, `rbs:validate`, `rbs:collection:init/install/update` (requires `rbs` in the consuming gem's bundle)
+- `Gempilot::RBSTask` (`lib/gempilot/rbs_task.rb`, a `Rake::TaskLib`) wraps `rbs collection`: `rbs:setup`, `rbs:clobber`, `rbs:validate`, `rbs:default_gems` (adds the bundle's default gems to `rbs_collection.yaml` via `Gempilot::Rubygems::Env`), `rbs:collection:init/install/update` (requires `rbs` in the consuming gem's bundle)
 - `SegmentedVersion` value object (`lib/gempilot/segmented_version.rb`) owns version parsing and bump arithmetic; every bump moves to the smallest version of the requested shape greater than the current version (RubyGems ordering)
 - CommandKit::Commands::AutoLoad maps filenames in `commands/` to command names
 
@@ -48,5 +48,5 @@ A CLI tool for creating and managing Ruby gems, built on CommandKit.
 - GitHub Actions CI workflow (`.github/workflows/ci.yml`)
 - `git ls-files`-based gemspec with glob fallback for non-git repos
 - Version lifecycle rake tasks installed via `Gempilot::VersionTask.new` (a `Rake::TaskLib`): `version:current/bump/commit/tag/untag/reset/revert` and composite `version:release`/`version:unrelease`
-- RBS collection rake tasks via `Gempilot::RBSTask.new`; `bin/setup` runs `rake setup`, which chains `rbs:setup` → `rbs:collection:install` → `rbs:collection:init`. `gempilot create` runs the new gem's `bin/setup`, so the collection (and `rbs_collection.lock.yaml`) exist before the initial commit
+- RBS collection rake tasks via `Gempilot::RBSTask.new`; `bin/setup` runs `rake setup`, which chains `rbs:setup` → `rbs:default_gems` → `rbs:collection:init`, then `rbs:collection:install`. `gempilot create` runs the new gem's `bin/setup`, so the collection (and `rbs_collection.lock.yaml`) exist before the initial commit
 - Publishing rake tasks (mixed into `VersionTask` via `Gempilot::ReleaseTasks`): `release` (all remotes), `release:rubygems`, `release:github`, `release:list:github`, `unrelease`, `unrelease:github`. These override and reuse bundler's `bundler/gem_tasks` release chain; `release:source_control_push` is replaced with `Gempilot::Origin` to push commit+tag idempotently
