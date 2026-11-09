@@ -2,10 +2,10 @@ source "https://rubygems.org"
 
 gemspec
 
-gem "json", "~> 2.21"
 gem "benchmark"
 gem "debug", "~> 1.10"
 gem "irb", "~> 1.15"
+gem "json", "~> 2.21"
 gem "minitest"
 gem "minitest-reporters"
 gem "observer"
